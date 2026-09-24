@@ -5,6 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { runMany } from './run.mjs';
 import { LIVES, MAYA_BOOK_IT, MAYA_LATER } from './lives.js';
+import { SAMPLE_DAYS, runSample, acidRR } from './stephan.js';
 
 const N = +(process.argv[2] || 400);
 const node = process.execPath;
@@ -21,6 +22,12 @@ sh('./levers.mjs', String(Math.min(N, 300)), tmp);
 const levers = JSON.parse((await import('node:fs')).readFileSync(tmp, 'utf8'));
 (await import('node:fs')).unlinkSync(tmp);
 const two = JSON.parse(sh('./twolives.mjs', String(N)));
+const hhmm = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+const days = SAMPLE_DAYS.map(d => {
+  const r = runSample(d);
+  return { id: d.id, label: d.label, acidMinutes: r.acidMinutes, sleepAcid: r.sleepAcid, lowest: +r.lowest.toFixed(2), longest: r.longest,
+    rr: +acidRR(r.acidDose).toFixed(2), rootMinutes: r.rootMinutes, erosion: Math.round(r.erosion) };
+});
 
 let md = `# Simulation report (prototype model v0)
 
@@ -69,7 +76,26 @@ Featured pair (seed ${two.featured.seed}, used in the art sample):
 ${[34, 45, 62, 79].map(a => { const A = two.featured.snapBookIt[a], B = two.featured.snapLater[a]; return `| ${a} | ${money(A.oop)} / ${A.missing} / ${A.painDays} | ${money(B.oop)} / ${B.missing} / ${B.painDays} |`; }).join('\n')}
 
 "Later..." life, from 34 on: ${two.featured.storyLater.slice(0, 14).join('; ')}.
+
+## 5. The Acid Clock: one day of plaque pH (sim/stephan.js)
+
+A day's meals, snacks and drinks become a 24-hour Stephan curve for a typical mouth. "Acid time" is minutes below
+pH 5.5 (enamel dissolves); exposed roots dissolve below ~6.2. Caries pressure is the day's acid dose (area below 5.5)
+relative to the first row, before fluoride. Erosion counts acidic drinks bathing the teeth (independent of sugar).
+
+| Day | Acid time | ...of it asleep | Lowest pH | Longest stretch | Caries pressure | Below 6.2 (roots) | Erosion |
+|---|---:|---:|---:|---:|---:|---:|---:|
+${days.map(d => `| ${d.label} | ${hhmm(d.acidMinutes)} | ${d.sleepAcid ? hhmm(d.sleepAcid) : '-'} | ${d.lowest.toFixed(2)} | ${d.longest} min | x${d.rr.toFixed(2)} | ${hhmm(d.rootMinutes)} | ${d.erosion || '-'} |`).join('\n')}
+
+## 6. The Acid Clock across a life (${N} lives each)
+
+Average minutes a day below pH 5.5 in each stage of life (the day changes as habits, job, bacteria, plaque and
+saliva change), and minutes below 6.2 once roots are exposed.
+
+| Life | Toddler (2-3) | Kid (6-12) | Teen (13-17) | Working (25-55) | Retired (66-79) | Roots, retired |
+|---|---:|---:|---:|---:|---:|---:|
+${presets.map(r => `| ${r.name} | ${r.acid.toddler} | ${r.acid.kid} | ${r.acid.teen} | ${r.acid.adult} | ${r.acid.elder} | ${r.acid.elderRoot} |`).join('\n')}
 `;
 writeFileSync(new URL('../docs/SIM_REPORT.md', import.meta.url), md);
-writeFileSync(new URL('../docs/sim-report.json', import.meta.url), JSON.stringify({ N, presets, levers, two }, null, 2));
+writeFileSync(new URL('../docs/sim-report.json', import.meta.url), JSON.stringify({ N, presets, levers, two, acid: { days } }, null, 2));
 console.log(md);

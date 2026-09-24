@@ -35,6 +35,9 @@ export const LIVES = {
   microbiomeLow: { ...typical, name: 'Vaginal birth, healthy parents', birth: 'vaginal', parentsOral: 'healthy', salivaSharing: false },
   microbiomeHigh: { ...typical, name: 'C-section, parents w/ decay', birth: 'csection', parentsOral: 'poor', salivaSharing: true },
   smoker: { ...typical, name: 'Smoker (quits at 50)', smoking: 'smoker', phases: [{ age: 50, set: { smoking: 'never' } }] },
+  nightSnacker: { ...typical, name: 'Night snacker', bedtimeSnack: true },
+  mealtime: { ...typical, name: 'Sweets with meals + gum', withMeals: true, gum: true },
+  dryMouth: { ...typical, name: 'Dry-mouth meds from 55', phases: [{ age: 55, set: { dryMouthMeds: true } }] },
 };
 
 // Maya, the pastry chef from the art samples. At 34 the dentist's office calls.
@@ -46,3 +49,25 @@ export const MAYA_LATER = {
   ...MAYA, name: 'Maya: "Later..."',
   phases: [{ age: 34, set: { visits: 'pain' } }],
 };
+
+// Maya's Acid Clock over a life (art sample, review page): the same person as
+// her habits change. Juice bottle in bed as a toddler, sodas sipped from 13,
+// tastings at the bakery from 22, gum after tastings and one soda with lunch
+// after a hygienist's tip at 34, a medication that dries her mouth at 62.
+export const MAYA_ACID = {
+  ...MAYA, name: 'Maya: the Acid Clock over a life',
+  bedtimeBottle: true, kidSugar: 4,
+  phases: [
+    { age: 13, set: { sodas: 2, sipping: true } },
+    { age: 34, set: { sodas: 1, sipping: false, withMeals: true, gum: true } },
+    { age: 62, set: { dryMouthMeds: true } },
+  ],
+};
+export const MAYA_ACID_MARKERS = [
+  { age: 1, icon: 'bottle', label: 'juice bottle in bed' },
+  { age: 13, icon: 'soda', label: 'sips sodas' },
+  { age: 22, icon: 'cupcake', label: 'bakery tastings' },
+  { age: 34, icon: 'gum', label: 'sweets with meals, gum' },
+  { age: 62, icon: 'pill', label: 'dry-mouth meds' },
+];
+

@@ -7,6 +7,9 @@ import { PROP } from '../art/sprites/props.js';
 import { EMOTE } from '../art/sprites/emotes.js';
 import { drawHouse } from '../art/scenes/house.js';
 import * as sheets from '../art/sheets.js';
+import { SAMPLE_DAYS, simulateDay, mouthOf, FOODS, attribution, acidRR, ENAMEL_CRIT, ROOT_CRIT } from '../sim/stephan.js';
+import { simulateLife } from '../sim/model.js';
+import { LIVES, MAYA_ACID, MAYA_ACID_MARKERS } from '../sim/lives.js';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DATA = JSON.parse(document.getElementById('page-data').textContent);
@@ -169,6 +172,7 @@ caption();
 if (!reduceMotion) setInterval(() => { frame++; drawHero(frame); }, 125);
 
 // Maya's numbers (400 same-luck pairs)
+if (FEAT.seed) document.getElementById('hero-note').textContent = `Every image on this page is drawn live by the game's own pixel renderer. The numbers come from the simulation: one same-luck pair of Maya's lives, seed ${FEAT.seed}.`;
 {
   const s = DATA.summary;
   const $ = v => '$' + Math.round(v).toLocaleString('en-US');
@@ -311,3 +315,311 @@ labBtn.addEventListener('click', () => {
 });
 // open in a realistic working state: run the default comparison once
 labBtn.click();
+
+// ---------------------------------------------------------------------------
+// The Acid Clock: one day's plaque-pH curve (Stephan curve), live from the sim.
+
+const clock = m => { const h = Math.floor(m / 60) % 24, mm = String(m % 60).padStart(2, '0'); return `${h % 12 || 12}:${mm} ${h < 12 ? 'am' : 'pm'}`; };
+const hhmm = m => (m >= 60 ? `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const DAY_START = 6 * 60; // the chart runs 6 am -> 6 am
+const since6 = m => (m - DAY_START + 1440) % 1440;
+const eats = f => !FOODS[f].noSugar; // meals, snacks and sugary drinks
+const isMeal = f => f === 'meal' || f === 'dessertMeal';
+
+const ACID_DAYS = SAMPLE_DAYS.filter(d => !['gum', 'dry'].includes(d.id));
+const daySelect = document.getElementById('acid-day');
+daySelect.innerHTML = ACID_DAYS.map(d => `<option value="${d.id}">${esc(d.label)}</option>`).join('');
+const tg = { dry: document.getElementById('acid-dry'), gum: document.getElementById('acid-gum'), water: document.getElementById('acid-water'), ms: document.getElementById('acid-ms') };
+
+function acidState() {
+  const d = ACID_DAYS.find(x => x.id === daySelect.value) || ACID_DAYS[0];
+  const toddler = d.id === 'toddler' || d.id === 'bottle';
+  tg.gum.disabled = toddler;
+  tg.gum.parentElement.title = toddler ? 'Not for toddlers' : '';
+  const extra = [];
+  for (const it of d.intakes) {
+    if (!eats(it.food)) continue;
+    const done = it.t + Math.max(it.sip ?? FOODS[it.food].sip ?? 0, 0);
+    const meal = isMeal(it.food);
+    if (tg.gum.checked && !toddler) extra.push({ t: (done + (meal ? 20 : 10)) % 1440, food: 'gum' });
+    if (tg.water.checked && !meal) extra.push({ t: (done + 10) % 1440, food: 'water' });
+  }
+  const intakes = [...d.intakes, ...extra].sort((p, q) => p.t - q.t);
+  const baseMouth = mouthOf({ saliva: d.saliva });
+  const mouth = mouthOf({ saliva: tg.dry.checked ? 0.35 : d.saliva, ms: tg.ms.checked ? 2 : 1 });
+  const changed = extra.length > 0 || tg.dry.checked && d.saliva > 0.35 || tg.ms.checked;
+  return {
+    d, intakes, mouth, changed,
+    base: simulateDay(d.intakes, baseMouth, d.sleep),
+    mod: simulateDay(intakes, mouth, d.sleep),
+  };
+}
+
+function svgEl(host, W, H) {
+  let svg = host.querySelector('svg');
+  if (!svg) { svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); host.prepend(svg); }
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  return svg;
+}
+
+let acidNow = null, acidCursor = null;
+function drawAcid() {
+  const st = acidNow = acidState();
+  const host = document.getElementById('acid-chart');
+  const W = Math.max(300, Math.round(host.clientWidth - 12));
+  const narrow = W < 560;
+  const H = Math.round(Math.min(360, Math.max(250, W * 0.4)));
+  const L = 34, R = 10, T = 34, B = 26, pw = W - L - R, ph = H - T - B;
+  const x = m => L + (since6(m) / 1440) * pw;
+  const y = v => T + ((7.2 - Math.max(4, Math.min(7.2, v))) / 3.2) * ph;
+  const path = curve => { let p = ''; for (let i = 0; i <= 1440; i++) { const m = (DAY_START + i) % 1440; p += `${i ? 'L' : 'M'}${(L + (i / 1440) * pw).toFixed(1)},${y(curve[m]).toFixed(1)}`; } return p; };
+  let out = '';
+  // asleep bands
+  const [s0, s1] = st.d.sleep.map(since6);
+  const band = (a, b) => `<rect x="${(L + (a / 1440) * pw).toFixed(1)}" y="${T}" width="${(((b - a) / 1440) * pw).toFixed(1)}" height="${ph}" style="fill: color-mix(in srgb, var(--rule) 55%, transparent)"/>`;
+  out += s0 < s1 ? band(s0, s1) : band(s0, 1440) + band(0, s1);
+  // grid + axis labels
+  for (const v of [7, 6, 5, 4]) out += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" style="stroke: var(--rule)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  out += `<text x="${L - 6}" y="${T - 22}" text-anchor="end">pH</text>`;
+  const step = narrow ? 360 : 180;
+  for (let i = 0; i <= 1440; i += step) {
+    const m = (DAY_START + i) % 1440, xx = L + (i / 1440) * pw;
+    const label = m === 0 ? 'midnight' : m === 720 ? 'noon' : clock(m).replace(':00', '');
+    out += `<line x1="${xx}" x2="${xx}" y1="${T + ph}" y2="${T + ph + 4}" style="stroke: var(--muted)"/><text x="${xx}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === 1440 ? 'end' : 'middle'}">${label}</text>`;
+  }
+  // acid area of the current curve
+  const c = st.mod.curve;
+  let area = '';
+  for (let i = 0; i < 1440; i++) {
+    const m = (DAY_START + i) % 1440;
+    if (c[m] >= ENAMEL_CRIT) continue;
+    let j = i; while (j < 1440 && c[(DAY_START + j) % 1440] < ENAMEL_CRIT) j++;
+    area += `M${(L + (i / 1440) * pw).toFixed(1)},${y(ENAMEL_CRIT)}`;
+    for (let k = i; k < j; k++) area += `L${(L + (k / 1440) * pw).toFixed(1)},${y(c[(DAY_START + k) % 1440]).toFixed(1)}`;
+    area += `L${(L + ((j - 1) / 1440) * pw).toFixed(1)},${y(ENAMEL_CRIT)}Z`;
+    i = j;
+  }
+  out += `<path d="${area}" style="fill: color-mix(in srgb, var(--worse) 45%, transparent)"/>`;
+  // reference lines
+  out += `<line x1="${L}" x2="${W - R}" y1="${y(ROOT_CRIT)}" y2="${y(ROOT_CRIT)}" style="stroke: var(--muted); stroke-dasharray: 2 4"/>`;
+  out += `<text class="ref-label" x="${W - R - 4}" y="${y(ROOT_CRIT) - 5}" text-anchor="end">${narrow ? '6.2 roots' : '6.2 exposed roots dissolve'}</text>`;
+  out += `<line x1="${L}" x2="${W - R}" y1="${y(ENAMEL_CRIT)}" y2="${y(ENAMEL_CRIT)}" style="stroke: var(--worse)"/>`;
+  out += `<text class="ref-label" x="${W - R - 4}" y="${y(ENAMEL_CRIT) - 5}" text-anchor="end">${narrow ? '5.5 enamel' : '5.5 enamel dissolves'}</text>`;
+  // curves
+  if (st.changed) out += `<path d="${path(st.base.curve)}" fill="none" style="stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 3"/>`;
+  out += `<path d="${path(c)}" fill="none" style="stroke: var(--better); stroke-width: 2; stroke-linejoin: round"/>`;
+  // what was eaten, on a shelf above the plot
+  const placed = [];
+  for (const it of st.intakes) {
+    const f = FOODS[it.food], xx = x(it.t);
+    let row = 0; while (placed.some(p => p.row === row && Math.abs(p.x - xx) < 11)) row++;
+    placed.push({ x: xx, row });
+    const cy = T - 8 - row * 10;
+    const kind = !eats(it.food) ? (f.effect ? 'helper' : 'none') : isMeal(it.food) ? 'meal' : 'sugar';
+    const style = kind === 'sugar' ? 'fill: var(--worse); stroke: var(--surface); stroke-width: 2' : kind === 'helper' ? 'fill: var(--surface); stroke: var(--better); stroke-width: 2' : 'fill: var(--muted); stroke: var(--surface); stroke-width: 2';
+    const sip = it.sip ?? f.sip ?? 0;
+    if (sip >= 30) out += `<line x1="${xx}" x2="${Math.min(W - R, xx + (sip / 1440) * pw)}" y1="${cy}" y2="${cy}" style="stroke: var(--worse); stroke-width: 2"/>`;
+    out += `<circle cx="${xx.toFixed(1)}" cy="${cy}" r="4.5" style="${style}"><title>${clock(it.t)} · ${esc(f.label)}${sip >= 30 ? `, sipped over ${sip} min` : ''}</title></circle>`;
+  }
+  // crosshair (hidden until hover/focus)
+  out += `<g id="acid-cross" style="display:none"><line y1="${T}" y2="${T + ph}" style="stroke: var(--ink-2)"/><circle r="4" class="dot-mod" style="fill: var(--better); stroke: var(--surface); stroke-width: 2"/><circle r="4" class="dot-base" style="fill: var(--muted); stroke: var(--surface); stroke-width: 2; display: ${st.changed ? 'inline' : 'none'}"/></g>`;
+  const svg = svgEl(host, W, H);
+  svg.innerHTML = out;
+  svg.setAttribute('tabindex', '0');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', `Plaque pH from 6 am to 6 am for “${st.d.label}”. ${hhmm(st.mod.acidMinutes)} below pH 5.5. Use the arrow keys to read the curve; the table below lists every food.`);
+  svg._geom = { L, pw, T, ph, x, y, W };
+  const lg = document.getElementById('acid-legend').children;
+  lg[0].textContent = st.changed ? 'With your changes' : 'This day';
+  lg[1].style.display = st.changed ? '' : 'none';
+  acidTiles(st);
+  if (acidCursor != null) showAcidCursor(acidCursor);
+}
+
+function acidTiles(st) {
+  const { mod, base, changed } = st;
+  const delta = (a, b, fmt) => {
+    if (!changed || a === b) return '';
+    const up = a > b;
+    return `<span class="delta ${up ? 'up' : 'down'}">${fmt(Math.abs(a - b))} ${up ? 'more' : 'less'}</span>`;
+  };
+  const rrM = acidRR(mod.acidDose), rrB = acidRR(base.acidDose);
+  const tiles = [
+    ['Acid time', hhmm(mod.acidMinutes) + delta(mod.acidMinutes, base.acidMinutes, hhmm), 'below pH 5.5, where enamel dissolves'],
+    ['Longest stretch', `${mod.longest} min` + delta(mod.longest, base.longest, v => `${v} min`), `starting ${clock(mod.longestStart)}`],
+    ['Acid while asleep', hhmm(mod.sleepAcid) + delta(mod.sleepAcid, base.sleepAcid, hhmm), 'saliva nearly stops in sleep'],
+    ['Cavity pressure', `×${rrM.toFixed(2)}` + delta(Math.round(rrM * 100), Math.round(rrB * 100), v => `${(v / 100).toFixed(2)}`), 'vs. three snacks between meals'],
+    ['Exposed roots', hhmm(mod.rootMinutes) + delta(mod.rootMinutes, base.rootMinutes, hhmm), 'below pH 6.2, if gums have receded'],
+  ];
+  document.getElementById('acid-tiles').innerHTML = tiles.map(([l, v, sub]) => { const [val, d = ''] = v.split('<span'); return `<div class="tile"><span class="label">${l}</span><span class="value">${val}</span>${d ? '<span' + d : ''}<span class="sub">${sub}</span></div>`; }).join('');
+  // one plain sentence about what changed
+  const why = [];
+  if (tg.dry.checked && st.d.saliva > 0.35) why.push('a drying medication slows saliva, so every dip lasts longer and food lingers');
+  if (tg.ms.checked) why.push('more cavity bacteria make every dip deeper');
+  if (tg.gum.checked && !tg.gum.disabled) why.push('gum after eating brings the pH back up faster');
+  if (tg.water.checked) why.push('a water rinse after snacks helps a little');
+  document.getElementById('acid-note').textContent = changed
+    ? `Acid time goes from ${hhmm(base.acidMinutes)} to ${hhmm(mod.acidMinutes)}: ${why.join('; ')}.`
+    : `${st.d.label}: ${hhmm(mod.acidMinutes)} a day below pH 5.5, the longest stretch ${mod.longest} minutes. Tick a box above to change the mouth or the habits.`;
+  // table: what each food adds
+  const att = attribution(st.intakes, st.mouth, st.d.sleep);
+  document.getElementById('acid-table').innerHTML = `<table><thead><tr><th>Time</th><th>Food or drink</th><th class="num">Acid time it adds</th></tr></thead><tbody>${att
+    .map(a => `<tr><td>${clock(a.t)}</td><td>${esc(FOODS[a.food].label)}${(a.sip ?? 0) >= 30 ? `, sipped over ${a.sip} min` : ''}</td><td class="num">${a.acidMinutes > 0 ? '+' + hhmm(a.acidMinutes) : a.acidMinutes < 0 ? '−' + hhmm(-a.acidMinutes) : '0'}</td></tr>`)
+    .join('')}</tbody></table>`;
+}
+
+function showAcidCursor(i) {
+  const st = acidNow, svg = document.querySelector('#acid-chart svg');
+  if (!svg || !st) return;
+  const g = svg._geom, m = (DAY_START + i) % 1440;
+  const cross = svg.querySelector('#acid-cross');
+  const xx = g.L + (i / 1440) * g.pw;
+  cross.style.display = '';
+  cross.querySelector('line').setAttribute('x1', xx); cross.querySelector('line').setAttribute('x2', xx);
+  const dm = cross.querySelector('.dot-mod'), db = cross.querySelector('.dot-base');
+  dm.setAttribute('cx', xx); dm.setAttribute('cy', g.y(st.mod.curve[m]));
+  db.setAttribute('cx', xx); db.setAttribute('cy', g.y(st.base.curve[m]));
+  const last = [...st.intakes].filter(it => since6(it.t) <= i && FOODS[it.food].drop > 0).pop();
+  const tip = document.getElementById('acid-tip');
+  tip.innerHTML = `<strong>${clock(m)}</strong><br>pH ${st.mod.curve[m].toFixed(2)}${st.changed ? ' with your changes' : ''}${st.changed ? `<br>pH ${st.base.curve[m].toFixed(2)} as described` : ''}${last ? `<br>Last: ${esc(FOODS[last.food].label)} at ${clock(last.t)}` : ''}${st.mod.curve[m] < ENAMEL_CRIT ? '<br><em>Enamel is dissolving</em>' : ''}`;
+  tip.hidden = false;
+  const host = document.getElementById('acid-chart');
+  const scale = svg.getBoundingClientRect().width / g.W;
+  tip.style.top = '6px';
+  tip.style.left = Math.max(4, Math.min(xx * scale + 14, host.clientWidth - 238)) + 'px';
+  if (xx * scale + 250 > host.clientWidth) tip.style.left = Math.max(4, xx * scale - 244) + 'px';
+}
+{
+  const host = document.getElementById('acid-chart');
+  const toIndex = e => {
+    const svg = host.querySelector('svg'), g = svg._geom, r = svg.getBoundingClientRect();
+    const px = ((e.clientX - r.left) / r.width) * g.W;
+    return Math.max(0, Math.min(1439, Math.round(((px - g.L) / g.pw) * 1440)));
+  };
+  host.addEventListener('mousemove', e => { if (e.target.closest('svg')) { acidCursor = toIndex(e); showAcidCursor(acidCursor); } });
+  host.addEventListener('mouseleave', () => { acidCursor = null; document.getElementById('acid-tip').hidden = true; const c = host.querySelector('#acid-cross'); if (c) c.style.display = 'none'; });
+  host.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    acidCursor = e.key === 'Home' ? 0 : e.key === 'End' ? 1439 : Math.max(0, Math.min(1439, (acidCursor ?? 0) + (e.key === 'ArrowLeft' ? -10 : 10)));
+    showAcidCursor(acidCursor);
+  });
+  host.addEventListener('focusout', () => { acidCursor = null; document.getElementById('acid-tip').hidden = true; });
+  daySelect.addEventListener('change', () => {
+    const d = ACID_DAYS.find(x => x.id === daySelect.value);
+    if (d.saliva < 1) tg.dry.checked = true;
+    drawAcid();
+  });
+  for (const t of Object.values(tg)) t.addEventListener('change', drawAcid);
+  new ResizeObserver(() => drawAcid()).observe(host);
+}
+
+// ---------------------------------------------------------------------------
+// The Acid Clock over a lifetime: minutes a day below 5.5, age 0-79, one life.
+
+const PHASE_WORDS = {
+  sodas: v => `${v} soda${v === 1 ? '' : 's'} a day`, sipping: v => (v ? 'sips drinks' : 'finishes drinks'), withMeals: v => (v ? 'sweets with meals' : 'snacks between meals'),
+  gum: v => (v ? 'gum after eating' : 'no gum'), dryMouthMeds: v => (v ? 'drying medication' : 'off the medication'), bedtimeSnack: v => (v ? 'snack after brushing' : 'no bedtime snack'),
+  job: v => `job: ${v}`, visits: v => `visits: ${v}`, smoking: v => (v === 'never' ? 'quits smoking' : v),
+};
+const ACID_LIVES = [
+  ['maya', 'Maya, as her habits change', MAYA_ACID, MAYA_ACID_MARKERS],
+  ['typical', 'A typical US life', LIVES.typical],
+  ['baker', 'The Baker', LIVES.baker],
+  ['soda', 'The Soda Sipper', LIVES.soda],
+  ['nightSnacker', 'Night snacker', LIVES.nightSnacker],
+  ['mealtime', 'Sweets with meals + gum', LIVES.mealtime],
+  ['dryMouth', 'Dry-mouth medication from 55', LIVES.dryMouth],
+];
+const lifeSelect = document.getElementById('acid-life');
+lifeSelect.innerHTML = ACID_LIVES.map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join('');
+const lifeCache = new Map();
+function lifeFor(id) {
+  if (!lifeCache.has(id)) {
+    const [, label, plan, markers] = ACID_LIVES.find(l => l[0] === id);
+    const life = simulateLife(plan, 12, { log: false });
+    const mk = markers || (plan.phases || []).map(ph => ({ age: ph.age, label: Object.entries(ph.set).map(([k, v]) => (PHASE_WORDS[k] ? PHASE_WORDS[k](v) : k)).join(', ') }));
+    lifeCache.set(id, { label, life, markers: mk });
+  }
+  return lifeCache.get(id);
+}
+
+function drawAcidLifeChart() {
+  const { life, markers, label } = lifeFor(lifeSelect.value);
+  const host = document.getElementById('acid-life-chart');
+  const W = Math.max(300, Math.round(host.clientWidth - 12));
+  const H = Math.round(Math.min(260, Math.max(190, W * 0.26)));
+  const L = 40, R = 10, T = 30, B = 26, pw = W - L - R, ph = H - T - B;
+  const years = life.yearly.filter(yr => yr.age < 80);
+  const peakH = Math.max(...years.map(yr => yr.acidMin)) / 60, stepH = peakH > 8 ? 4 : 2;
+  const maxH = Math.max(6, Math.ceil(peakH / stepH) * stepH);
+  const y = v => T + ph - (v / (maxH * 60)) * ph;
+  const bw = pw / 80;
+  let out = '';
+  for (let hh = 0; hh <= maxH; hh += stepH) out += `<line x1="${L}" x2="${W - R}" y1="${y(hh * 60)}" y2="${y(hh * 60)}" style="stroke: var(--rule)"/><text x="${L - 6}" y="${y(hh * 60) + 4}" text-anchor="end">${hh}h</text>`;
+  for (const yr of years) {
+    const v = yr.acidMin;
+    if (v <= 0) continue;
+    const bx = L + yr.age * bw, top = y(v);
+    out += `<rect x="${(bx + 0.5).toFixed(1)}" y="${top.toFixed(1)}" width="${Math.max(1, bw - 1.5).toFixed(1)}" height="${(T + ph - top).toFixed(1)}" rx="${bw > 6 ? 2 : 0}" style="fill: var(--worse)"/>`;
+  }
+  for (const a of [0, 10, 20, 30, 40, 50, 60, 70, 80]) {
+    const xx = L + a * bw;
+    out += `<line x1="${xx}" x2="${xx}" y1="${T + ph}" y2="${T + ph + 4}" style="stroke: var(--muted)"/><text x="${xx}" y="${H - 6}" text-anchor="${a === 0 ? 'start' : a === 80 ? 'end' : 'middle'}">${a}</text>`;
+  }
+  markers.forEach((mk, i) => {
+    const xx = L + mk.age * bw + bw / 2;
+    out += `<line x1="${xx}" x2="${xx}" y1="${T - 4}" y2="${T + ph}" style="stroke: var(--ink-2); stroke-dasharray: 2 3"/>`;
+    out += `<circle cx="${xx}" cy="${T - 8 - (i % 2) * 10}" r="4.5" style="fill: var(--surface); stroke: var(--ink-2); stroke-width: 2"><title>${mk.age}: ${esc(mk.label)}</title></circle>`;
+  });
+  out += `<rect id="acid-life-hover" x="0" y="${T}" width="0" height="${ph}" style="fill: var(--ink); opacity: 0.08; display: none"/>`;
+  const svg = svgEl(host, W, H);
+  svg.innerHTML = out;
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('tabindex', '0');
+  svg.setAttribute('aria-label', `Minutes a day below pH 5.5 for each year of life, 0 to 79: ${label}. The table below has the numbers by stage of life.`);
+  svg._geom = { L, pw, bw, W, years, markers };
+  // table by stage
+  const stages = [['Toddler', 1, 3], ['Kid', 4, 12], ['Teen', 13, 17], ['18–21', 18, 21], ['Working years', 22, 64], ['Retired', 65, 79]];
+  const avg = (a0, a1, k) => { const v = years.filter(yr => yr.age >= a0 && yr.age <= a1).map(yr => yr[k]); return Math.round(v.reduce((p, q) => p + q, 0) / (v.length || 1)); };
+  document.getElementById('acid-life-table').innerHTML = `<table><thead><tr><th>Stage of life</th><th class="num">Acid time a day (below 5.5)</th><th class="num">Exposed roots (below 6.2)</th></tr></thead><tbody>${stages
+    .map(([n, a0, a1]) => `<tr><td>${n} (${a0}–${a1})</td><td class="num">${hhmm(avg(a0, a1, 'acidMin'))}</td><td class="num">${avg(a0, a1, 'rootMin') ? hhmm(avg(a0, a1, 'rootMin')) : '–'}</td></tr>`)
+    .join('')}</tbody></table>${markers.length ? `<p style="margin-top:10px; color: var(--ink-2)">Changes: ${markers.map(mk => `at ${mk.age}, ${esc(mk.label)}`).join('; ')}.</p>` : ''}`;
+}
+{
+  const host = document.getElementById('acid-life-chart');
+  const tip = document.getElementById('acid-life-tip');
+  let cursor = null;
+  const show = age => {
+    const svg = host.querySelector('svg'), g = svg._geom, yr = g.years.find(q => q.age === age);
+    if (!yr) return;
+    const hover = svg.querySelector('#acid-life-hover');
+    hover.style.display = ''; hover.setAttribute('x', g.L + age * g.bw); hover.setAttribute('width', g.bw);
+    const mk = g.markers.filter(q => q.age <= age).pop();
+    tip.innerHTML = `<strong>Age ${age}</strong><br>${hhmm(yr.acidMin)} a day below pH 5.5${yr.rootMin ? `<br>${hhmm(yr.rootMin)} below 6.2 on exposed roots` : ''}${mk ? `<br>Since ${mk.age}: ${esc(mk.label)}` : ''}`;
+    tip.hidden = false;
+    const scale = svg.getBoundingClientRect().width / g.W, xx = (g.L + age * g.bw) * scale;
+    tip.style.top = '6px';
+    tip.style.left = (xx + 250 > host.clientWidth ? Math.max(4, xx - 244) : xx + 14) + 'px';
+  };
+  host.addEventListener('mousemove', e => {
+    const svg = host.querySelector('svg'); if (!svg || !e.target.closest('svg')) return;
+    const g = svg._geom, r = svg.getBoundingClientRect();
+    const age = Math.floor((((e.clientX - r.left) / r.width) * g.W - g.L) / g.bw);
+    if (age >= 0 && age < 80) { cursor = age; show(age); }
+  });
+  const hide = () => { cursor = null; tip.hidden = true; const h = host.querySelector('#acid-life-hover'); if (h) h.style.display = 'none'; };
+  host.addEventListener('mouseleave', hide);
+  host.addEventListener('focusout', hide);
+  host.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    cursor = e.key === 'Home' ? 0 : e.key === 'End' ? 79 : Math.max(0, Math.min(79, (cursor ?? 0) + (e.key === 'ArrowLeft' ? -1 : 1)));
+    show(cursor);
+  });
+  lifeSelect.addEventListener('change', drawAcidLifeChart);
+  new ResizeObserver(() => drawAcidLifeChart()).observe(host);
+}
+drawAcid();
+drawAcidLifeChart();

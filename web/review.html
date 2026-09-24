@@ -170,6 +170,29 @@
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .table-wrap td:not(:first-child) { font-variant-numeric: tabular-nums; }
 
+  /* acid clock */
+  .acid { display: grid; gap: 18px; }
+  .acid > * { min-width: 0; }
+  .acid-form { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: end; }
+  .toggles { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; flex: 2 1 380px; }
+  .toggles label { display: inline-flex; gap: 8px; align-items: center; font-size: 16px; color: var(--ink-2); cursor: pointer; }
+  .toggles input { width: 18px; height: 18px; accent-color: var(--button); }
+  .acid-chart { position: relative; background: var(--surface); border: 2px solid var(--rule); padding: 8px 6px 4px; }
+  .acid-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .acid-chart svg:focus-visible { outline: 3px solid var(--better); outline-offset: 2px; }
+  .acid-chart text { font: 12px var(--body); fill: var(--muted); }
+  .acid-chart .ref-label { fill: var(--ink-2); }
+  .acid-tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .acid-tiles .value { font-size: clamp(24px, 3.2vw, 32px); white-space: nowrap; }
+  .delta { font-size: 15px; font-weight: 700; }
+  .delta.up { color: var(--worse); }
+  .delta.down { color: var(--better); }
+  .legend .line::before { height: 3px; width: 18px; vertical-align: 4px; }
+  .legend .dash::before { background: repeating-linear-gradient(90deg, var(--c) 0 5px, transparent 5px 8px); height: 3px; width: 18px; vertical-align: 4px; }
+  .legend .dot::before { border-radius: 50%; }
+  .legend .ring::before { border-radius: 50%; background: transparent; border: 2px solid var(--c); width: 7px; height: 7px; }
+  .acid-life-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; justify-content: space-between; }
+
   /* how it plays */
   .modes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
   .mode { background: var(--surface); border: 2px solid var(--rule); padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
@@ -199,7 +222,7 @@
       <div class="control"><span>Time</span><div class="seg" id="time"><button type="button" data-value="day" aria-pressed="false">Day</button><button type="button" data-value="dusk" aria-pressed="true">Dusk</button><button type="button" data-value="night" aria-pressed="false">Night</button></div></div>
     </div>
     <p id="house-caption" aria-live="polite"></p>
-    <p class="note">Every image on this page is drawn live by the game's own pixel renderer. The numbers come from the simulation: one same-luck pair of Maya's lives, seed 337.</p>
+    <p class="note" id="hero-note">Every image on this page is drawn live by the game's own pixel renderer. The numbers come from the simulation: one same-luck pair of Maya's lives.</p>
   </div>
 </header>
 
@@ -267,6 +290,10 @@
             <option value="cheapest">Always picks the cheapest fix</option>
             <option value="noInsurance">Has no dental insurance as an adult</option>
             <option value="birth">C-section birth, parents with untreated decay</option>
+            <option value="withMeals">Eats sweets as dessert with meals, not as snacks</option>
+            <option value="gum">Chews sugar-free gum after eating</option>
+            <option value="bedtimeSnack">Has a snack after brushing at night</option>
+            <option value="dryMeds45">Starts a medication that dries the mouth at 45</option>
           </select></div>
         <button class="run" id="lab-run" type="button">Live it 100 times</button>
       </form>
@@ -302,6 +329,38 @@
     <p style="margin-top: 22px; color: var(--ink-2)">Three findings shaped the design. <strong>Avoidance can look cheaper on paper</strong>: always picking the cheapest fix saves money but costs about three teeth, so the ledger has to count teeth, pain and hidden smiles, not just dollars. <strong>Sugar frequency is the biggest habit lever.</strong> <strong>Birth and microbiome are a small head start</strong>, real but dwarfed by habits, which is the no-guilt message we want.</p>
   </section>
 
+  <section id="acid">
+    <div class="section-head">
+      <div class="eyebrow">New mechanic · the Acid Clock</div>
+      <h2>A day of eating, the way your teeth feel it</h2>
+      <p>Every snack or sugary drink drops the pH of the plaque on your teeth for a while. Below 5.5, enamel starts to dissolve; exposed roots start sooner, around 6.2. Saliva brings the pH back up. How low it goes and how long it stays down depends on <em>what</em> you eat, <em>when</em> you eat it, and your mouth. This is the Stephan curve, and in the game it is the Acid Clock: the model runs it for every day of a life and adds up the acid time.</p>
+    </div>
+    <div class="acid">
+      <form class="acid-form" onsubmit="return false">
+        <div class="field"><label for="acid-day">A day</label><select id="acid-day"></select></div>
+        <fieldset class="toggles" style="border:0; padding:0; margin:0">
+          <legend class="eyebrow" style="padding:0; margin-bottom:6px">Change the mouth or the habits</legend>
+          <label><input type="checkbox" id="acid-dry"> Dry mouth (a drying medication)</label>
+          <label><input type="checkbox" id="acid-gum"> Sugar-free gum after eating</label>
+          <label><input type="checkbox" id="acid-water"> Water rinse after snacks</label>
+          <label><input type="checkbox" id="acid-ms"> More cavity bacteria</label>
+        </fieldset>
+      </form>
+      <div class="legend" id="acid-legend"><span class="line" style="--c: var(--better)">With your changes</span><span class="dash" style="--c: var(--muted)">The day as described</span><span style="--c: color-mix(in srgb, var(--worse) 45%, transparent)">Acid time (below 5.5)</span><span style="--c: color-mix(in srgb, var(--rule) 70%, transparent)">Asleep</span><span class="dot" style="--c: var(--worse)">Sweet snack or drink</span><span class="dot" style="--c: var(--muted)">Meal or sugar-free drink</span><span class="ring" style="--c: var(--better)">Gum or water</span></div>
+      <div class="acid-chart" id="acid-chart"><div class="tip" id="acid-tip" hidden></div></div>
+      <div class="acid-tiles tiles" id="acid-tiles"></div>
+      <p id="acid-note" aria-live="polite" style="color: var(--ink-2)"></p>
+      <details><summary>Show the day as a table</summary><div class="table-wrap" id="acid-table"></div></details>
+
+      <div class="acid-life-head" style="margin-top: 26px">
+        <div style="display:grid; gap:6px"><h3>Tracked over a lifetime</h3><p style="color: var(--ink-2)">The day changes as habits, jobs, bacteria, plaque and saliva change. Minutes per day below pH 5.5, age 0 to 80, for one simulated life.</p></div>
+        <div class="field" style="flex: 0 1 300px"><label for="acid-life">Life</label><select id="acid-life"></select></div>
+      </div>
+      <div class="acid-chart" id="acid-life-chart"><div class="tip" id="acid-life-tip" hidden></div></div>
+      <details><summary>Show the lifetime as a table</summary><div class="table-wrap" id="acid-life-table"></div></details>
+    </div>
+  </section>
+
   <section id="art">
     <div class="section-head">
       <div class="eyebrow">Art samples</div>
@@ -309,6 +368,8 @@
       <p>320×180 native resolution, integer-scaled. A warm custom palette with purple-leaning shadows and ink outlines. Characters are paper dolls: skin, hair, outfit, expression, pose, glasses and hats all swap.</p>
     </div>
     <div class="gallery">
+      <div class="piece"><figure class="frame"><canvas data-sheet="acidclock" width="320" height="308" aria-label="The Acid Clock in pixel art: three versions of one day's plaque pH, and acid time per day across a life."></canvas></figure>
+        <div class="text"><h3>The Acid Clock</h3><p>How the game shows a day: what she ate and drank sits on a shelf above the curve, night is shaded, and acid time is filled in. Same food eaten with meals: 1h 33m instead of 5h 33m. The same day on a drying medication at 70: over 8 hours. Below, her acid time for every year of one simulated life, with the choices that moved it.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="mockup" width="320" height="180" aria-label="Main game screen mockup with status panel, wallet, event card and life timeline."></canvas></figure>
         <div class="text"><h3>The main screen</h3><p>Feelings instead of stats in the status panel, a wallet with speed controls, an event card (“It's been 18 months!”) and the life timeline. The postcards on the fridge are the reminders Maya keeps not answering.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="lineup" width="320" height="84" aria-label="Maya at eight ages, from baby to 75."></canvas></figure>

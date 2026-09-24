@@ -22,6 +22,10 @@ export const CHANGES = {
   cheapest: { treatment: 'cheapest' },
   noInsurance: { insurance: 'none' },
   birth: { birth: 'csection', parentsOral: 'poor' },
+  withMeals: { withMeals: true },
+  gum: { gum: true },
+  bedtimeSnack: { bedtimeSnack: true },
+  dryMeds45: { phases: [{ age: 45, set: { dryMouthMeds: true } }] },
 };
 
 const cost = l => l.money.outOfPocket + l.money.parentsPaid;

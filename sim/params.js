@@ -15,11 +15,15 @@ export const P = {
   // Mejàre 1999/2004: 2.7-4.3 new enamel lesions /100 approximal surface-years [V]
   // (per-tooth rates here are calibration knobs; see sim/calibrate.mjs)
   cariesInit: {
-    primary: { incisor: 0.009, canine: 0.007, molar: 0.042 },
-    permanent: { incisor: 0.005, canine: 0.006, premolar: 0.018, molar: 0.045 },
+    primary: { incisor: 0.0086, canine: 0.0067, molar: 0.040 },
+    permanent: { incisor: 0.0038, canine: 0.0045, premolar: 0.0135, molar: 0.034 },
   },
-  // age curve for permanent teeth (adolescents highest, adults lower, root caries later) [D]
-  cariesAge: a => (a < 12 ? 0.95 : a < 20 ? 0.8 : a < 40 ? 0.6 : a < 60 ? 0.55 : 0.75),
+  // age curve for permanent teeth (adolescents highest, adults lower) [D];
+  // root caries in later life comes from exposed roots + the Acid Clock (rootInit)
+  cariesAge: a => (a < 12 ? 0.95 : a < 20 ? 0.8 : a < 40 ? 0.6 : a < 60 ? 0.55 : 0.6),
+  // root caries on a tooth with fully exposed roots, per year at root-acid RR = 1 [U/D]
+  // (older adults: roughly 0.5-1 new root lesions per person-year in cohort studies)
+  rootInit: 0.02,
 
   // --- caries: progression, per year at RR = 1 (adult permanent teeth)
   prog: {
@@ -39,27 +43,30 @@ export const P = {
     varnishPermanent: 0.57, // [V] Marinho 2013
     varnishPrimary: 0.63, // [V]
     waterFluoride: 0.93, // [V/D] Cochrane 2024: small modern effect, low certainty
-    brushOnce: 1.30, // [V/D] OR 1.45 -> RR
-    brushRarely: 1.35, // [V/D] OR 1.56 -> RR (plus plaque effects elsewhere)
+    // brushing: OR 1.45 (once) / 1.56 (rarely) -> RR ~1.3 / ~1.55 in total [V/D]. Thicker
+    // plaque already deepens the Acid Clock (~x1.24 / ~x1.7), so these are the remainder.
+    brushOnce: 1.08, // [V/D]
+    brushRarely: 1.05, // [V/D]
     sealant: 0.25, // [V/D] OR 0.12 at 24 months, occlusal surfaces
     sealantLossPerYear: 0.07, // [U]
     braces: 1.6, // [V] 46% develop white-spot lesions during fixed appliances
-    dryMouth: 2.5, // [V/D]
+    // dry mouth: RR ~2.5 in total [V/D]; slower Acid Clock recovery gives ~x2.2, the rest
+    // is lost remineralization and antimicrobial saliva
+    dryMouthResidual: 1.15, // [D]
     vaping: 1.3, // [U] emerging
     cSection: 1.1, // [V/D] OR 1.48, low certainty; kept deliberately small
-    bedtimeBottle: 2.0, // [D] strong consensus risk factor
     salivaSharing: 1.1, // [D] emerging
+    // a bottle in bed: the Acid Clock carries the all-night acid; on top of that the drink
+    // pools on the upper front teeth (the classic nursing-caries pattern) [V/D]
+    bottlePooling: 3.0, // [D]
     xylitol: 1.0, // [V] 13%, low certainty -> no effect in game
-    erosion: 1.15, // [U] acidic drinks soften enamel
+    erosionPerRef: 0.075, // [U] acid-softened enamel: +7.5% per two sodas' worth of acid bath (cap +15%)
   },
-  // sugar: exposures/day -> multiplier. Frequency matters (acid clock ~30 min
-  // per exposure [V]); daily SSB x1.31 [V]; halve the excess with good fluoride use [V].
-  sugarRR(exposures, goodFluoride) {
-    const base = Math.max(0.55, Math.pow(Math.max(exposures, 0.5) / 3, 0.75));
-    return goodFluoride && base > 1 ? 1 + (base - 1) * 0.6 : base;
-  },
-  // mutans streptococci load (1 = typical). High load RR ~2-2.5 [V].
-  msRR: m => Math.pow(m, 0.8),
+  // Sugar, bacteria, plaque and saliva act through the Acid Clock (sim/stephan.js):
+  // caries pressure = (daily acid dose below pH 5.5 / reference day)^0.75, excess
+  // halved by good fluoride use [V]. Calibrated shape: +1 separate sweet snack a day
+  // ~ +25-30%; a high mutans load (ms 2) ~x1.8 (RR ~2-2.5 reported [V]).
+  saliva: { dry: 0.35, meds: 0.5 }, // [V/D] hyposalivation: unstimulated flow <0.1 vs ~0.3-0.4 mL/min
 
   // --- symptoms (episodes per year while in a state) [D]
   symptoms: {

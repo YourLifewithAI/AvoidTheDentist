@@ -18,6 +18,7 @@ const list = [
   ['feelings', 4, () => sheets.feelings()],
   ['work-and-play', 4, () => sheets.workplay()],
   ['two-lives', 4, () => sheets.twolives(featured)],
+  ['acid-clock', 4, () => sheets.acidclock()],
   ['clinic', 4, () => sheets.clinic()],
   ['props', 4, () => sheets.props()],
   ['palette', 5, () => sheets.palette()],
