@@ -591,13 +591,36 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 - **Pay can't buy placement.** The list is fixed by criteria first; the affiliate link, if any, is attached afterwards. Show a non-affiliate or generic option (e.g. "any fluoride toothpaste") whenever one exists, plus a plain disclosure (FTC endorsement rules).
 - **Dentist-only items point to the dentist:** custom night guards, prescription 5,000 ppm fluoride, sealants.
 
+**Clinical direction from the advisor (September 2026):**
+
+- **Most dental disease is an infection that habits feed.** Caries and periodontitis need pathogens. Diet, pH, saliva and plaque decide whether those organisms take over. Erosion, grinding and dry mouth are the non-infectious exceptions. The game shows this as an ecosystem (the backyard garden, below), not as a verdict.
+- **No silver bullets.** Every helper has a modest, honest effect, and the big wins come from stacking habits. Newer options sit alongside proven generics with their evidence badge and are never presented as a cure:
+  - silver diamine fluoride and resin infiltration (ICON) for early lesions;
+  - postbiotic toothpastes (e.g. *S. dentisani*-derived);
+  - microbiome testing, framed as "see for yourself" tracking.
+- **The medical-dental connection is part of the story.** Acid reflux, sleep apnea and mouth breathing, diabetes and medications show up as life events that change the mouth.
+
+**Proposed features from that direction:**
+
+1. **The backyard garden (the microbiome, without showing teeth).** The house's garden mirrors the mouth's ecosystem:
+   - Helpful plants thrive when the Acid Clock is calm.
+   - Weeds (pathogens) spread with frequent sugar, long acid time, dry mouth and neglected plaque.
+   - A microbiome test is a "soil test": it reveals the weeds and lets the player re-test after a change.
+   - Professional care is a gardener's visit.
+2. **Body events on the Acid Clock:**
+   - Acid reflux adds night-time acid spikes that don't come from food: erosion, plus a smaller decay effect.
+   - Sleep apnea and mouth breathing dry the mouth at night, so recovery during sleep is slower, and they raise grinding and jaw pain.
+   - Each is a card with a "mention it to your doctor and dentist" way out, not a diagnosis.
+3. **The repair side of the Acid Clock** (demineralization vs. remineralization) and the toothpaste-amount choice with fluorosis, as proposed above.
+4. **A tool shed of options** with evidence badges. Generics come first; innovations are labeled Emerging or Moderate and stack with habits rather than replacing them.
+
 **Still open:**
 
 5. **Numbers during play.** My proposal: none while playing. The Life Story ledger, 100 Lives, the Acid Clock recap and an optional *Why?* view come afterwards. Agree?
 6. **Costs:** US-only for v1?
 7. **Art:** keep building with the code-drawn toolkit, or bring in a pixel artist for M3 animation polish?
 8. **Name:** keep *Avoid the Dentist*? Alternates: *Small Now, Big Later*; *Open Wide, Live Long*; *Tooth & Consequences*.
-9. **Next build (proposed):** draw the repair side of the Acid Clock (demineralization vs. remineralization), and add the toothpaste-amount choice with fluorosis.
+9. **Next build (proposed):** the repair side of the Acid Clock plus reflux and sleep-apnea events (they reuse the same engine), then the backyard garden as the microbiome view.
 
 ---
 
