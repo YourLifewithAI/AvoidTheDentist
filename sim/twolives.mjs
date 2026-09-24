@@ -33,7 +33,7 @@ const summary = {
 const target = summary.medianExtraCostBy80;
 const mm = summary.medianExtraMissingAt80;
 const featured = pairs
-  .filter(p => p.d45 > 800 && at(p.B, 62).missing > at(p.A, 62).missing)
+  .filter(p => p.d45 > 800 && at(p.B, 62).missing > at(p.A, 62).missing && at(p.A, 34).painDays < 40 && at(p.A, 34).missing === 0 && at(p.A, 62).missing === 0)
   .sort((a, b) => (Math.abs(a.d80 - target) / 4000 + Math.abs(a.miss80 - mm) / 3) - (Math.abs(b.d80 - target) / 4000 + Math.abs(b.miss80 - mm) / 3))[0];
 
 const story = l => l.events.filter(e => e.age >= 33 && !['skippedVisit', 'scaryVisit'].includes(e.type)).map(e => `${Math.floor(e.age)}: ${e.type}${e.what ? ` (${e.what})` : ''}${e.why ? ` (${e.why})` : ''}${e.cause ? ` (${e.cause})` : ''}`);

@@ -6,6 +6,10 @@
   "description": "A cozy pixel-art life-sim about the everyday choices that shape a lifetime of dental health.",
   "scripts": {
     "art": "node tools/render-art.mjs",
-    "sim": "node sim/run.mjs"
+    "sim": "node sim/run.mjs",
+    "review": "node tools/build-review.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.0"
   }
 }

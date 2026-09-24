@@ -1,10 +1,10 @@
-# Avoid the Dentist: Game Plan v0.1
+# Avoid the Dentist: Game Plan v0.2
 
 *A cozy pixel-art life-sim about the everyday choices that add up to a lifetime of teeth, comfort, confidence and money.*
 
 ![Key art: a cozy cutaway house at dusk. June brushes her teeth upstairs, Maya has an evening mug in the kitchen, the cat sleeps on the couch.](art/keyart.png)
 
-> **Status:** planning checkpoint (M0). This folder contains the plan, ten art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. Every number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)).
+> **Status:** planning checkpoint (M0). This folder contains the plan, fourteen art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. **New in v0.2:** the Acid Clock (§4.5, §6.2), a 24-hour plaque-pH model that now drives decay in the simulation, and your answers to the open questions (§14). Every simulation number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)); fees and evidence come from the [research notes](research/).
 
 ---
 
@@ -22,23 +22,27 @@
 4. **100 lives like yours.** At the end, your life is shown as one pixel person among 100 simulated lives with your choices. Luck is real, but so are the odds.
 5. **Never scold.** The dentist is kind, going back after years is celebrated, and money, time and access barriers are visible without blame.
 
+**The Acid Clock ties the habits together.** Every day in the game has a Stephan curve. Each snack or sugary drink drops plaque pH, and saliva brings it back. The simulation turns the time spent below pH 5.5 into decay; that's demineralization, and the rest of the day is repair. Foods differ: candy dips deep, crackers linger. Timing matters: the same sweets as dessert cost a fraction of the acid time they cost as snacks, and a snack after brushing lasts all night. The mouth matters too: a drying medication stretches every dip 2–3×. See §4.5.
+
 **What the prototype model says** (same-luck paired runs, typical US life as baseline):
 
 | One change | Lifetime cost | Teeth lost by 80 | Pain days | Years hiding smile |
 |---|---:|---:|---:|---:|
-| Sips 3 sodas a day instead of 1 | +$28,280 | +3.8 | +41 | +6.2 |
-| Only goes to the dentist when it hurts | +$14,597 | **+9.2** | **+154** | **+13.0** |
-| Brushes once a day instead of twice | +$12,584 | +1.5 | +8 | +2.6 |
-| Smokes from 18 | +$10,958 | +1.8 | +43 | +3.2 |
-| Hockey 8–30 without a mouthguard | +$2,584 | +0.7 | +8 | +13.6 |
-| ...with a custom mouthguard instead | +$1,721 | +0.4 | +3 | +5.8 |
-| C-section + parents with untreated decay | +$1,583 | +0.1 | +2 | 0 |
-| Checkups every 6 months instead of yearly | +$711 | −0.2 | −5 | −0.6 |
-| Picks the cheapest fix every time | **−$5,710** | **+2.9** | 0 | +2.8 |
+| Sips 3 sodas a day instead of 1 | +$15,232 | +1.8 | +90 | +3.1 |
+| Only goes to the dentist when it hurts | +$15,212 | **+9.1** | **+149** | **+13.1** |
+| Brushes once a day instead of twice | +$12,211 | +1.1 | +7 | +2.4 |
+| Smokes from 18 | +$12,030 | +1.8 | +44 | +3.4 |
+| Hockey 8–30 without a mouthguard | +$3,617 | +0.8 | +12 | +14.0 |
+| ...with a custom mouthguard instead | +$2,809 | +0.5 | +8 | +6.1 |
+| A snack after brushing at night | +$4,507 | +0.4 | +5 | +0.6 |
+| C-section + parents with untreated decay | +$761 | +0.1 | +1 | +0.2 |
+| Checkups every 6 months instead of yearly | +$1,318 | −0.1 | −4 | −0.4 |
+| Sweets as dessert with meals instead of snacks | −$2,583 | −0.2 | −4 | −0.3 |
+| Picks the cheapest fix every time | **−$4,873** | **+2.4** | 0 | +3.1 |
 
-And the headline for Maya, our pastry chef: when the dentist's office calls at 34, "Later..." costs a **median of $48 by age 45** and **$11,342 plus 5 teeth by age 80**. It ends worse in 97% of 400 same-luck pairs.
+And the headline for Maya, our pastry chef: when the dentist's office calls at 34, "Later..." costs **nothing extra by age 45** (median $0) and **$11,674 plus 4 teeth by age 80**. It ends worse in 93% of 400 same-luck pairs.
 
-**Decisions I need from you** are in [section 14](#14-open-questions-for-you). The big ones: primary audience, whether this is a clinic tool, a consumer game or both, and whether to include community water fluoridation.
+**Your answers** (September 2026) are in [section 14](#14-decisions-and-open-questions): adults, young adults and parents at home; a free public game that clinics can use; fluoride framed as part of the demineralization and remineralization balance, not as a water-supply debate; and a dentist on the team.
 
 ---
 
@@ -174,29 +178,91 @@ Idle games make progress through automation. Here, **habits are the automation**
 - **Money compounds.** Savings grow at a 5% real return, which is where "what else it could have been" comes from. Dental bills interrupt the compounding. That is the idle-game "number go up" with a lesson inside it.
 - **The dream board** in the living room holds pinned goals: a trip, a guitar, a bike, a car, a home. Reached goals get a gold star; money diverted to emergency dental work makes the photos fade. Players see opportunity cost on the wall of their own house.
 
-### 4.5 Event cards
+### 4.5 The Acid Clock: a day, as the teeth feel it
+
+The idle layer runs days, so the game can show what a day does. **The Acid Clock** is a slim strip along the bottom of the house screen. It shows the last 24 hours of plaque pH like a heart-rate trace:
+- tiny food and drink icons sit at the times she ate;
+- a blue band marks sleep;
+- whatever dips below the red line is filled in.
+
+It never shows a tooth; it shows her day. Tap it for the day recap (art sample in §8).
+
+![The Acid Clock](art/acid-clock.png)
+*Three versions of Maya's Tuesday, and acid time per day across one simulated life. Numbers are from `sim/stephan.js` and `sim/model.js`.*
+
+**What it teaches, with no lecture:**
+
+| Lesson | What the player sees (typical mouth) |
+|---|---|
+| **What** you eat | Candy and soda dip deepest. Chips, crackers and dried fruit linger. Cheese, nuts and veggies barely move it. Diet soda doesn't feed bacteria but bathes teeth in acid (erosion is tracked separately). |
+| **When** you eat | Three sweet snacks between meals: **2h 06m** of acid. The same sweets as dessert: **57m**. Two sodas sipped all afternoon: **5h 33m**. The same sodas finished at meals: **3h 18m**. |
+| **Sleep** | Saliva nearly stops in sleep. A cookie after brushing adds **2h 08m**, 1h 50m of it asleep. A toddler's juice bottle in bed: **3h 06m** of acid while asleep. |
+| **The mouth** | Dry mouth (medications, age) stretches every dip: three snacks go from 2h 06m to **4h 31m**. Sucking candies for dry-mouth relief: **8h a day**. More cavity bacteria and thicker plaque dip deeper. |
+| **Helpers** | Sugar-free gum after eating: 2h 06m → **1h 11m**. A water rinse helps a little. |
+| **Your work** | A baker's tastings from 5 am: **4h 40m**. Night-shift snacks, with lower saliva at night: **4h 22m**. |
+| **Your body** ("connects with") | Reflux at night brings acid with no food on the shelf. It connects with acid wear (erosion and cold sensitivity) far more than with decay, and the model follows the evidence. Mouth breathing in sleep (sleep apnea) dries the mouth at night: the bedtime cookie goes from 4h 14m to **6h 03m** of acid, 3h 39m of it asleep. |
+
+**Demineralization and remineralization.** The clock frames decay as a daily tug-of-war rather than a verdict. Time below 5.5 is enamel dissolving. Time back above ~6.0, with saliva, fluoride, calcium and phosphate around, is repair. A thin band under the strip shows both: red for acid, teal for repair. In the model, repair time decides how often early lesions harden again. Dry mouth costs twice: longer dips and less repair.
+
+**Playing with it.** The day is set by the life stage, the job and the player's habit cards: snacks, drinks, "sweets with meals", "gum after eating", "water after snacks", "snack after brushing". Moving a candy from 3 pm to dessert is one tap, and the strip changes immediately. Foods that keep plaque above pH 5.7 for 30 minutes get a small tooth-friendly badge, after the Swiss tooth-friendly test. No numbers during play: the shape carries the message. Minutes show up in the recap and the *Why?* view.
+
+**Tracked over a lifetime.** The Life Story gets an "acid time per day" band across ages 0–80, annotated with the choices that moved it. Maya's shows a juice bottle at 1, sodas at 13, bakery tastings at 22, dessert-not-snacks plus gum at 34, and a drying medication at 62.
+
+### 4.6 The backyard garden (the microbiome) and the tool shed
+
+![The backyard garden](art/garden.png)
+*Four lives, four gardens, from the simulation. Prevention Pro's is mostly flowers. The Soda Sipper's is overrun with sugar weeds. The Avoider's gum weeds creep in without cleanings. On a drying medication, the soil cracks.*
+
+**The garden is the mouth's ecosystem, without a tooth.** Most decay and gum disease come from bacteria that habits feed, and the garden behind the house shows that:
+- **Flowers** are the health-associated community.
+- **Sugar weeds** are acid-loving decay bacteria. In the model they're selected by the diet's acid time on the Acid Clock, so timing matters, not just amount.
+- **Gum weeds** are anaerobes that creep low and hide deep. They grow with gum inflammation, tartar and pockets.
+- **Dry, cracked soil** means low saliva.
+- A **microbiome test is a soil test**: see the weeds, change a habit, test again.
+- The **hygienist is the gardener** who pulls the gum weeds.
+
+The garden changes slowly, over years, which matches the long, stochastic nature of the disease.
+
+![The tool shed](art/tool-shed.png)
+*Each tool wears its evidence badge: Strong, Moderate, Low certainty or Emerging. A white tag means ask your dentist.*
+
+**The tool shed** (`sim/toolshed.js`) holds 20 tools on five shelves: brush and paste, food and drink, the dentist's chair, sleep and body, and tests. Each tool has:
+- a plain description;
+- what's known, with a linked source;
+- what it does in the game;
+- whether generic options exist;
+- whether it's dentist-only.
+
+Generics come first. Newer options sit beside them, clearly labeled:
+- resin infiltration and silver diamine fluoride (Strong);
+- postbiotic toothpaste and microbiome tests (Emerging).
+
+Emerging tools act only through their measured mechanism. The postbiotic lowers acid-loving bacteria while it's used, and any effect on cavities follows from that alone. When the honest answer is "no visible change", the garden shows no change. "Try it" replays the same life, with the same luck, using the tool. This is also the backbone for the recommendation idea in §14: recommendations would come from the drivers of a player's outcome, filtered through these badges.
+
+### 4.7 Event cards
 
 Each card has context art, two or three choices, hidden effects, and a *Why?* link that appears **after** the consequence lands. Examples by stage:
 
 | Age | Card | Choices | Hidden effect |
 |---|---|---|---|
 | 0.6 | "A first tooth! Your pediatrician mentions a dental visit." | Book one now / Wait until 3 / Only if there's a problem | Anticipatory guidance may fix a risky habit; varnish starts; the familiarity lowers fear |
-| 1.5 | "Bedtime is easier with a bottle of juice..." | Juice / Milk / Water | Bottle sugar ×2 on baby teeth until 4 |
+| 1.5 | "Bedtime is easier with a bottle of juice..." | Juice / Milk / Water | An all-night Acid Clock (~3 h below pH 5.5 while asleep) plus pooling on the upper front teeth, until 4 |
 | 6 | "The dentist suggests sealants on the new molars ($42 each)." | Yes / Skip | Occlusal decay risk ×0.25 while retained |
 | 9 | "Ow! A tooth hurts. It's been a while since a checkup." | Dentist today / Wait and see | Pediatric vs. general dentist and invasiveness drive a scary or fine visit |
 | 14 | "Hockey tryouts! The team requires... nothing, actually." | Custom guard ($300) / Boil-and-bite ($25) / None | Injury risk ×0.45 / ×0.55 / ×1 |
 | 16 | "A tooth got knocked out at practice!" | Put it in milk and go now / Wrap it in a tissue | Replant success ~60% only with the first choice (IADT) |
 | 22 | "Your new job offers dental. $18 per paycheck." | Enroll / Skip | 100/80/50 coverage, $1,500 annual maximum |
-| 27 | "Energy drinks are getting you through night shifts." | Keep going / Switch to water | Sugar and acid hits; grinding |
+| 27 | "Energy drinks are getting you through night shifts." | Keep going / Switch to water | Each can is a ~45-min acid dip, longer at night when saliva is low; erosion; grinding |
 | 34 | "Voicemail from Dr. Reyes' office: it's been 18 months!" | Book it / Later... | Visit rhythm switches to "pain only" |
 | 38 | "You wake up with a sore jaw again." | Ask about a night guard / Ignore | Crack and jaw-pain risk |
 | 41 | "Root canal and crown ($2,650), or pull it ($250)?" | Save it / Pull it | Keep the tooth vs. a gap, drift, and implant later |
 | 45 | "Your gums bleed when you brush." | Mention it at a checkup / Brush harder, softer, never mind | Gingivitis is reversible now; periodontitis later isn't |
 | 48 | "Diagnosed with type 2 diabetes." | — | Perio ×1.86; gum treatment lowers HbA1c ~0.4 |
 | 52 | "It's been 11 years. What will they think of me?" | Call a no-judgment practice / Not yet | Shame lowers visits; the kind dentist resets it |
+| 62 | "Your new blood-pressure pill can cause dry mouth." | Ask about alternatives / Sip water, chew sugar-free gum / Suck on candies for relief | Dry mouth stretches every dip 2–3×; candies for relief mean ~8 h of acid a day |
 | 66 | "Medicare doesn't cover cleanings?" | Buy a dental plan / Medicare Advantage / Go without | Coverage in later life |
 
-### 4.6 The Life Story (end screen)
+### 4.8 The Life Story (end screen)
 
 - **A timeline of moments:** a filmstrip of pixel vignettes (first visit, braces, the phone call at 34, the family photo at 70).
 - **The ledger:** lifetime dental spending (you vs. insurance vs. your parents), days in pain, sleepless nights, days off work, and years you hid your smile.
@@ -210,12 +276,12 @@ Each card has context art, two or three choices, hidden effects, and a *Why?* li
 
 | System | Choices | Model effect (summary) |
 |---|---|---|
-| **Born into** | Vaginal birth / C-section; parents' oral health (healthy / average / untreated decay); anxious parents; water fluoridation (optional, see §14); family insurance | Earlier and larger colonization by cavity-causing bacteria (C-section ~12 months earlier, Li 2005); starting fear level; access |
+| **Born into** | Vaginal birth / C-section; parents' oral health (healthy / average / untreated decay); anxious parents; fluoride where you grew up (a small, neutral circumstance, see §14); family insurance | Earlier and larger colonization by cavity-causing bacteria (C-section ~12 months earlier, Li 2005); starting fear level; access |
 | **Parents' choices** | First visit timing; pediatric vs. general dentist; bedtime bottle; brushing; snacks; sealants; braces; shared spoons | Baby-tooth decay (which predicts adult decay, RR ~2.6); sealants; early experiences that set dental fear |
-| **Your habits** | Sugar hits per day; sodas (and *sipping*); diet soda and energy drinks; brushing 0/1/2; fluoride toothpaste; interdental cleaning; electric brush; ice chewing | Caries initiation and progression, the microbiome drifting with diet, erosion, plaque, gums |
+| **Your habits** | Sweet snacks per day; sweets with meals or between them; sodas (and *sipping*); diet soda and energy drinks; a snack after brushing; sugar-free gum or a water rinse after eating; brushing 0/1/2; fluoride toothpaste; interdental cleaning; electric brush; ice chewing | The Acid Clock (a plaque-pH curve for every day), which drives decay; the microbiome drifting with diet; erosion; plaque; gums |
 | **Work** | Office, baker, warehouse, night nurse, rideshare, teacher, dental hygienist (easter egg) | Extra sugar, grinding from exertion or stress, shift work, savings rate, whether insurance comes with the job |
 | **Play** | Hockey, basketball, football, soccer, boxing, skating, running; guard: none / boil-and-bite / custom | Dental trauma (chips, fractures, knocked-out teeth); endurance sport means sports drinks |
-| **Body** | Smoking, vaping, pregnancy, diabetes (event), dry-mouth medication (later life), sleep apnea | Gum disease ×1.85 (smoking), ×1.86 (diabetes); dry mouth ×2.5 caries |
+| **Body** | Smoking, vaping, pregnancy, diabetes (event), dry-mouth medication (later life), sleep apnea | Gum disease ×1.85 (smoking), ×1.86 (diabetes); dry mouth: every Acid Clock dip lasts 2–3× longer, plus lost repair, ×~2.4 decay; receding gums expose roots that dissolve at pH ~6.2 |
 | **Mind** | Coping: tell the dentist, sedation, CBT | Anxiety level, which drives skipped visits and the fear, avoidance and bigger-treatment loop |
 | **Knowledge** | Risk assessment or microbiome test | Reveals hidden traits; personalizes prevention |
 | **Money** | Insurance type; treatment style (follow the plan / cheapest fix / only if it hurts); payment plans | Who pays; what gets treated; how teeth get replaced |
@@ -236,7 +302,37 @@ The prototype lives in `sim/`: ~800 lines of plain, deterministic JavaScript (`m
 - **Hidden traits at birth:** enamel resilience; gum susceptibility class, from Löe 1986 (8% rapid, 81% moderate, 11% resistant); baseline grinding; temperament; age at colonization.
 - **"Same luck" by construction.** Every stochastic process (each tooth's decay, each restoration's failure, each crack, each injury, each skipped visit) draws from its **own named random stream**. Events fire when accumulated hazard crosses an exponential threshold from that stream. Two lives with the same seed therefore share luck process by process, so Twin Lives isolates the effect of the choice.
 
-### 6.2 The decay ladder and the restorative cycle
+### 6.2 The Acid Clock (plaque pH)
+
+`sim/stephan.js` builds a typical day for each stage of life and runs a minute-by-minute plaque-pH curve over it.
+
+- **The day.** The plan, life stage and job set the schedule:
+  - kids' bedtimes;
+  - a baker up at 4:30 with tastings through the morning;
+  - a night nurse who sleeps by day;
+  - snacks spread through waking hours, or folded into meals as dessert;
+  - drinks with how long they're sipped.
+- **Each intake** drops pH by a food-specific depth, scaled by the mouth: more cavity bacteria and thicker plaque dip deeper and rest lower. It reaches bottom in minutes and holds while the food lingers. Sticky and starchy foods linger longer, and longer still with low saliva. Then it recovers exponentially with saliva flow: 1 awake, 0.7 at night, 0.08 asleep, ×0.35 with dry mouth. Overlapping intakes add their acid.
+- **Helpers:** chewing a meal, sugar-free gum, cheese and a water rinse speed clearance and wash away lingering food.
+- **Outputs per day:**
+  - acid time and dose below pH 5.5 (enamel);
+  - acid time and dose below 6.2 (exposed roots);
+  - erosion from acidic drinks.
+- **Into the life model:**
+  - Decay pressure = (the day's acid dose ÷ a reference day of three snacks between meals)^0.75, floored at ×0.35. Good fluoride use halves the excess.
+  - Once attachment loss exposes roots, root decay follows the dose below 6.2.
+  - Acid baths from drinks add up to +15%.
+  - Dry mouth adds a residual ×1.15 for lost repair.
+  - The day is recomputed, and cached, whenever habits, job, stage, bacteria, plaque or saliva change.
+- **Calibration anchors:**
+  - one more separate sweet snack a day ≈ +25–30% (as with the old sugar-exposure rule);
+  - a high mutans load ×1.8;
+  - brushing once a day ×1.34 in total;
+  - dry mouth ×2.4 in total.
+  - Base decay rates were re-tuned so the population still matches CDC data (§6.8).
+- **What it is and isn't.** The shape follows Stephan 1944: a nadir within minutes and 30–60 minutes back for a sugary snack in a normal mouth. Critical pH values are from the literature. The per-food depths and linger times are design estimates. It's a teaching model of plaque pH, not a clinical predictor, and it's the first thing I'd like you to review as a clinician.
+
+### 6.3 The decay ladder and the restorative cycle
 
 ```mermaid
 flowchart LR
@@ -256,20 +352,20 @@ flowchart LR
 - **Detection:** a routine exam with bitewings finds early lesions 45% of the time, dentin lesions 75%, and deep ones 95%. An emergency visit mostly finds the tooth that hurts.
 - **The restorative cycle:** fillings fail (secondary decay, fracture), and each redo is bigger. Large fillings crack. Crowns need redoing. Root canals can fail. This is the "death spiral of a tooth" (Elderton; Qvist), and the model reproduces it without being told to.
 
-### 6.3 Gums
+### 6.4 Gums
 
 - **Gingivitis** follows plaque and calculus within weeks and clears within about a week of good hygiene (Löe 1965). It's reversible.
 - **Attachment loss** accumulates only above an inflammation threshold, scaled by susceptibility class, smoking (×1.85), diabetes (×1.86), stress and age. With no care at all, the rapid class loses every tooth by about 45, matching Löe 1986. With cleanings and maintenance, it slows (~0.08 teeth/yr, Hirschfeld & Wasserman 1978).
 - **Diabetes works both ways:** gum treatment lowers HbA1c ~0.43 points (Cochrane 2022). It's the one systemic link we present as more than an association.
 - **Smokers bleed less:** the visible warning signal is quieter than the disease.
 
-### 6.4 Grinding, cracks and trauma
+### 6.5 Grinding, cracks and trauma
 
 - **Grinding** comes from a baseline trait plus job exertion or stress, energy drinks, smoking and age. A night guard protects the teeth ~80% when worn (~70% adherence). It doesn't stop the habit.
 - **Cracks** mostly hit back teeth, much more often in teeth with big fillings or root canals and no crown, in grinders, and in ice chewers. Outcomes: a crown (55%), a root canal plus crown (30%), or loss of the tooth (15%).
 - **Trauma:** toddler falls, kid and teen accidents, and sports. Hockey without a guard is ~10% a year while playing. Guards cut the risk to ×0.45–0.55. A knocked-out tooth has ~60% odds of being saved with the right first aid.
 
-### 6.5 Fear and avoidance
+### 6.6 Fear and avoidance
 
 - **Starting fear** comes from temperament plus anxious parents.
 - **Each visit can go badly.** Odds rise with invasiveness (cleaning 3%, root canal 20%, emergency 30%), in childhood (×1.5), with existing fear (×(1+fear)), and with a general rather than a pediatric dentist for kids. Odds fall with coping tools.
@@ -277,63 +373,68 @@ flowchart LR
 - **Fear drives skipping:** skip odds are 6% + 80% × fear². Uninsured adds 12%, shift work 6%, and "it's been more than 3 years, they'll judge me" 10%. Above 0.7, you're an avoider who goes only when the pain is bad.
 - **The vicious cycle emerges on its own:** fear, skipping, bigger problems, emergency visits, scary procedures, more fear. So do the exits (CBT, a gentle practice, telling the dentist).
 
-### 6.6 Money
+### 6.7 Money
 
 - **Fees** are typical US 2024–26 uninsured prices (see §7). Insured patients pay in-network rates (−25%).
 - **Insurance:** employer PPO (100/80/50, $50 deductible, $1,500 annual maximum); Medicaid for kids (full); Medicaid for adults (emergency-only states); traditional Medicare (no routine dental); Medicare Advantage (~$1,300 cap, 50%).
 - **Savings** depend on the job ($2,500–$7,000 a year) and grow at 5% real. Dental costs come out of savings (parents pay until 18). A running "no-dental twin" wallet gives the opportunity cost.
 
-### 6.7 Calibration (3,000 random US-like lives vs. CDC surveillance)
+### 6.8 Calibration (3,000 random US-like lives vs. CDC surveillance)
 
 | Metric | Model | Target | Source |
 |---|---:|---:|---|
-| Caries experience, baby teeth, ages 2–5 | 27.8% | 23% | CDC OHSR 2019 ✓ |
-| Caries experience, permanent, ages 12–19 | 59.6% | ~57% | NHANES (unverified) |
-| Caries experience, permanent, ages 20–64 | 95.5% | ~90% | NIDCR (unverified) |
-| Mean natural teeth, dentate adults, 20–34 / 50–64 / 65–74 | 27.5 / 25.1 / 23.8 | 27.0 / 23.3 / 21.7 | CDC OHSR 2024 ✓ |
-| No natural teeth, 50–64 / 65–74 / 75–79 | 6.8% / 13.7% / 18.7% | 5.9% / 11.4% / 19.7% | CDC OHSR 2024 ✓ |
-| Periodontitis (CAL ≥3 mm), 30+ / 65+ | 38.4% / 65.2% | ~42% / ~68% | Eke 2012, 2018 (unverified) |
-| Severe periodontitis (CAL ≥6 mm), 30+ | 10.3% | ~7.8% | Eke 2018 (unverified) |
+| Caries experience, baby teeth, ages 2–5 | 23.8% | 23% | CDC OHSR 2019 ✓ |
+| Caries experience, permanent, ages 12–19 | 55.9% | ~57% | NHANES (unverified) |
+| Caries experience, permanent, ages 20–64 | 93.7% | ~90% | NIDCR (unverified) |
+| Mean natural teeth, dentate adults, 20–34 / 50–64 / 65–74 | 27.5 / 25.4 / 24.3 | 27.0 / 23.3 / 21.7 | CDC OHSR 2024 ✓ |
+| No natural teeth, 50–64 / 65–74 / 75–79 | 6.5% / 13.9% / 18.3% | 5.9% / 11.4% / 19.7% | CDC OHSR 2024 ✓ |
+| Periodontitis (CAL ≥3 mm), 30+ / 65+ | 38.7% / 65.7% | ~42% / ~68% | Eke 2012, 2018 (unverified) |
+| Severe periodontitis (CAL ≥6 mm), 30+ | 10.2% | ~7.8% | Eke 2018 (unverified) |
 | Mean attachment loss, mm/yr | 0.085 | ~0.1 | Needleman 2018 ✓ |
-| High dental anxiety, adults | 10.0% | ~12–15% | Silveira 2021 (unverified) |
-| Lifetime dental spending, all payers (median) | $41,811 | ~$42k | ~$520 per person per year (unverified) |
+| High dental anxiety, adults | 8.3% | ~12–15% | Silveira 2021 (unverified) |
+| Lifetime dental spending, all payers (median) | $39,313 | ~$42k | ~$520 per person per year (unverified) |
 
-**Known gaps.** Model elders who keep their teeth keep ~2 more of them than today's elders. Part of this is a real cohort effect: today's 75-year-olds grew up before fluoride toothpaste, so a life born today *should* land somewhat better. It still needs review with a dental advisor. "Untreated decay" brackets the target depending on whether early dentin lesions count.
+**Known gaps.** With the Acid Clock the model has a little less adult decay than before. That means fewer bad visits, so dental fear sits below target (8.5% vs. ~12–15%). Model elders who keep their teeth keep ~2 more of them than today's elders. Part of this is a real cohort effect: today's 75-year-olds grew up before fluoride toothpaste, so a life born today *should* land somewhat better. It still needs review with a dental advisor. "Untreated decay" brackets the target depending on whether early dentin lesions count.
 
-### 6.8 What the model says (preset lives, 400 each)
+### 6.9 What the model says (preset lives, 400 each)
 
 | Life | Median lifetime cost | Teeth lost by 80 | Pain days | Years hiding smile | Years with gum disease |
 |---|---:|---:|---:|---:|---:|
-| Prevention Pro | $11,018 | 0.8 | 75 | 3.5 | 0 |
-| Typical | $14,370 | 1.4 | 83 | 4.5 | 0 |
-| The Baker (tastes all day) | $19,351 | 2.0 | 67 | 5.5 | 0.2 |
-| The Soda Sipper (3 sipped sodas, pain-only visits, uninsured) | $73,286 | 27.7 | 319 | 39.8 | 62.4 |
-| The Grinder (warehouse, no night guard) | $17,537 | 1.9 | 307 | 5.0 | 0.1 |
-| Grinder + night guard | $16,074 | 1.6 | 94 | 4.9 | 0.1 |
-| Hockey, no guard | $16,769 | 2.1 | 91 | 18.9 | 0.1 |
-| Hockey + custom guard | $15,951 | 1.8 | 86 | 11.1 | 0 |
-| The Avoider (scary start, pain-only visits) | $20,431 | **16.6** | 283 | 23.9 | 74.5 |
-| Late Bloomer (avoider who returns at 40 with CBT) | $23,468 | **3.1** | 152 | 11.4 | 35.4 |
-| Vaginal birth, healthy parents | $13,127 | 1.3 | 82 | 4.3 | 0 |
-| C-section, parents with untreated decay | $15,901 | 1.5 | 85 | 4.6 | 0.1 |
-| Smoker (quits at 50) | $22,095 | 2.2 | 109 | 6.7 | 0 |
+| Prevention Pro | $10,440 | 0.7 | 74 | 3.4 | 0 |
+| Typical | $12,053 | 1.2 | 81 | 4.2 | 0 |
+| The Baker (tastes all day) | $15,412 | 1.6 | 62 | 4.9 | 0 |
+| The Soda Sipper (3 sipped sodas, pain-only visits, uninsured) | $68,941 | 26.9 | 308 | 38.9 | 62.4 |
+| The Grinder (warehouse, no night guard) | $15,377 | 1.8 | 306 | 4.7 | 0 |
+| Grinder + night guard | $14,684 | 1.5 | 93 | 4.8 | 0.1 |
+| Hockey, no guard | $15,265 | 2.0 | 89 | 19.1 | 0.1 |
+| Hockey + custom guard | $14,713 | 1.7 | 85 | 11.1 | 0 |
+| The Avoider (scary start, pain-only visits) | $20,076 | **16.1** | 274 | 23.0 | 74.5 |
+| Late Bloomer (avoider who returns at 40 with CBT) | $21,156 | **2.7** | 143 | 9.9 | 35.8 |
+| Vaginal birth, healthy parents | $11,693 | 1.2 | 80 | 4.2 | 0 |
+| C-section, parents with untreated decay | $12,906 | 1.3 | 82 | 4.4 | 0 |
+| Smoker (quits at 50) | $21,071 | 2.1 | 109 | 6.7 | 0 |
+| Night snacker (a snack after brushing) | $14,994 | 1.5 | 84 | 4.5 | 0 |
+| Sweets with meals + gum after eating | $9,283 | 1.0 | 77 | 3.8 | 0 |
+| Dry-mouth medication from 55 | $13,163 | 1.3 | 81 | 4.3 | 0 |
 
 **Five things the model taught me that should shape the game:**
 
-1. **The bill really does come later.** At 45 the two Mayas are ~$48 apart. At 80 it's $11K and 5 teeth. The game's pacing must deliver that delay without making players wait for it: Twin Lives and the 100-Lives screen do that work.
-2. **Avoidance can look cheaper on paper.** The Avoider spends less than the Late Bloomer ($20K vs. $23K) but loses 16.6 teeth instead of 3.1, with twice the pain days. The ledger must count teeth, pain and hidden smiles, not just dollars, or the game teaches the wrong lesson.
-3. **Frequency of sugar is the biggest single habit lever.** Sipping sodas tops the chart.
-4. **Birth and microbiome are a small head start.** It's real (+$1.6K, 43% more fillings) but dwarfed by habits. That is exactly the message: no guilt about C-sections, and habits matter more.
-5. **Six-month vs. yearly checkups matter little for typical-risk adults** (+$711, −0.2 teeth), consistent with the INTERVAL trial. The game should say "your dentist will set your interval by your risk", not "every 6 months or else". That honesty buys trust.
+1. **The bill really does come later.** At 45 the two Mayas are (in the median) $0 apart. At 80 it's $11.7K and 4 teeth. The game's pacing must deliver that delay without making players wait for it: Twin Lives and the 100-Lives screen do that work.
+2. **Avoidance can look cheaper on paper.** The Avoider spends less than the Late Bloomer ($20.1K vs. $21.2K) but loses 16.1 teeth instead of 2.7, with twice the pain days. The ledger must count teeth, pain and hidden smiles, not just dollars, or the game teaches the wrong lesson.
+3. **Frequency and timing of sugar are the biggest habit levers.** Sipping sodas tops the chart, and the Acid Clock shows why. The flip side is the kindest lesson in the game: moving sweets to dessert (−$2.6K) or chewing gum after eating (−$1.0K) costs nothing to try. A snack after brushing is the costliest small habit (+$4.5K).
+4. **Birth and microbiome are a small head start.** It's real (+$0.8K, 28% more fillings) but dwarfed by habits. That is exactly the message: no guilt about C-sections, and habits matter more.
+5. **Six-month vs. yearly checkups matter little for typical-risk adults** (+$1,313, −0.1 teeth), consistent with the INTERVAL trial. The game should say "your dentist will set your interval by your risk", not "every 6 months or else". That honesty buys trust.
 
 Full tables: [SIM_REPORT.md](SIM_REPORT.md). Regenerate with `node sim/report.mjs 400`.
 
-### 6.9 Model limitations (v0)
+### 6.10 Model limitations (v0)
 
 - **About half the parameters are verified.** The rest are recalled from the literature and tagged `[U]` in `sim/params.js`; the research session ran out of search budget. The verification to-do list is in [research/clinical-evidence.md](research/clinical-evidence.md) (§16) and needs a dental advisor.
 - **Tooth-level, not surface-level.** Good enough for the story; surface-level adds realism without new lessons.
 - **US costs and insurance only.** Localizing is a data swap (§11).
 - **No sex, income or ethnicity differences in biology.** Social factors enter through access, insurance and jobs, on purpose.
+- **The Acid Clock models a typical day per life stage.** Weekends, holidays and day-to-day variety aren't modeled, and per-food depths are design estimates (§6.2).
+- **Early childhood caries rarely escalates** to treatment under general anesthesia in the model, so the cost of a bedtime bottle is probably understated.
 - **Systemic health** (heart, dementia) is shown as "linked with", never "causes". Only the diabetes link has mechanics.
 
 ---
@@ -407,7 +508,10 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 *Jobs and sports shape a mouth: the baker tasting all day, the loader clenching under a box, office coffee and stress, energy drinks on the night shift, hockey with and without a guard, soda on the road.*
 
 ![Two lives](art/two-lives.png)
-*Twin Lives: the same person with the same luck makes one choice at 34. At 45 the lives barely differ. At 62 the gap is obvious. Numbers are from the simulation (seed 337).*
+*Twin Lives: the same person with the same luck makes one choice at 34. At 45 the lives barely differ. At 62 the gap is obvious. Numbers are from the simulation (seed 81).*
+
+![The Acid Clock](art/acid-clock.png)
+*The Acid Clock: the same Tuesday as it is, with the same food eaten at meals, and at 70 on a drying medication. Below it, acid time per day across one life. See §4.5.*
 
 ![Friendly clinic](art/clinic.png)
 *The dentist as a warm place: fish tank, cartoons on the ceiling, a sticker chart, a smiling hygienist, June grinning in the chair with a balloon.*
@@ -424,7 +528,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 
 - **Native resolution 320×180**, integer-scaled: ×4 is 720p, ×6 is 1080p, ×8 is 1440p. CSS `image-rendering: pixelated`, with canvas smoothing off.
 - **Palette "Hearth":** about 70 warm, slightly desaturated colors with purple-leaning shadows and ink (`#2b2135`) outlines instead of black. Five skin ramps and seven hair ramps. See `art/palette.js` and the swatch sheet below.
-- **Characters are chibi paper dolls,** about 16×28 px for adults: `back hair → body (age × outfit) → arms (pose) → head (hairstyle) → face (expression) → glasses and hat → props`. Colors are **roles** (`skin.1`, `hair.0`, `top.2`...), so one sprite covers every skin tone, hair color and outfit. Current library: 5 age builds (baby, toddler, kid, teen, adult/senior) across 15 body-and-outfit sprites, 10 adult hairstyles plus 2 baby/toddler heads, 15 expressions, 12 arm poses, 4 hats, 41 props and ~35 furniture pieces.
+- **Characters are chibi paper dolls,** about 16×28 px for adults: `back hair → body (age × outfit) → arms (pose) → head (hairstyle) → face (expression) → glasses and hat → props`. Colors are **roles** (`skin.1`, `hair.0`, `top.2`...), so one sprite covers every skin tone, hair color and outfit. Current library: 5 age builds (baby, toddler, kid, teen, adult/senior) across 15 body-and-outfit sprites, 10 adult hairstyles plus 2 baby/toddler heads, 15 expressions, 12 arm poses, 4 hats, 47 props and ~35 furniture pieces.
 ![The cast](art/cast.png)
 *One paper-doll system, many people: skin tone, hair, outfit, expression, pose, glasses and hats all swap.*
 
@@ -480,8 +584,8 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 | House | 1 house (family) + 1 apartment variant; 3 decor eras; day/dusk/night | 1 house, 3 skies ✓ |
 | People | 8 ages × 2 builds; 5 skin tones; 10 hairstyles; 15 outfits | 5 age builds, 15 body/outfit sprites, 12 heads, 5 skin tones ✓ |
 | Expressions and poses | 15 faces, 12 poses, 20 emote marks | 15 faces, 12 poses, 11 emotes ✓ |
-| Props | ~60 | 41 props + ~35 furniture pieces ✓ |
-| Event cards | ~60 across stages | 15 designed (§4.5) |
+| Props | ~60 | 47 props + ~35 furniture pieces ✓ |
+| Event cards | ~60 across stages | 16 designed (§4.7) |
 | Jobs / sports | 7 / 6 | in the model ✓, art for 6 ✓ |
 | Helpers | 10 | in the design ✓ |
 | Preset lives | 12 | 12 in the model ✓ |
@@ -493,7 +597,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 
 | Milestone | Scope | Estimate* |
 |---|---|---|
-| **M0: Plan & proof** ✓ | This plan; 10 art samples; toolkit; calibrated model prototype; report | done |
+| **M0: Plan & proof** ✓ | This plan; 14 art samples; toolkit; the Acid Clock, garden and tool shed; calibrated model prototype; report; review page with a working What-If Lab | done |
 | **M1: Vertical slice** | Playable birth-to-80 life in the house at 1×/2×/4×; 20 cards; 6 helpers; year-end ledger; Life Story; local save | 3–4 weeks |
 | **M2: The comparison engine** | What-If Lab; Twin Lives side by side; 100 Lives icon array; "Why?" view with evidence badges | 2–3 weeks |
 | **M3: Content & feel** | 60 cards; all jobs and sports; animations; audio; apartment variant; era decor | 4 weeks |
@@ -504,22 +608,57 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 
 ---
 
-## 14. Open questions for you
+## 14. Decisions and open questions
 
-1. **Primary audience:** adults and parents at home (my recommendation), dental teams chairside, or teens in schools? This sets the default mode (Live a Life vs. What-If Lab) and card tone.
-2. **Distribution:** a free public game, a white-label tool for practices (clinic branding, "book with us" button), or both? White-label changes the no-branding rule and adds a CTA.
-3. **Community water fluoridation:** include it as a birth circumstance? The evidence is real but its modern effect is small and low certainty (Cochrane 2024), and it's politically charged in 2026. My recommendation: include it neutrally as "where you grew up" with the honest evidence badge, or leave it out of v1. Your call.
-4. **How explicit should the numbers be during play?** You said the statistics should sit *under* the experience. My proposal: none during play, then the Life Story ledger, 100 Lives and an optional "Why?" view afterwards. Agree?
-5. **Costs:** US-only for v1? If you have a target market outside the US, tell me now.
-6. **Art:** keep building with this code-drawn toolkit (fast, consistent, cheap), or bring in a pixel artist for M3 animation polish? I'd do M1–M2 with the toolkit either way.
-7. **Clinical advisor:** do you have a dentist or hygienist who can review ~40 parameters and the card copy in M4? It's the biggest credibility lever.
-8. **Name:** keep *Avoid the Dentist*? I love the irony, but some clinics might hesitate. Alternates: *Small Now, Big Later*; *Open Wide, Live Long*; *Tooth & Consequences*.
+**Decided (September 2026):**
+
+1. **Audience: adults, young adults and parents at home.** "Live a Life" is the default mode, and cards are written for grown-ups and parents. There's no school or teen-classroom track in v1.
+2. **Distribution: a free public game.** Clinics may use it as an educational tool: an embeddable, kiosk-friendly build with no clinic branding required.
+3. **Fluoride: the balance, not the water debate.** Water fluoridation stays as a small, neutral "where you grew up" circumstance with its honest, modest modern effect. The emphasis moves to the daily ebb and flow of demineralization and remineralization: what tips it toward acid (frequency, timing, sleep, dry mouth, plaque) and what tips it toward repair (saliva, fluoride toothpaste, sealants, time between exposures). Too much fluoride has a cost too. Proposal: a parent choice between a smear and a pea-sized amount of toothpaste, with mild fluorosis as a possible (cosmetic, visible-in-the-mirror) outcome of swallowing too much in the early years.
+4. **Clinical advisor: you.** You're a dentist. First review targets: the Acid Clock food table and critical pH values (§6.2), then the `[U]` parameters in `sim/params.js`, then the card copy.
+
+**Being considered: recommendations with affiliate links.** The idea: a player who says a character is like them gets a short list of products and services matched to what drove *their* simulated outcomes (for example, the Acid Clock says sipping, or dry mouth). Only well-established or well-principled products qualify, and the links are affiliate. My proposed guardrails, so it reads as care and not a funnel:
+- **The model never knows about products.** Recommendations are computed after the Life Story from the drivers of the outcome, and they never change a simulated result.
+- **Evidence gate.** Every recommendation carries the same Strong / Moderate / Emerging badge as the *Why?* cards. Emerging items, microbiome testing for example, are framed as "see for yourself" tracking tools: re-test after a change and watch the pathogen load move. They're never presented as prevention on their own.
+- **Pay can't buy placement.** The list is fixed by criteria first; the affiliate link, if any, is attached afterwards. Show a non-affiliate or generic option (e.g. "any fluoride toothpaste") whenever one exists, plus a plain disclosure (FTC endorsement rules).
+- **Dentist-only items point to the dentist:** custom night guards, prescription 5,000 ppm fluoride, sealants.
+
+**Clinical direction from the advisor (September 2026):**
+
+- **Most dental disease is an infection that habits feed.** Caries and periodontitis need pathogens. Diet, pH, saliva and plaque decide whether those organisms take over. Erosion, grinding and dry mouth are the non-infectious exceptions. The game shows this as an ecosystem (the backyard garden, below), not as a verdict.
+- **No silver bullets.** Every helper has a modest, honest effect, and the big wins come from stacking habits. Newer options sit alongside proven generics with their evidence badge and are never presented as a cure:
+  - silver diamine fluoride and resin infiltration (ICON) for early lesions;
+  - postbiotic toothpastes (e.g. *S. dentisani*-derived);
+  - microbiome testing, framed as "see for yourself" tracking.
+- **The medical-dental connection is part of the story.** Acid reflux, sleep apnea and mouth breathing, diabetes and medications show up as life events that change the mouth.
+
+**Proposed features from that direction:**
+
+1. **The backyard garden (the microbiome, without showing teeth).** The house's garden mirrors the mouth's ecosystem:
+   - Helpful plants thrive when the Acid Clock is calm.
+   - Weeds (pathogens) spread with frequent sugar, long acid time, dry mouth and neglected plaque.
+   - A microbiome test is a "soil test": it reveals the weeds and lets the player re-test after a change.
+   - Professional care is a gardener's visit.
+2. **Body events on the Acid Clock:**
+   - Acid reflux adds night-time acid spikes that don't come from food: erosion, plus a smaller decay effect.
+   - Sleep apnea and mouth breathing dry the mouth at night, so recovery during sleep is slower, and they raise grinding and jaw pain.
+   - Each is a card with a "mention it to your doctor and dentist" way out, not a diagnosis.
+3. **The repair side of the Acid Clock** (demineralization vs. remineralization) and the toothpaste-amount choice with fluorosis, as proposed above.
+4. **A tool shed of options** with evidence badges. Generics come first; innovations are labeled Emerging or Moderate and stack with habits rather than replacing them.
+
+**Still open:**
+
+5. **Numbers during play.** My proposal: none while playing. The Life Story ledger, 100 Lives, the Acid Clock recap and an optional *Why?* view come afterwards. Agree?
+6. **Costs:** US-only for v1?
+7. **Art:** keep building with the code-drawn toolkit, or bring in a pixel artist for M3 animation polish?
+8. **Name:** keep *Avoid the Dentist*? Alternates: *Small Now, Big Later*; *Open Wide, Live Long*; *Tooth & Consequences*.
+9. **Built (September 2026):** the repair side of the Acid Clock, reflux and sleep apnea, the backyard garden and the tool shed. **Next:** the toothpaste-amount choice with fluorosis, then garden and shed screens inside the playable house (M1).
 
 ---
 
 ## 15. Evidence table (condensed)
 
-`[V]` = verified against a source abstract or summary during research (2026-09); `[U]` = recalled from the literature, verify before launch; `[D]` = design assumption or calibration knob.
+Every claim with a link: [SOURCES.md](SOURCES.md). `[V]` = verified against a source abstract or summary during research (2026-09); `[U]` = recalled from the literature, verify before launch; `[D]` = design assumption or calibration knob.
 
 | Parameter | Value in model | Source | Tag |
 |---|---|---|---|
@@ -529,7 +668,22 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 | Brushing <2×/day | ×1.30 (OR 1.45) | Kumar 2016 | V/D |
 | Sealants | occlusal ×0.25 (OR 0.12 at 24 months) | Ahovuo-Saloranta 2017, Cochrane | V/D |
 | Sugary drinks, daily | ×1.31 | Bernabé 2014 | V |
-| Acid clock per sugar exposure | ~30 min below pH 5.5 | Stephan curve | V |
+| Stephan curve | nadir within minutes of sugar; back in 30–60 min | Stephan 1944 | V |
+| Critical pH | enamel ~5.5; root dentin/cementum ~6.2–6.7 | textbook consensus | V |
+| Tooth-friendly test | plaque pH stays above 5.7 for 30 min | Imfeld (telemetry); Toothfriendly International | V |
+| Saliva in sleep | flow virtually nil | Schneyer 1956; Dawes 2008 | V |
+| Starchy snacks | slower drop, longer low pH, worse with low saliva | Lingström 1993 | V |
+| Sugar-free gum after eating | faster plaque-pH recovery | Manning & Edgar 1993 | V |
+| Other foods in a meal | blunt a sugary drink's pH fall | Rugg-Gunn 1975 | V |
+| Cheese after sugar | raises plaque pH | Rugg-Gunn 1975 and later work | U |
+| Sugar at meals vs. between meals | far less decay at meals | Vipeholm (Gustafsson 1954) | V |
+| Reflux | connects with erosion (pooled OR ~5); decay link mixed | meta-analysis 2022; reviews | V |
+| Mouth breathing in sleep | intraoral pH 6.6 vs. 7.0, dips to 3.6 | Choi 2016 | V |
+| Sleep apnea and bruxism | associated; causality unclear. Treatment reduced bruxism in ~60% (small pilot) | scoping review 2022; pilot 2023 | V (mixed) |
+| Beverage acidity | sodas and sports drinks ~pH 3.1; juices ~3.5 | Reddy 2016 | V |
+| Hyposalivation | unstimulated flow <0.1 vs. ~0.3–0.4 mL/min | clinical definition | V/D |
+| Per-food dip depths, linger times, gum and water effects | see `sim/stephan.js` | design estimates | D |
+| Bedtime bottle pooling on upper front teeth | ×3 on top of the all-night curve | nursing-caries pattern | D |
 | Enamel → dentin progression | ~6%/yr; 65–86% never progress in 11 yrs | Mejàre 1999/2004 | V |
 | Adolescent progression | ~3× adults | Mejàre 2004 | V |
 | Baby-tooth decay that ever hurts | 18% | Levine 2002 | V |
@@ -567,8 +721,12 @@ art/            pixel-art toolkit + sprites + scenes (browser & Node)
   sprites/      people (paper dolls), props, furniture, emotes
   scenes/       house cutaway, clinic, UI
   sheets.js     every art sample as a function
+  garden.js     the backyard garden and the tool shed
+  acidclock.js  the Acid Clock strip, life chart and sheet
 sim/            the hidden model
   model.js      one life, month by month
+  stephan.js    the Acid Clock: a day's plaque-pH curve (acid and repair)
+  toolshed.js   tools with evidence badges and sources
   params.js     parameters with evidence tags
   rng.js        named random streams + hazard clocks ("same luck")
   lives.js      preset lives (and Maya)

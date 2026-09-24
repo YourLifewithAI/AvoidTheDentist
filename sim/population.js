@@ -36,6 +36,10 @@ export function randomPlan(seed) {
     sodas,
     sipping: sodas > 0 && chance('sip', 0.2),
     dietSodas: pick(S, 'diet', [[0, 0.7], [1, 0.2], [2, 0.1]]),
+    withMeals: chance('withMeals', 0.2),
+    gum: chance('gum', 0.15),
+    waterAfterSnacks: chance('rinse', 0.1),
+    bedtimeSnack: chance('bedSnack', 0.25),
     energyDrinks: pick(S, 'energy', [[0, 0.85], [1, 0.12], [2, 0.03]]),
     brushing: pick(S, 'brush', [['twice', 0.65], ['once', 0.30], ['rarely', 0.05]]),
     fluorideToothpaste: chance('fpaste', 0.95),
@@ -60,6 +64,9 @@ export function randomPlan(seed) {
     pregnancies: chance('female', 0.5) ? [26, 30, 34].slice(0, pick(S, 'kids', [[0, 0.25], [1, 0.25], [2, 0.35], [3, 0.15]])) : [],
     phases: [],
   };
+  if (chance('reflux', 0.15)) plan.phases.push({ age: pick(S, 'refluxAge', [[35, 0.3], [45, 0.4], [55, 0.3]]), set: { reflux: true } });
+  if (chance('apnea', 0.12)) plan.phases.push({ age: pick(S, 'apneaAge', [[40, 0.5], [50, 0.5]]), set: { sleepApnea: chance('apneaTreated', 0.3) ? 'treated' : 'untreated' } });
+  if (chance('dryMeds', 0.12)) plan.phases.push({ age: pick(S, 'dryMedsAge', [[35, 0.3], [45, 0.4], [55, 0.3]]), set: { dryMouthMeds: true } });
   if (smoking === 'smoker' && chance('quit', 0.55)) plan.phases.push({ age: pick(S, 'quitAge', [[30, 0.3], [40, 0.35], [50, 0.35]]), set: { smoking: 'never' } });
   return plan;
 }

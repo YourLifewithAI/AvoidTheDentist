@@ -37,6 +37,9 @@ export function runMany(plan, n = N, seed0 = 1) {
     anxietyPeak: +mean(pick(l => l.anxietyPeak)).toFixed(2),
     skipped: +mean(pick(l => l.counts.skipped)).toFixed(1),
     emergencies: +mean(pick(l => l.counts.emergencies + l.counts.er)).toFixed(1),
+    // Acid Clock: minutes a day below pH 5.5 (enamel), and below 6.2 on exposed roots
+    acid: Object.fromEntries([['toddler', 2, 3], ['kid', 6, 12], ['teen', 13, 17], ['adult', 25, 55], ['elder', 66, 79], ['elderRoot', 66, 79, 'rootMin']]
+      .map(([k, a0, a1, f = 'acidMin']) => [k, Math.round(mean(pick(l => mean(l.yearly.filter(y => y.age >= a0 && y.age <= a1).map(y => y[f])))))])),
   };
 }
 

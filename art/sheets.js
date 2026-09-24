@@ -481,3 +481,6 @@ export function palette() {
   });
   return pix;
 }
+
+export { acidclock } from './acidclock.js';
+export { garden, toolshed } from './garden.js';

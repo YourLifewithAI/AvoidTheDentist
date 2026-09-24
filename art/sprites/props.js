@@ -348,3 +348,52 @@ oxxo.....
 oxxooooo.
 .oo..o.o.
 `, { x: 'gold2' });
+
+// --- Acid Clock foods
+PROP.cookie = sprite(`
+.ooo.
+oxkxo
+oxxko
+okxxo
+.ooo.
+`, { x: 'wood3', k: 'wood0' });
+
+PROP.chips = sprite(`
+ooooo
+oxxxo
+oxkxo
+oxxxo
+ooooo
+`, { x: 'gold2', k: 'red1' });
+
+PROP.juiceBox = sprite(`
+...o
+oooo
+oxxo
+okxo
+oxxo
+oooo
+`, { x: 'gold1', k: 'green3' });
+
+PROP.bottle = sprite(`
+.oo.
+.xx.
+oooo
+okko
+okko
+.oo.
+`, { x: 'gold3', k: 'gold2' });
+
+PROP.cheese = sprite(`
+....oo
+..ooxo
+ooxkxo
+oooooo
+`, { x: 'gold2', k: 'gold1' });
+
+PROP.plate = sprite(`
+..oooo..
+.oygrgo.
+oxxxxxxo
+.oooooo.
+`, { x: 'white', y: 'wood3', g: 'green2', r: 'red2' });
