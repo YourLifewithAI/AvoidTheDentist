@@ -4,7 +4,7 @@
 
 ![Key art: a cozy cutaway house at dusk. June brushes her teeth upstairs, Maya has an evening mug in the kitchen, the cat sleeps on the couch.](art/keyart.png)
 
-> **Status:** planning checkpoint (M0). This folder contains the plan, ten art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. Every number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)).
+> **Status:** planning checkpoint (M0). This folder contains the plan, eleven art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. Every simulation number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)); fees and evidence come from the [research notes](research/).
 
 ---
 
@@ -493,7 +493,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 
 | Milestone | Scope | Estimate* |
 |---|---|---|
-| **M0: Plan & proof** ✓ | This plan; 10 art samples; toolkit; calibrated model prototype; report | done |
+| **M0: Plan & proof** ✓ | This plan; 11 art samples; toolkit; calibrated model prototype; report; review page with a working What-If Lab | done |
 | **M1: Vertical slice** | Playable birth-to-80 life in the house at 1×/2×/4×; 20 cards; 6 helpers; year-end ledger; Life Story; local save | 3–4 weeks |
 | **M2: The comparison engine** | What-If Lab; Twin Lives side by side; 100 Lives icon array; "Why?" view with evidence badges | 2–3 weeks |
 | **M3: Content & feel** | 60 cards; all jobs and sports; animations; audio; apartment variant; era decor | 4 weeks |
