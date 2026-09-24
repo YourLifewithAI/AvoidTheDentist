@@ -17,7 +17,7 @@ Replay any moment with the same luck and one different choice, and see your life
 
 ## Run it
 
-Requires Node 18+. No dependencies.
+Requires Node 18+. The art and the model have no dependencies.
 
 ```bash
 npm run art           # render every art sample to docs/art/
@@ -25,12 +25,14 @@ npm run sim           # preset lives, 500 each
 node sim/levers.mjs   # one choice at a time, same luck
 node sim/calibrate.mjs  # model vs. US surveillance data
 node sim/report.mjs   # regenerate docs/SIM_REPORT.md
+npm install && npm run review   # build docs/review.html: live art, the chart and a What-If Lab in one page (needs esbuild)
 ```
 
 ## Layout
 
 - `art/`: pixel-art toolkit (framebuffer, role-based palette sprites, bitmap font) and every sprite and scene. It runs in Node and the browser.
 - `sim/`: the deterministic life model, with evidence-tagged parameters and "same luck" random streams.
-- `tools/`: art export and preview.
+- `web/`: the single-file review page (live house demo, gallery, What-If Lab running the real model in a Web Worker).
+- `tools/`: art export, preview and the review-page build.
 
 Not medical advice. Costs are typical 2024–26 US figures.

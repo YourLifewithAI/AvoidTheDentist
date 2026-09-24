@@ -1,0 +1,423 @@
+<title>Avoid the Dentist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Pixelify+Sans:wght@500;600;700&family=Silkscreen&display=swap">
+<style>
+  :root {
+    --bg: #f6eee0;
+    --surface: #fffaf0;
+    --ink: #2b2135;
+    --ink-2: #4a3f55;
+    --muted: #6f6376;
+    --rule: #dccbb4;
+    --link: #1f6571;
+    --button: #2d7480;
+    --button-ink: #fffaf0;
+    --frame: #2b2135;
+    --frame-shadow: #d8c6ad;
+    --worse: #d0563a;
+    --better: #1f7fb3;
+    --same: #b8aca3;
+    --zero: #9c8e86;
+    --night: #1b2040;
+    --night-2: #262d55;
+    --night-ink: #fbf3e4;
+    --night-muted: #c3bad3;
+    --display: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
+    --label: "Silkscreen", "Pixelify Sans", ui-monospace, monospace;
+    --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1b2040;
+      --surface: #252c54;
+      --ink: #fbf3e4;
+      --ink-2: #ddd4e6;
+      --muted: #aaa1bd;
+      --rule: #39416e;
+      --link: #8fd3c0;
+      --button: #2d7480;
+      --button-ink: #fffaf0;
+      --frame: #0d1026;
+      --frame-shadow: #0d1026;
+      --worse: #dd6a45;
+      --better: #3597c9;
+      --same: #5d6385;
+      --zero: #7c7699;
+      --night: #11152e;
+      --night-2: #1f2549;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1b2040;
+    --surface: #252c54;
+    --ink: #fbf3e4;
+    --ink-2: #ddd4e6;
+    --muted: #aaa1bd;
+    --rule: #39416e;
+    --link: #8fd3c0;
+    --button: #2d7480;
+    --button-ink: #fffaf0;
+    --frame: #0d1026;
+    --frame-shadow: #0d1026;
+    --worse: #dd6a45;
+    --better: #3597c9;
+    --same: #5d6385;
+    --zero: #7c7699;
+    --night: #11152e;
+    --night-2: #1f2549;
+  }
+
+  body { background: var(--bg); color: var(--ink); font: 17px/1.6 var(--body); }
+  a { color: var(--link); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible, .lever-row:focus-visible { outline: 3px solid var(--better); outline-offset: 2px; }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; margin-inline: auto; max-width: 100%; }
+  .wrap { max-width: 1040px; margin-inline: auto; padding-inline: 20px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; line-height: 1.15; text-wrap: balance; margin: 0; }
+  h2 { font-size: clamp(26px, 3.4vw, 34px); }
+  h3 { font-size: 21px; }
+  p { margin: 0; max-width: 66ch; }
+  .eyebrow { font-family: var(--label); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  section { padding-block: 56px; border-top: 2px solid var(--rule); }
+  .section-head { display: grid; gap: 10px; margin-bottom: 28px; }
+  .section-head p { color: var(--ink-2); }
+
+  /* hero: the house at dusk */
+  .hero { background: var(--night); color: var(--night-ink); padding-block: 40px 44px; }
+  .hero .eyebrow { color: var(--night-muted); }
+  .hero h1 { font-size: clamp(42px, 7vw, 76px); letter-spacing: 0.01em; }
+  .hero .lede { color: var(--night-ink); font-size: 19px; max-width: 58ch; }
+  .hero-grid { display: grid; gap: 22px; }
+  .stage { background: #151a33; border: 3px solid #0b0e20; box-shadow: 6px 6px 0 #0b0e20; padding: 8px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; }
+  .control { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .control > span { font-family: var(--label); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--night-muted); }
+  .seg { display: inline-flex; border: 2px solid #0b0e20; box-shadow: 3px 3px 0 #0b0e20; }
+  .seg button { font: 600 15px/1 var(--display); padding: 9px 12px; border: 0; background: var(--night-2); color: var(--night-ink); cursor: pointer; }
+  .seg button + button { border-left: 2px solid #0b0e20; }
+  .seg button[aria-pressed="true"] { background: #2d7480; color: #fffaf0; }
+  .seg button:hover { filter: brightness(1.15); }
+  #house-caption { color: var(--night-ink); min-height: 1.6em; }
+  .hero .note { color: var(--night-muted); font-size: 15px; }
+
+  /* pixel frames */
+  .frame { background: var(--surface); border: 3px solid var(--frame); box-shadow: 5px 5px 0 var(--frame-shadow); padding: 10px; }
+
+  /* the idea */
+  .pillars { display: grid; gap: 18px 28px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin: 0; }
+  .pillars div { display: grid; gap: 4px; }
+  .pillars dt { font-family: var(--display); font-weight: 600; font-size: 19px; }
+  .pillars dd { margin: 0; color: var(--ink-2); }
+
+  /* numbers */
+  .tiles { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .tile { background: var(--surface); border: 2px solid var(--rule); padding: 14px 16px; display: grid; gap: 2px; align-content: start; }
+  .tile .label { font-size: 15px; color: var(--muted); }
+  .tile .value { font-weight: 700; font-size: clamp(28px, 4vw, 38px); line-height: 1.1; }
+  .tile .sub { font-size: 15px; color: var(--ink-2); }
+
+  /* gallery */
+  .gallery { display: grid; gap: 44px; }
+  .piece { display: grid; gap: 18px 32px; grid-template-columns: minmax(0, 660px) minmax(0, 1fr); align-items: start; }
+  .piece figure { margin: 0; }
+  .piece .text { display: grid; gap: 8px; align-content: start; }
+  .piece .text p { color: var(--ink-2); }
+  @media (max-width: 860px) { .piece { grid-template-columns: 1fr; } }
+
+  /* what-if lab */
+  .lab { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+  .lab > * { min-width: 0; }
+  .lab-form { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; }
+  .field { display: grid; gap: 6px; min-width: min(100%, 250px); flex: 1 1 250px; }
+  .field label { font-size: 15px; color: var(--muted); }
+  select { font: 16px/1.3 var(--body); color: var(--ink); background: var(--surface); border: 2px solid var(--frame); padding: 9px 10px; border-radius: 0; width: 100%; min-width: 0; }
+  .run { font: 600 17px/1 var(--display); padding: 12px 18px; background: var(--button); color: var(--button-ink); border: 2px solid var(--frame); box-shadow: 3px 3px 0 var(--frame-shadow); cursor: pointer; }
+  .run:disabled { opacity: 0.7; cursor: progress; }
+  progress { width: 100%; height: 10px; accent-color: var(--button); }
+  .lab-out { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { .lab-out { grid-template-columns: 1fr; } }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 15px; color: var(--ink-2); }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+  /* lever chart: two small multiples sharing rows */
+  .chart { position: relative; }
+  .lever-head, .lever-row { display: grid; grid-template-columns: minmax(170px, 1.15fr) minmax(0, 1fr) minmax(0, 1fr); gap: 4px 18px; align-items: center; }
+  .lever-head { font-family: var(--label); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--rule); margin-bottom: 6px; }
+  .lever-row { padding-block: 5px; border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent); }
+  .lever-row:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+  .lever-label { font-size: 15px; line-height: 1.3; }
+  .bar-cell { position: relative; height: 24px; }
+  .bar-cell::before { content: ""; position: absolute; left: var(--zero); top: -3px; bottom: -3px; width: 1px; background: var(--zero); }
+  .bar { position: absolute; top: 5px; height: 14px; }
+  .bar.pos { background: var(--worse); border-radius: 0 4px 4px 0; }
+  .bar.neg { background: var(--better); border-radius: 4px 0 0 4px; }
+  .bar-val { position: absolute; top: 2px; font-size: 13px; color: var(--ink-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tip { position: absolute; z-index: 5; width: 230px; background: var(--surface); color: var(--ink); border: 2px solid var(--frame); box-shadow: 3px 3px 0 var(--frame-shadow); padding: 8px 10px; font-size: 14px; line-height: 1.45; pointer-events: none; }
+  @media (max-width: 640px) {
+    .lever-head, .lever-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .lever-head > :first-child { display: none; }
+    .lever-label { grid-column: 1 / -1; }
+    .bar-val { font-size: 12px; }
+  }
+  details { margin-top: 18px; }
+  summary { cursor: pointer; font-weight: 700; }
+  .table-wrap { overflow-x: auto; margin-top: 10px; }
+  table { border-collapse: collapse; font-size: 15px; min-width: 560px; width: 100%; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-weight: 700; color: var(--ink-2); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .table-wrap td:not(:first-child) { font-variant-numeric: tabular-nums; }
+
+  /* how it plays */
+  .modes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .mode { background: var(--surface); border: 2px solid var(--rule); padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+  .mode .time { font-family: var(--label); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .mode p { color: var(--ink-2); font-size: 16px; }
+  pre.mermaid { background: var(--surface); border: 2px solid var(--rule); padding: 16px; overflow-x: auto; margin: 22px 0 0; }
+
+  /* decisions */
+  ol.decisions { display: grid; gap: 14px; padding-left: 1.4em; margin: 0; max-width: 80ch; }
+  ol.decisions li::marker { font-family: var(--display); font-weight: 700; color: var(--muted); }
+  ol.decisions strong { font-weight: 700; }
+
+  footer { padding-block: 40px 56px; border-top: 2px solid var(--rule); color: var(--ink-2); display: grid; gap: 10px; font-size: 16px; }
+  footer ul { margin: 0; padding-left: 1.2em; }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="eyebrow">Game plan · checkpoint M0 · September 2026</div>
+    <h1>Avoid the Dentist</h1>
+    <p class="lede">A cozy pixel-art life-sim about the everyday choices that add up to a lifetime of teeth, comfort, confidence and money. You watch a person live, never a close-up of a tooth.</p>
+    <div class="stage"><canvas id="house" width="320" height="180" aria-label="Pixel-art cutaway of Maya's house. The scene changes with her choice at 34 and her age."></canvas></div>
+    <div class="controls" role="group" aria-label="Scene controls">
+      <div class="control"><span>At 34, Maya says</span><div class="seg" id="choice"><button type="button" data-value="book" aria-pressed="false">Book it</button><button type="button" data-value="later" aria-pressed="true">Later...</button></div></div>
+      <div class="control"><span>Show her at</span><div class="seg" id="age"><button type="button" data-value="34" aria-pressed="true">34</button><button type="button" data-value="45" aria-pressed="false">45</button><button type="button" data-value="62" aria-pressed="false">62</button></div></div>
+      <div class="control"><span>Time</span><div class="seg" id="time"><button type="button" data-value="day" aria-pressed="false">Day</button><button type="button" data-value="dusk" aria-pressed="true">Dusk</button><button type="button" data-value="night" aria-pressed="false">Night</button></div></div>
+    </div>
+    <p id="house-caption" aria-live="polite"></p>
+    <p class="note">Every image on this page is drawn live by the game's own pixel renderer. The numbers come from the simulation: one same-luck pair of Maya's lives, seed 337.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="idea" style="border-top: 0">
+    <div class="section-head">
+      <div class="eyebrow">The idea</div>
+      <h2>The surest way to avoid the big dentist is to see the small one</h2>
+      <p>You live one life, from the first tooth to the rocking chair, in a dollhouse cutaway. Time runs by itself like an idle game. You set habits, pick a job, play sports and answer life's little prompts. A hidden model, calibrated against CDC data, decides what happens next, and you see it in the person: an open grin or a hand over the mouth, a dream board filling with trips or a counter stacking up with bills.</p>
+    </div>
+    <dl class="pillars">
+      <div><dt>The person, not the teeth</dt><dd>Every outcome shows up as posture, expression, props, rooms and money.</dd></div>
+      <div><dt>The bill comes later</dt><dd>One choice at 34 barely registers by 45 and dominates by 70. Compressed time makes the delay playable.</dd></div>
+      <div><dt>Same luck, one change</dt><dd>Twin Lives replays your life with identical luck and one different choice, so cause and effect are unambiguous.</dd></div>
+      <div><dt>100 lives like yours</dt><dd>At the end you're one pixel person among 100 simulated lives with your choices. Luck is real, and so are the odds.</dd></div>
+      <div><dt>Never scold</dt><dd>The dentist is kind, going back after years is celebrated, and money, time and access barriers are visible without blame.</dd></div>
+    </dl>
+  </section>
+
+  <section id="maya">
+    <div class="section-head">
+      <div class="eyebrow">Same luck, one choice</div>
+      <h2>Maya's voicemail at 34</h2>
+      <p>The dentist's office calls: it's been 18 months. We ran 400 pairs of Maya's life with identical luck. The only difference is her answer.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="label">Extra cost of “Later...” by 45</span><span class="value" id="t-45"></span><span class="sub">median; almost nothing yet</span></div>
+      <div class="tile"><span class="label">Extra cost by 80</span><span class="value" id="t-80"></span><span class="sub">median, out of pocket</span></div>
+      <div class="tile"><span class="label">Extra teeth lost by 80</span><span class="value" id="t-teeth"></span><span class="sub">median</span></div>
+      <div class="tile"><span class="label">Pairs where “Later...” ends worse</span><span class="value" id="t-share"></span><span class="sub">of 400 same-luck pairs</span></div>
+    </div>
+    <figure class="frame" style="margin: 26px 0 0"><canvas data-sheet="twolives" width="320" height="204" aria-label="Two rows of three panels: Maya at 34, 45 and 62 after booking the visit or putting it off."></canvas></figure>
+  </section>
+
+  <section id="lab">
+    <div class="section-head">
+      <div class="eyebrow">Try it · a working prototype</div>
+      <h2>What-If Lab: live it 100 times</h2>
+      <p>Pick a life and one change. Your browser runs the real model 200 times: 100 lives as they are and the same 100 lives with the change, with identical luck. Each pixel person below is one pair.</p>
+    </div>
+    <div class="lab">
+      <form class="lab-form" onsubmit="return false">
+        <div class="field"><label for="lab-base">Start from</label>
+          <select id="lab-base">
+            <option value="maya" selected>Maya, pastry chef</option>
+            <option value="typical">A typical US life</option>
+            <option value="prevention">Prevention Pro</option>
+          </select></div>
+        <div class="field"><label for="lab-change">Change one thing</label>
+          <select id="lab-change">
+            <option value="later34" selected>Says “Later...” at 34 (stops checkups)</option>
+            <option value="sodas">Sips 3 sodas a day</option>
+            <option value="painOnly">Only goes to the dentist when it hurts</option>
+            <option value="brushOnce">Brushes once a day instead of twice</option>
+            <option value="noFluoride">Uses fluoride-free toothpaste</option>
+            <option value="smoker">Smokes from 18</option>
+            <option value="baker">Takes a baking job, tasting all day</option>
+            <option value="lifting">Warehouse lifting, no night guard</option>
+            <option value="liftingGuard">Warehouse lifting, with a night guard</option>
+            <option value="hockey">Plays hockey 8–30 without a mouthguard</option>
+            <option value="hockeyGuard">Plays hockey 8–30 with a custom guard</option>
+            <option value="every6">Checkups every 6 months</option>
+            <option value="floss">Cleans between teeth daily</option>
+            <option value="sealants">Gets sealants as a kid</option>
+            <option value="cheapest">Always picks the cheapest fix</option>
+            <option value="noInsurance">Has no dental insurance as an adult</option>
+            <option value="birth">C-section birth, parents with untreated decay</option>
+          </select></div>
+        <button class="run" id="lab-run" type="button">Live it 100 times</button>
+      </form>
+      <progress id="lab-progress" max="100" value="0" aria-label="Lives simulated"></progress>
+      <div class="lab-out">
+        <div class="tiles" style="grid-template-columns: repeat(2, minmax(0, 1fr))">
+          <div class="tile"><span class="label">Lifetime dental cost</span><span class="value" id="lab-cost">…</span><span class="sub">average change</span></div>
+          <div class="tile"><span class="label">Teeth lost by 80</span><span class="value" id="lab-teeth">…</span><span class="sub">average change</span></div>
+          <div class="tile"><span class="label">Days in pain</span><span class="value" id="lab-pain">…</span><span class="sub">average change</span></div>
+          <div class="tile"><span class="label">Years hiding a smile</span><span class="value" id="lab-smile">…</span><span class="sub">average change</span></div>
+        </div>
+        <div style="display:grid; gap:10px">
+          <div class="frame"><canvas id="lab-icons" width="181" height="61" aria-label="100 pixel people, one per pair of lives, colored by whether the change cost teeth."></canvas></div>
+          <div class="legend"><span style="--c: var(--worse)">Lost more teeth</span><span style="--c: var(--better)">Kept more teeth</span><span style="--c: var(--same)">No difference in teeth</span></div>
+          <p id="lab-summary" aria-live="polite" style="color: var(--ink-2)"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="choices">
+    <div class="section-head">
+      <div class="eyebrow">What the hidden model says</div>
+      <h2>Which choices matter most</h2>
+      <p>One change at a time against a typical US life, 300 same-luck pairs each. Coral means worse, blue means better. Hover or focus a row for exact figures, pain days and years spent hiding a smile; the table view has everything.</p>
+    </div>
+    <div class="chart">
+      <div class="lever-head"><div>One change</div><div>Lifetime dental cost</div><div>Teeth lost by 80</div></div>
+      <div id="levers"></div>
+      <div class="tip" id="lever-tip" hidden></div>
+    </div>
+    <details><summary>Show as a table</summary><div class="table-wrap" id="lever-table"></div></details>
+    <p style="margin-top: 22px; color: var(--ink-2)">Three findings shaped the design. <strong>Avoidance can look cheaper on paper</strong>: always picking the cheapest fix saves money but costs about three teeth, so the ledger has to count teeth, pain and hidden smiles, not just dollars. <strong>Sugar frequency is the biggest habit lever.</strong> <strong>Birth and microbiome are a small head start</strong>, real but dwarfed by habits, which is the no-guilt message we want.</p>
+  </section>
+
+  <section id="art">
+    <div class="section-head">
+      <div class="eyebrow">Art samples</div>
+      <h2>Cozy, old-school, and about the person</h2>
+      <p>320×180 native resolution, integer-scaled. A warm custom palette with purple-leaning shadows and ink outlines. Characters are paper dolls: skin, hair, outfit, expression, pose, glasses and hats all swap.</p>
+    </div>
+    <div class="gallery">
+      <div class="piece"><figure class="frame"><canvas data-sheet="mockup" width="320" height="180" aria-label="Main game screen mockup with status panel, wallet, event card and life timeline."></canvas></figure>
+        <div class="text"><h3>The main screen</h3><p>Feelings instead of stats in the status panel, a wallet with speed controls, an event card (“It's been 18 months!”) and the life timeline. The postcards on the fridge are the reminders Maya keeps not answering.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="lineup" width="320" height="84" aria-label="Maya at eight ages, from baby to 75."></canvas></figure>
+        <div class="text"><h3>One life, eight moments</h3><p>Age shows through the sprite: a baby with a rattle, a kid with a dentist's balloon, a teen in a hoodie, a pastry chef at 38, reading glasses at 55, a cane at 75. Pencil marks track her height on the growth chart.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="feelings" width="320" height="150" aria-label="Eight tiles of Maya showing feelings linked to oral health."></canvas></figure>
+        <div class="text"><h3>Feelings, not teeth</h3><p>Smiling freely, hiding a smile, a toothache, a cold sting, grinding at night, dodging the call, a swollen jaw, a clean checkup. This is how the hidden model's states reach the player.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="workplay" width="320" height="164" aria-label="Six vignettes of jobs and sports."></canvas></figure>
+        <div class="text"><h3>Work and play</h3><p>A baker tasting all day, a loader clenching under a box, office coffee and stress, energy drinks on the night shift, hockey with and without a guard, soda on the road.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="clinic" width="320" height="120" aria-label="A friendly dental office with a fish tank and a child grinning in the chair."></canvas></figure>
+        <div class="text"><h3>The dentist as a warm place</h3><p>A fish tank, cartoons on the ceiling, a sticker chart, a smiling hygienist, June grinning in the chair with a balloon. The game never uses drills, blood or a scolding dentist.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="cast" width="320" height="52" aria-label="Eleven characters with varied skin tones, hair, outfits and ages."></canvas></figure>
+        <div class="text"><h3>The cast</h3><p>One paper-doll system with five skin tones, twelve heads, fifteen outfits, fifteen expressions and twelve poses.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="props" width="320" height="150" aria-label="Helpers, temptations and dreams as pixel props."></canvas></figure>
+        <div class="text"><h3>Helpers, temptations, dreams</h3><p>Helpers are the idle-game upgrades: real-world nudges that make good habits automatic. Temptations are the acid clocks. Dreams are what the money could have been, pinned to the dream board in the living room.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="mockupDay" width="320" height="180" aria-label="The main screen in daylight."></canvas></figure>
+        <div class="text"><h3>Day, dusk, night</h3><p>The sky and the lamps follow the clock, so the house feels lived in whether you check in at breakfast or at midnight.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="palette" width="160" height="88" aria-label="The Hearth palette grouped into ramps."></canvas></figure>
+        <div class="text"><h3>The Hearth palette</h3><p>About 70 colors in ramps: ink and paper, wood, warm, green and teal, cool, rose and wallpaper, sky, and five skin ramps.</p></div></div>
+    </div>
+  </section>
+
+  <section id="play">
+    <div class="section-head">
+      <div class="eyebrow">How it plays</div>
+      <h2>Four ways to live it</h2>
+    </div>
+    <div class="modes">
+      <div class="mode"><span class="time">15–20 minutes</span><h3>Live a Life</h3><p>Birth to 80 in the house. Parents decide early on; you take over as a teen. Event cards, habits, helpers and a year-end ledger lead to your Life Story.</p></div>
+      <div class="mode"><span class="time">1–3 minutes</span><h3>What-If Lab</h3><p>Every choice on one screen, then jump straight to the outcome. Built for curious players and for dental teams chairside.</p></div>
+      <div class="mode"><span class="time">2–5 minutes</span><h3>Twin Lives</h3><p>Pick a moment, change one choice, and watch both houses side by side with the same luck. The game asks “What changed?” before it shows the ledger.</p></div>
+      <div class="mode"><span class="time">30 seconds</span><h3>100 Lives Like Yours</h3><p>An icon array of 100 pixel people who made your choices: how many kept every tooth, needed a root canal, or lost teeth to gum disease.</p></div>
+    </div>
+<pre class="mermaid">
+flowchart LR
+  A[Watch the house] --> B{Something happens}
+  B -->|event card| C[Choose]
+  B -->|habit or helper| D[Tweak a routine]
+  C --> E[Hidden model ticks monthly]
+  D --> E
+  E --> F[Visible change: face, pose, props, ledger]
+  F --> A
+  E -->|age 80| H[Life Story, 100 lives, Twin Lives]
+  H -->|replay with one change| A
+</pre>
+    <div class="table-wrap" style="margin-top: 22px">
+      <table>
+        <thead><tr><th>Stage</th><th>Who decides</th><th>Choices</th><th>A card you might see</th></tr></thead>
+        <tbody>
+          <tr><td>Baby 0–2</td><td>Parents</td><td>First visit timing, bedtime bottle, brushing with a smear of fluoride paste</td><td>“A first tooth! Book a dental visit now, at 3, or only if there's a problem?”</td></tr>
+          <tr><td>Kid 3–12</td><td>Parents, then shared</td><td>Checkups, pediatric or general dentist, sealants, snacks, sports</td><td>“The dentist suggests sealants on the new molars ($42 each).”</td></tr>
+          <tr><td>Teen 13–18</td><td>You, with parents</td><td>Sodas and energy drinks, braces, mouthguard, vaping</td><td>“A tooth got knocked out at practice! Milk and go now, or wrap it in a tissue?”</td></tr>
+          <tr><td>Young adult 19–29</td><td>You</td><td>First job, insurance, finding a dentist after a move</td><td>“Your new job offers dental: $18 per paycheck. Enroll?”</td></tr>
+          <tr><td>Adult 30–49</td><td>You</td><td>Visits, work stress and grinding, kids, night guard</td><td>“Voicemail from the dentist's office: it's been 18 months!”</td></tr>
+          <tr><td>Midlife 50–64</td><td>You</td><td>Gum treatment, maintenance, money</td><td>“Root canal and crown ($2,650), or pull it ($250)?”</td></tr>
+          <tr><td>Later life 65–80</td><td>You</td><td>Medicare or a dental plan, dry-mouth medications, dentures or implants</td><td>“Medicare doesn't cover cleanings?”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="honest">
+    <div class="section-head">
+      <div class="eyebrow">Is the model honest?</div>
+      <h2>Calibrated against US surveillance data</h2>
+      <p>3,000 random US-like lives compared with CDC figures. The model runs month by month from birth to 80, with 48 teeth, gums, grinding, trauma, fear and avoidance, insurance and savings. About half of its parameters are verified against published sources; the rest are flagged for review by a dental advisor.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Measure</th><th class="num">Model</th><th class="num">US data</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td>Tooth decay in baby teeth, ages 2–5</td><td class="num">27.8%</td><td class="num">23%</td><td>CDC 2019</td></tr>
+          <tr><td>Tooth decay in adult teeth, ages 12–19</td><td class="num">59.6%</td><td class="num">~57%</td><td>NHANES (to verify)</td></tr>
+          <tr><td>Natural teeth left, ages 50–64 (people with teeth)</td><td class="num">25.1</td><td class="num">23.3</td><td>CDC 2024</td></tr>
+          <tr><td>Natural teeth left, ages 65–74</td><td class="num">23.8</td><td class="num">21.7</td><td>CDC 2024</td></tr>
+          <tr><td>No natural teeth, ages 65–74</td><td class="num">13.7%</td><td class="num">11.4%</td><td>CDC 2024</td></tr>
+          <tr><td>No natural teeth, ages 75–79</td><td class="num">18.7%</td><td class="num">19.7% (75+)</td><td>CDC 2024</td></tr>
+          <tr><td>Gum disease (periodontitis), adults 30+</td><td class="num">38.4%</td><td class="num">~42%</td><td>Eke 2018 (to verify)</td></tr>
+          <tr><td>Severe gum disease, adults 30+</td><td class="num">10.3%</td><td class="num">~7.8%</td><td>Eke 2018 (to verify)</td></tr>
+          <tr><td>High dental anxiety, adults</td><td class="num">10.0%</td><td class="num">~12–15%</td><td>Silveira 2021 (to verify)</td></tr>
+          <tr><td>Lifetime dental spending, all payers (median)</td><td class="num">$41,811</td><td class="num">~$42,000</td><td>~$520 per person per year (to verify)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top: 16px; color: var(--ink-2)">Where the model misses: people who keep their teeth keep about two more of them at 65+ than today's elders do. Part of that is a cohort effect, since today's 75-year-olds grew up before fluoride toothpaste, but it needs a dental advisor's review.</p>
+  </section>
+
+  <section id="decisions">
+    <div class="section-head">
+      <div class="eyebrow">Your call</div>
+      <h2>Decisions I need from you</h2>
+    </div>
+    <ol class="decisions">
+      <li><strong>Primary audience.</strong> Adults and parents at home (my recommendation), dental teams chairside, or teens in schools?</li>
+      <li><strong>Distribution.</strong> A free public game, a white-label tool for practices with a “book with us” button, or both?</li>
+      <li><strong>Water fluoridation.</strong> Include it as a birth circumstance with its honest, low-certainty modern evidence, or leave it out of v1?</li>
+      <li><strong>Numbers during play.</strong> My proposal: none while playing, then the Life Story ledger, 100 Lives and an optional “Why?” view afterwards.</li>
+      <li><strong>Costs.</strong> US-only for v1, or is there another market to plan for now?</li>
+      <li><strong>Art.</strong> Keep building with the code-drawn toolkit, or bring in a pixel artist for animation polish at M3?</li>
+      <li><strong>Clinical advisor.</strong> Is there a dentist or hygienist who can review about 40 parameters and the card copy?</li>
+      <li><strong>Name.</strong> Keep <em>Avoid the Dentist</em>, or consider <em>Small Now, Big Later</em>, <em>Open Wide, Live Long</em> or <em>Tooth &amp; Consequences</em>?</li>
+    </ol>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>The full plan, the art toolkit and the model are in the repository: <a href="https://github.com/YourLifewithAI/AvoidTheDentist/blob/claude/keen-davinci-xhh5au/docs/GAME_PLAN.md">GAME_PLAN.md</a>, <a href="https://github.com/YourLifewithAI/AvoidTheDentist/blob/claude/keen-davinci-xhh5au/docs/SIM_REPORT.md">SIM_REPORT.md</a> and the <a href="https://github.com/YourLifewithAI/AvoidTheDentist/tree/claude/keen-davinci-xhh5au/docs/research">research notes</a> with verification tags.</p>
+  <p>Not medical advice. Costs are typical 2024–26 US fees without insurance.</p>
+</footer>
+
+<script id="page-data" type="application/json">/*PAGE_DATA*/</script>
+<script id="sim-worker" type="text/plain">/*SIM_WORKER*/</script>
+<script>/*MAIN*/</script>
