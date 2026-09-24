@@ -52,7 +52,7 @@ export const P = {
     braces: 1.6, // [V] 46% develop white-spot lesions during fixed appliances
     // dry mouth: RR ~2.5 in total [V/D]; slower Acid Clock recovery gives ~x2.2, the rest
     // is lost remineralization and antimicrobial saliva
-    dryMouthResidual: 1.15, // [D]
+    dryMouthResidual: 1.0, // [D] now 1: lost repair is modeled directly (Acid Clock repair time)
     vaping: 1.3, // [U] emerging
     cSection: 1.1, // [V/D] OR 1.48, low certainty; kept deliberately small
     salivaSharing: 1.1, // [D] emerging
@@ -66,7 +66,12 @@ export const P = {
   // caries pressure = (daily acid dose below pH 5.5 / reference day)^0.75, excess
   // halved by good fluoride use [V]. Calibrated shape: +1 separate sweet snack a day
   // ~ +25-30%; a high mutans load (ms 2) ~x1.8 (RR ~2-2.5 reported [V]).
-  saliva: { dry: 0.35, meds: 0.5 }, // [V/D] hyposalivation: unstimulated flow <0.1 vs ~0.3-0.4 mL/min
+  saliva: { dry: 0.35, meds: 0.5 },
+  // sleep apnea / mouth breathing: saliva in sleep x0.4 (x0.8 treated: mask leaks can dry
+  // too); connects with grinding [V: mixed] and drier plaque at the gumline [U/D]. Treatment
+  // (CPAP or an advancement appliance) reduced sleep bruxism in ~60% in a pilot study [V: small]
+  apnea: { nightDry: 0.4, nightDryTreated: 0.8, brux: { untreated: 0.15, treated: 0 }, gums: 0.05 },
+  erosionSensitivity: 0.6, // [D] cold-sensitivity episodes/yr per extra "two sodas" of daily acid bath // [V/D] hyposalivation: unstimulated flow <0.1 vs ~0.3-0.4 mL/min
 
   // --- symptoms (episodes per year while in a state) [D]
   symptoms: {

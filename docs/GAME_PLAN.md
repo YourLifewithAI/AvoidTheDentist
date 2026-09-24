@@ -40,7 +40,7 @@
 | Sweets as dessert with meals instead of snacks | −$2,343 | −0.2 | −3 | −0.3 |
 | Picks the cheapest fix every time | **−$4,866** | **+2.4** | 0 | +2.9 |
 
-And the headline for Maya, our pastry chef: when the dentist's office calls at 34, "Later..." costs **nothing extra by age 45** (median $0) and **$11,319 plus 4 teeth by age 80**. It ends worse in 94% of 400 same-luck pairs.
+And the headline for Maya, our pastry chef: when the dentist's office calls at 34, "Later..." costs **nothing extra by age 45** (median $0) and **$11,459 plus 4 teeth by age 80**. It ends worse in 94% of 400 same-luck pairs.
 
 **Your answers** (September 2026) are in [section 14](#14-decisions-and-open-questions): adults, young adults and parents at home; a free public game that clinics can use; fluoride framed as part of the demineralization and remineralization balance, not as a water-supply debate; and a dentist on the team.
 
@@ -200,8 +200,9 @@ It never shows a tooth; it shows her day. Tap it for the day recap (art sample i
 | **The mouth** | Dry mouth (medications, age) stretches every dip: three snacks go from 2h 06m to **4h 31m**. Sucking candies for dry-mouth relief: **8h a day**. More cavity bacteria and thicker plaque dip deeper. |
 | **Helpers** | Sugar-free gum after eating: 2h 06m → **1h 11m**. A water rinse helps a little. |
 | **Your work** | A baker's tastings from 5 am: **4h 40m**. Night-shift snacks, with lower saliva at night: **4h 22m**. |
+| **Your body** ("connects with") | Reflux at night brings acid with no food on the shelf. It connects with acid wear (erosion and cold sensitivity) far more than with decay, and the model follows the evidence. Mouth breathing in sleep (sleep apnea) dries the mouth at night: the bedtime cookie goes from 4h 14m to **6h 03m** of acid, 3h 39m of it asleep. |
 
-**Demineralization and remineralization.** The clock frames decay as a daily tug-of-war rather than a verdict. Time below the line is enamel dissolving. Time back above it, with saliva, fluoride, calcium and phosphate around, is repair. The next step (proposed in §14) is to draw the repair side too, so the strip reads as "acid vs. repair" and fluoride, saliva and sealants have a visible job.
+**Demineralization and remineralization.** The clock frames decay as a daily tug-of-war rather than a verdict. Time below 5.5 is enamel dissolving. Time back above ~6.0, with saliva, fluoride, calcium and phosphate around, is repair. A thin band under the strip shows both: red for acid, teal for repair. In the model, repair time decides how often early lesions harden again. Dry mouth costs twice: longer dips and less repair.
 
 **Playing with it.** The day is set by the life stage, the job and the player's habit cards: snacks, drinks, "sweets with meals", "gum after eating", "water after snacks", "snack after brushing". Moving a candy from 3 pm to dessert is one tap, and the strip changes immediately. Foods that keep plaque above pH 5.7 for 30 minutes get a small tooth-friendly badge, after the Swiss tooth-friendly test. No numbers during play: the shape carries the message. Minutes show up in the recap and the *Why?* view.
 
@@ -351,18 +352,18 @@ flowchart LR
 
 | Metric | Model | Target | Source |
 |---|---:|---:|---|
-| Caries experience, baby teeth, ages 2–5 | 23.7% | 23% | CDC OHSR 2019 ✓ |
-| Caries experience, permanent, ages 12–19 | 55.5% | ~57% | NHANES (unverified) |
+| Caries experience, baby teeth, ages 2–5 | 23.8% | 23% | CDC OHSR 2019 ✓ |
+| Caries experience, permanent, ages 12–19 | 55.9% | ~57% | NHANES (unverified) |
 | Caries experience, permanent, ages 20–64 | 93.7% | ~90% | NIDCR (unverified) |
 | Mean natural teeth, dentate adults, 20–34 / 50–64 / 65–74 | 27.5 / 25.4 / 24.3 | 27.0 / 23.3 / 21.7 | CDC OHSR 2024 ✓ |
 | No natural teeth, 50–64 / 65–74 / 75–79 | 6.5% / 13.9% / 18.3% | 5.9% / 11.4% / 19.7% | CDC OHSR 2024 ✓ |
-| Periodontitis (CAL ≥3 mm), 30+ / 65+ | 38.4% / 65.2% | ~42% / ~68% | Eke 2012, 2018 (unverified) |
+| Periodontitis (CAL ≥3 mm), 30+ / 65+ | 38.7% / 65.7% | ~42% / ~68% | Eke 2012, 2018 (unverified) |
 | Severe periodontitis (CAL ≥6 mm), 30+ | 10.2% | ~7.8% | Eke 2018 (unverified) |
 | Mean attachment loss, mm/yr | 0.085 | ~0.1 | Needleman 2018 ✓ |
 | High dental anxiety, adults | 8.3% | ~12–15% | Silveira 2021 (unverified) |
 | Lifetime dental spending, all payers (median) | $39,313 | ~$42k | ~$520 per person per year (unverified) |
 
-**Known gaps.** With the Acid Clock the model has a little less adult decay than before. That means fewer bad visits, so dental fear sits below target (8.3% vs. ~12–15%). Model elders who keep their teeth keep ~2 more of them than today's elders. Part of this is a real cohort effect: today's 75-year-olds grew up before fluoride toothpaste, so a life born today *should* land somewhat better. It still needs review with a dental advisor. "Untreated decay" brackets the target depending on whether early dentin lesions count.
+**Known gaps.** With the Acid Clock the model has a little less adult decay than before. That means fewer bad visits, so dental fear sits below target (8.5% vs. ~12–15%). Model elders who keep their teeth keep ~2 more of them than today's elders. Part of this is a real cohort effect: today's 75-year-olds grew up before fluoride toothpaste, so a life born today *should* land somewhat better. It still needs review with a dental advisor. "Untreated decay" brackets the target depending on whether early dentin lesions count.
 
 ### 6.9 What the model says (preset lives, 400 each)
 
@@ -387,7 +388,7 @@ flowchart LR
 
 **Five things the model taught me that should shape the game:**
 
-1. **The bill really does come later.** At 45 the two Mayas are (in the median) $0 apart. At 80 it's $11K and 4 teeth. The game's pacing must deliver that delay without making players wait for it: Twin Lives and the 100-Lives screen do that work.
+1. **The bill really does come later.** At 45 the two Mayas are (in the median) $0 apart. At 80 it's $11.5K and 4 teeth. The game's pacing must deliver that delay without making players wait for it: Twin Lives and the 100-Lives screen do that work.
 2. **Avoidance can look cheaper on paper.** The Avoider spends less than the Late Bloomer ($20.1K vs. $21.2K) but loses 16.1 teeth instead of 2.7, with twice the pain days. The ledger must count teeth, pain and hidden smiles, not just dollars, or the game teaches the wrong lesson.
 3. **Frequency and timing of sugar are the biggest habit levers.** Sipping sodas tops the chart, and the Acid Clock shows why. The flip side is the kindest lesson in the game: moving sweets to dessert (−$2.3K) or chewing gum after eating (−$1.0K) costs nothing to try. A snack after brushing is the costliest small habit (+$2.8K).
 4. **Birth and microbiome are a small head start.** It's real (+$0.8K, 28% more fillings) but dwarfed by habits. That is exactly the message: no guilt about C-sections, and habits matter more.
@@ -476,7 +477,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 *Jobs and sports shape a mouth: the baker tasting all day, the loader clenching under a box, office coffee and stress, energy drinks on the night shift, hockey with and without a guard, soda on the road.*
 
 ![Two lives](art/two-lives.png)
-*Twin Lives: the same person with the same luck makes one choice at 34. At 45 the lives barely differ. At 62 the gap is obvious. Numbers are from the simulation (seed 26).*
+*Twin Lives: the same person with the same luck makes one choice at 34. At 45 the lives barely differ. At 62 the gap is obvious. Numbers are from the simulation (seed 50).*
 
 ![The Acid Clock](art/acid-clock.png)
 *The Acid Clock: the same Tuesday as it is, with the same food eaten at meals, and at 70 on a drying medication. Below it, acid time per day across one life. See §4.5.*
@@ -620,13 +621,13 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 6. **Costs:** US-only for v1?
 7. **Art:** keep building with the code-drawn toolkit, or bring in a pixel artist for M3 animation polish?
 8. **Name:** keep *Avoid the Dentist*? Alternates: *Small Now, Big Later*; *Open Wide, Live Long*; *Tooth & Consequences*.
-9. **Next build (proposed):** the repair side of the Acid Clock plus reflux and sleep-apnea events (they reuse the same engine), then the backyard garden as the microbiome view.
+9. **Built:** the repair side of the Acid Clock, plus reflux and sleep apnea (September 2026). **Next:** the backyard garden as the microbiome view, then the tool shed with evidence badges, then the toothpaste-amount choice with fluorosis.
 
 ---
 
 ## 15. Evidence table (condensed)
 
-`[V]` = verified against a source abstract or summary during research (2026-09); `[U]` = recalled from the literature, verify before launch; `[D]` = design assumption or calibration knob.
+Every claim with a link: [SOURCES.md](SOURCES.md). `[V]` = verified against a source abstract or summary during research (2026-09); `[U]` = recalled from the literature, verify before launch; `[D]` = design assumption or calibration knob.
 
 | Parameter | Value in model | Source | Tag |
 |---|---|---|---|
@@ -642,8 +643,12 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 | Saliva in sleep | flow virtually nil | Schneyer 1956; Dawes 2008 | V |
 | Starchy snacks | slower drop, longer low pH, worse with low saliva | Lingström 1993 | V |
 | Sugar-free gum after eating | faster plaque-pH recovery | Manning & Edgar 1993 | V |
-| Cheese after sugar | raises plaque pH | Rugg-Gunn 1975 | U |
-| Sugar at meals vs. between meals | far less decay at meals | Vipeholm (Gustafsson 1954) | U |
+| Other foods in a meal | blunt a sugary drink's pH fall | Rugg-Gunn 1975 | V |
+| Cheese after sugar | raises plaque pH | Rugg-Gunn 1975 and later work | U |
+| Sugar at meals vs. between meals | far less decay at meals | Vipeholm (Gustafsson 1954) | V |
+| Reflux | connects with erosion (pooled OR ~5); decay link mixed | meta-analysis 2022; reviews | V |
+| Mouth breathing in sleep | intraoral pH 6.6 vs. 7.0, dips to 3.6 | Choi 2016 | V |
+| Sleep apnea and bruxism | associated; causality unclear. Treatment reduced bruxism in ~60% (small pilot) | scoping review 2022; pilot 2023 | V (mixed) |
 | Beverage acidity | sodas and sports drinks ~pH 3.1; juices ~3.5 | Reddy 2016 | V |
 | Hyposalivation | unstimulated flow <0.1 vs. ~0.3–0.4 mL/min | clinical definition | V/D |
 | Per-food dip depths, linger times, gum and water effects | see `sim/stephan.js` | design estimates | D |
@@ -688,7 +693,7 @@ art/            pixel-art toolkit + sprites + scenes (browser & Node)
   acidclock.js  the Acid Clock strip, life chart and sheet
 sim/            the hidden model
   model.js      one life, month by month
-  stephan.js    the Acid Clock: a day's plaque-pH curve
+  stephan.js    the Acid Clock: a day's plaque-pH curve (acid and repair)
   params.js     parameters with evidence tags
   rng.js        named random streams + hazard clocks ("same luck")
   lives.js      preset lives (and Maya)

@@ -294,6 +294,9 @@
             <option value="gum">Chews sugar-free gum after eating</option>
             <option value="bedtimeSnack">Has a snack after brushing at night</option>
             <option value="dryMeds45">Starts a medication that dries the mouth at 45</option>
+            <option value="reflux40">Acid reflux at night from 40</option>
+            <option value="apnea45">Sleep apnea from 45, untreated</option>
+            <option value="apnea45treated">Sleep apnea from 45, treated</option>
           </select></div>
         <button class="run" id="lab-run" type="button">Live it 100 times</button>
       </form>
@@ -333,7 +336,7 @@
     <div class="section-head">
       <div class="eyebrow">New mechanic · the Acid Clock</div>
       <h2>A day of eating, the way your teeth feel it</h2>
-      <p>Every snack or sugary drink drops the pH of the plaque on your teeth for a while. Below 5.5, enamel starts to dissolve; exposed roots start sooner, around 6.2. Saliva brings the pH back up. How low it goes and how long it stays down depends on <em>what</em> you eat, <em>when</em> you eat it, and your mouth. This is the Stephan curve, and in the game it is the Acid Clock: the model runs it for every day of a life and adds up the acid time.</p>
+      <p>Every snack or sugary drink drops the pH of the plaque on your teeth for a while. Below 5.5, enamel starts to dissolve; exposed roots start sooner, around 6.2. Saliva brings the pH back up, and once it is back above about 6.0 the enamel starts regaining minerals: the day is a tug-of-war between acid and repair. How low it goes and how long it stays down depends on <em>what</em> you eat, <em>when</em> you eat it, and your mouth. This is the Stephan curve, and in the game it is the Acid Clock: the model runs it for every day of a life and adds up the acid time.</p>
     </div>
     <div class="acid">
       <form class="acid-form" onsubmit="return false">
@@ -344,9 +347,11 @@
           <label><input type="checkbox" id="acid-gum"> Sugar-free gum after eating</label>
           <label><input type="checkbox" id="acid-water"> Water rinse after snacks</label>
           <label><input type="checkbox" id="acid-ms"> More cavity bacteria</label>
+          <label><input type="checkbox" id="acid-reflux"> Acid reflux at night</label>
+          <label><input type="checkbox" id="acid-apnea"> Sleep apnea / mouth breathing</label>
         </fieldset>
       </form>
-      <div class="legend" id="acid-legend"><span class="line" style="--c: var(--better)">With your changes</span><span class="dash" style="--c: var(--muted)">The day as described</span><span style="--c: color-mix(in srgb, var(--worse) 45%, transparent)">Acid time (below 5.5)</span><span style="--c: color-mix(in srgb, var(--rule) 70%, transparent)">Asleep</span><span class="dot" style="--c: var(--worse)">Sweet snack or drink</span><span class="dot" style="--c: var(--muted)">Meal or sugar-free drink</span><span class="ring" style="--c: var(--better)">Gum or water</span></div>
+      <div class="legend" id="acid-legend"><span class="line" style="--c: var(--better)">With your changes</span><span class="dash" style="--c: var(--muted)">The day as described</span><span style="--c: color-mix(in srgb, var(--worse) 45%, transparent)">Acid time (below 5.5)</span><span style="--c: color-mix(in srgb, var(--rule) 70%, transparent)">Asleep</span><span class="dot" style="--c: var(--worse)">Sweet snack or drink</span><span class="dot" style="--c: var(--muted)">Meal or sugar-free drink</span><span class="ring" style="--c: var(--better)">Gum or water</span><span style="--c: color-mix(in srgb, var(--better) 55%, transparent)">Repair time (back above 6.0)</span></div>
       <div class="acid-chart" id="acid-chart"><div class="tip" id="acid-tip" hidden></div></div>
       <div class="acid-tiles tiles" id="acid-tiles"></div>
       <p id="acid-note" aria-live="polite" style="color: var(--ink-2)"></p>
@@ -368,7 +373,7 @@
       <p>320×180 native resolution, integer-scaled. A warm custom palette with purple-leaning shadows and ink outlines. Characters are paper dolls: skin, hair, outfit, expression, pose, glasses and hats all swap.</p>
     </div>
     <div class="gallery">
-      <div class="piece"><figure class="frame"><canvas data-sheet="acidclock" width="320" height="308" aria-label="The Acid Clock in pixel art: three versions of one day's plaque pH, and acid time per day across a life."></canvas></figure>
+      <div class="piece"><figure class="frame"><canvas data-sheet="acidclock" width="320" height="314" aria-label="The Acid Clock in pixel art: three versions of one day's plaque pH, and acid time per day across a life."></canvas></figure>
         <div class="text"><h3>The Acid Clock</h3><p>How the game shows a day: what she ate and drank sits on a shelf above the curve, night is shaded, and acid time is filled in. Same food eaten with meals: 1h 33m instead of 5h 33m. The same day on a drying medication at 70: over 8 hours. Below, her acid time for every year of one simulated life, with the choices that moved it.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="mockup" width="320" height="180" aria-label="Main game screen mockup with status panel, wallet, event card and life timeline."></canvas></figure>
         <div class="text"><h3>The main screen</h3><p>Feelings instead of stats in the status panel, a wallet with speed controls, an event card (“It's been 18 months!”) and the life timeline. The postcards on the fridge are the reminders Maya keeps not answering.</p></div></div>

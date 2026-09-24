@@ -26,6 +26,9 @@ export const CHANGES = {
   gum: { gum: true },
   bedtimeSnack: { bedtimeSnack: true },
   dryMeds45: { phases: [{ age: 45, set: { dryMouthMeds: true } }] },
+  reflux40: { phases: [{ age: 40, set: { reflux: true } }] },
+  apnea45: { phases: [{ age: 45, set: { sleepApnea: 'untreated' } }] },
+  apnea45treated: { phases: [{ age: 45, set: { sleepApnea: 'treated' } }] },
 };
 
 const cost = l => l.money.outOfPocket + l.money.parentsPaid;

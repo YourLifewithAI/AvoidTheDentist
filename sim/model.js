@@ -8,7 +8,7 @@
 
 import { P, JOBS } from './params.js';
 import { Streams, Clock } from './rng.js';
-import { buildDay, simulateDay, mouthOf, acidRR, rootRR, REF_EROSION } from './stephan.js';
+import { buildDay, simulateDay, mouthOf, acidRR, rootRR, repairRR, REF_EROSION } from './stephan.js';
 
 export const DEFAULT_PLAN = {
   name: 'Default',
@@ -39,6 +39,8 @@ export const DEFAULT_PLAN = {
   waterAfterSnacks: false, // a water rinse after snacks and sodas
   bedtimeSnack: false, // a snack after brushing at night
   dryMouthMeds: false, // a daily medication that dries the mouth (adults; set with `phases`)
+  reflux: false, // acid reflux at night (connects with erosion, and with decay through night acid)
+  sleepApnea: false, // false | 'untreated' | 'treated': mouth breathing dries the mouth in sleep; connects with grinding
   brushing: 'twice', // 'twice' | 'once' | 'rarely'
   fluorideToothpaste: true,
   interdental: 'sometimes', // 'daily' | 'sometimes' | 'never'
@@ -74,12 +76,12 @@ export function acidDay(pl, ctx, mouth) {
   const key = [stage, working ? job : '', sportActive ? (kid ? 'k' : 'a') : '', kid ? pl.kidSugar : pl.sugar,
     kid ? '' : `${pl.sodas},${pl.dietSodas},${pl.energyDrinks},${pl.sipping ? 1 : 0}`,
     pl.withMeals ? 1 : 0, pl.gum ? 1 : 0, pl.waterAfterSnacks ? 1 : 0, pl.bedtimeSnack ? 1 : 0, stage === 'toddler' && pl.bedtimeBottle ? 1 : 0,
-    ms, PI, mouth.saliva].join('|');
+    stage === 'adult' && pl.reflux ? 1 : 0, ms, PI, mouth.saliva, mouth.nightDry ?? 1].join('|');
   let r = DAY_CACHE.get(key);
   if (!r) {
     const d = buildDay(pl, { age, job, working, sportActive });
-    const x = simulateDay(d.intakes, mouthOf({ ms, PI, saliva: mouth.saliva }), d.sleep);
-    r = { acidMinutes: x.acidMinutes, acidDose: x.acidDose, rootMinutes: x.rootMinutes, rootDose: x.rootDose, sleepAcid: x.sleepAcid, erosion: x.erosion };
+    const x = simulateDay(d.intakes, mouthOf({ ms, PI, saliva: mouth.saliva, nightDry: mouth.nightDry }), d.sleep);
+    r = { acidMinutes: x.acidMinutes, acidDose: x.acidDose, rootMinutes: x.rootMinutes, rootDose: x.rootDose, sleepAcid: x.sleepAcid, erosion: x.erosion, repairMinutes: x.repairMinutes, repairDose: x.repairDose };
     if (DAY_CACHE.size > 40000) DAY_CACHE.clear();
     DAY_CACHE.set(key, r);
   }
@@ -223,6 +225,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     tmd: new Clock(S, 'tmd'),
     wisdom: new Clock(S, 'wisdom'),
     prosthesis: new Clock(S, 'prosthesis'),
+    sensitivity: new Clock(S, 'sensitivity'),
   };
   const wisdomTrouble = S.u('trait:wisdom') < 0.6;
   let wisdomDone = false;
@@ -277,6 +280,8 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     const vaper = !kid && pl.smoking === 'vaper';
     const dryMouth = dryMouthLater && age >= 60;
     const saliva = dryMouth ? P.saliva.dry : pl.dryMouthMeds && adult ? P.saliva.meds : 1;
+    const apnea = adult ? pl.sleepApnea || false : false;
+    const nightDry = apnea === 'untreated' ? P.apnea.nightDry : apnea === 'treated' ? P.apnea.nightDryTreated : 1;
     const bracesOn = pl.braces && age >= 12 && age < 14.5;
     const pr = life.perio;
     let PI = P.plaque[brushing] - P.interdental[kid ? 'never' : pl.interdental] - (pl.electricBrush ? P.electricBrush : 0);
@@ -292,7 +297,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     }
 
     // ---- the Acid Clock: today's plaque-pH curve from diet, schedule and this mouth
-    const day = acidDay(pl, { age, job: pl.job, working, sportActive }, { ms: life.ms, PI: pr.PI, saliva });
+    const day = acidDay(pl, { age, job: pl.job, working, sportActive }, { ms: life.ms, PI: pr.PI, saliva, nightDry });
     life.acidNow = day;
 
     // ---- caries risk multiplier (mouth level)
@@ -310,7 +315,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     const kidHighRisk = pl.knowsRisk && rr > 1.6;
 
     // ---- bruxism
-    let brux = bruxBase + (working ? job.brux : 0) + (pl.energyDrinks > 0 ? 0.05 : 0) + (smoker ? 0.05 : 0) + (age > 45 ? 0.05 : 0);
+    let brux = bruxBase + (apnea ? P.apnea.brux[apnea] : 0) + (working ? job.brux : 0) + (pl.energyDrinks > 0 ? 0.05 : 0) + (smoker ? 0.05 : 0) + (age > 45 ? 0.05 : 0);
     brux = Math.min(1, brux);
     const guardOn = life.hasNightGuard ? P.nightGuardProtection * P.nightGuardAdherence : 0;
     const bruxEff = brux * (1 - guardOn);
@@ -318,7 +323,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     // ---- periodontal
     pr.calc = Math.min(1, pr.calc + P.calculusPerMonth * pr.PI);
     const pregnant = pl.pregnancies.some(a => age >= a && age < a + 0.75);
-    let G = 0.05 + 0.75 * pr.PI + 0.2 * pr.calc + (pregnant ? 0.2 : 0) + (life.diabetic ? 0.1 : 0) + (smoker ? 0.05 : 0) + (bracesOn ? 0.1 : 0);
+    let G = 0.05 + (apnea === 'untreated' ? P.apnea.gums : 0) + 0.75 * pr.PI + 0.2 * pr.calc + (pregnant ? 0.2 : 0) + (life.diabetic ? 0.1 : 0) + (smoker ? 0.05 : 0) + (bracesOn ? 0.1 : 0);
     if (pr.boost > 0) { G *= pr.maint ? 0.5 : 0.7; pr.boost--; }
     pr.G = Math.max(0, Math.min(1, G));
     if (age >= 15) {
@@ -384,7 +389,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
       if (t.stage === 0 && t.resto !== 'crown' && t.resto !== 'rct') {
         if (clockFor(S, t, 'init').tick(baseInit * trr + (isPrim ? 0 : rootRisk), dt)) t.stage = 1;
       } else if (t.stage === 1) {
-        const arrest = P.prog.arrest * (varnish ? 2.5 : 1) * (goodFluoride ? 1.3 : 0.7) / Math.max(0.5, Math.min(2.5, trr));
+        const arrest = P.prog.arrest * repairRR(day.repairDose) * (varnish ? 2.5 : 1) * (goodFluoride ? 1.3 : 0.7) / Math.max(0.5, Math.min(2.5, trr));
         if (clockFor(S, t, 'arrest').tick(arrest, dt)) t.stage = 0;
         else if (clockFor(S, t, 'prog').tick(P.prog.enamelToDentin * progF, dt)) t.stage = 2;
       } else if (t.stage === 2) {
@@ -458,6 +463,9 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
       }
     }
     if (!kid && visibleIssue) life.selfConsciousMonths++;
+
+    // acid wear: enamel softened by acidic drinks and reflux -> cold sensitivity (connects with erosion)
+    if (adult && day.erosion > REF_EROSION && clocks.sensitivity.tick(P.erosionSensitivity * (day.erosion / REF_EROSION - 1), dt)) life.painDays += 1;
 
     // gum abscess / jaw pain
     if (pr.CAL >= 6 && clocks.perioAbscess.tick(0.3, dt)) { severePain = true; painWhy = painWhy || 'gum abscess'; life.painDays += 5; }
@@ -553,7 +561,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
         anxiety: +life.anxiety.toFixed(2), oop: Math.round(life.oop), wallet: Math.round(life.wallet),
         painDays: Math.round(life.painDays), selfConscious: +(life.selfConsciousMonths / 12).toFixed(1),
         walletNoDental: Math.round(life.walletNoDental),
-        acidMin: life.acidNow.acidMinutes, rootMin: recession > 0 ? life.acidNow.rootMinutes : 0, sleepAcid: life.acidNow.sleepAcid,
+        acidMin: life.acidNow.acidMinutes, repairMin: life.acidNow.repairMinutes, rootMin: recession > 0 ? life.acidNow.rootMinutes : 0, sleepAcid: life.acidNow.sleepAcid,
       });
     }
   }

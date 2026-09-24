@@ -7,7 +7,7 @@ import { PROP } from '../art/sprites/props.js';
 import { EMOTE } from '../art/sprites/emotes.js';
 import { drawHouse } from '../art/scenes/house.js';
 import * as sheets from '../art/sheets.js';
-import { SAMPLE_DAYS, simulateDay, mouthOf, FOODS, attribution, acidRR, ENAMEL_CRIT, ROOT_CRIT } from '../sim/stephan.js';
+import { SAMPLE_DAYS, simulateDay, mouthOf, FOODS, attribution, acidRR, ENAMEL_CRIT, ROOT_CRIT, REPAIR_LINE } from '../sim/stephan.js';
 import { simulateLife } from '../sim/model.js';
 import { LIVES, MAYA_ACID, MAYA_ACID_MARKERS } from '../sim/lives.js';
 
@@ -327,16 +327,17 @@ const since6 = m => (m - DAY_START + 1440) % 1440;
 const eats = f => !FOODS[f].noSugar; // meals, snacks and sugary drinks
 const isMeal = f => f === 'meal' || f === 'dessertMeal';
 
-const ACID_DAYS = SAMPLE_DAYS.filter(d => !['gum', 'dry'].includes(d.id));
+const ACID_DAYS = SAMPLE_DAYS.filter(d => !['gum', 'dry', 'reflux', 'apnea'].includes(d.id));
 const daySelect = document.getElementById('acid-day');
 daySelect.innerHTML = ACID_DAYS.map(d => `<option value="${d.id}">${esc(d.label)}</option>`).join('');
-const tg = { dry: document.getElementById('acid-dry'), gum: document.getElementById('acid-gum'), water: document.getElementById('acid-water'), ms: document.getElementById('acid-ms') };
+const tg = { dry: document.getElementById('acid-dry'), gum: document.getElementById('acid-gum'), water: document.getElementById('acid-water'), ms: document.getElementById('acid-ms'), reflux: document.getElementById('acid-reflux'), apnea: document.getElementById('acid-apnea') };
 
 function acidState() {
   const d = ACID_DAYS.find(x => x.id === daySelect.value) || ACID_DAYS[0];
   const toddler = d.id === 'toddler' || d.id === 'bottle';
   tg.gum.disabled = toddler;
   tg.gum.parentElement.title = toddler ? 'Not for toddlers' : '';
+  tg.reflux.disabled = toddler; tg.apnea.disabled = toddler;
   const extra = [];
   for (const it of d.intakes) {
     if (!eats(it.food)) continue;
@@ -345,10 +346,12 @@ function acidState() {
     if (tg.gum.checked && !toddler) extra.push({ t: (done + (meal ? 20 : 10)) % 1440, food: 'gum' });
     if (tg.water.checked && !meal) extra.push({ t: (done + 10) % 1440, food: 'water' });
   }
+  if (tg.reflux.checked && !toddler) [30, 200, 380].forEach(dt => extra.push({ t: (d.sleep[0] + dt) % 1440, food: 'reflux' }));
   const intakes = [...d.intakes, ...extra].sort((p, q) => p.t - q.t);
+  const nightDry = tg.apnea.checked && !toddler ? 0.4 : 1;
   const baseMouth = mouthOf({ saliva: d.saliva });
-  const mouth = mouthOf({ saliva: tg.dry.checked ? 0.35 : d.saliva, ms: tg.ms.checked ? 2 : 1 });
-  const changed = extra.length > 0 || tg.dry.checked && d.saliva > 0.35 || tg.ms.checked;
+  const mouth = mouthOf({ saliva: tg.dry.checked ? 0.35 : d.saliva, ms: tg.ms.checked ? 2 : 1, nightDry });
+  const changed = extra.length > 0 || tg.dry.checked && d.saliva > 0.35 || tg.ms.checked || nightDry < 1;
   return {
     d, intakes, mouth, changed,
     base: simulateDay(d.intakes, baseMouth, d.sleep),
@@ -370,7 +373,7 @@ function drawAcid() {
   const W = Math.max(300, Math.round(host.clientWidth - 12));
   const narrow = W < 560;
   const H = Math.round(Math.min(360, Math.max(250, W * 0.4)));
-  const L = 34, R = 10, T = 34, B = 26, pw = W - L - R, ph = H - T - B;
+  const L = 34, R = 10, T = 34, B = 36, pw = W - L - R, ph = H - T - B;
   const x = m => L + (since6(m) / 1440) * pw;
   const y = v => T + ((7.2 - Math.max(4, Math.min(7.2, v))) / 3.2) * ph;
   const path = curve => { let p = ''; for (let i = 0; i <= 1440; i++) { const m = (DAY_START + i) % 1440; p += `${i ? 'L' : 'M'}${(L + (i / 1440) * pw).toFixed(1)},${y(curve[m]).toFixed(1)}`; } return p; };
@@ -386,7 +389,15 @@ function drawAcid() {
   for (let i = 0; i <= 1440; i += step) {
     const m = (DAY_START + i) % 1440, xx = L + (i / 1440) * pw;
     const label = m === 0 ? 'midnight' : m === 720 ? 'noon' : clock(m).replace(':00', '');
-    out += `<line x1="${xx}" x2="${xx}" y1="${T + ph}" y2="${T + ph + 4}" style="stroke: var(--muted)"/><text x="${xx}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === 1440 ? 'end' : 'middle'}">${label}</text>`;
+    out += `<line x1="${xx}" x2="${xx}" y1="${T + ph + 10}" y2="${T + ph + 14}" style="stroke: var(--muted)"/><text x="${xx}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : i === 1440 ? 'end' : 'middle'}">${label}</text>`;
+  }
+  // acid vs. repair, a balance strip under the plot
+  for (let i = 0; i < 1440; ) {
+    const v = c0 => (c0 < ENAMEL_CRIT ? 'acid' : c0 >= REPAIR_LINE ? 'repair' : 'none');
+    const k = v(st.mod.curve[(DAY_START + i) % 1440]);
+    let j = i; while (j < 1440 && v(st.mod.curve[(DAY_START + j) % 1440]) === k) j++;
+    if (k !== 'none') out += `<rect x="${(L + (i / 1440) * pw).toFixed(1)}" y="${T + ph + 3}" width="${(((j - i) / 1440) * pw).toFixed(1)}" height="6" style="fill: color-mix(in srgb, var(${k === 'acid' ? '--worse' : '--better'}) ${k === 'acid' ? 75 : 55}%, transparent)"/>`;
+    i = j;
   }
   // acid area of the current curve
   const c = st.mod.curve;
@@ -439,15 +450,16 @@ function drawAcid() {
 
 function acidTiles(st) {
   const { mod, base, changed } = st;
-  const delta = (a, b, fmt) => {
+  const delta = (a, b, fmt, moreIsBetter = false) => {
     if (!changed || a === b) return '';
     const up = a > b;
-    return `<span class="delta ${up ? 'up' : 'down'}">${fmt(Math.abs(a - b))} ${up ? 'more' : 'less'}</span>`;
+    return `<span class="delta ${up !== moreIsBetter ? 'up' : 'down'}">${fmt(Math.abs(a - b))} ${up ? 'more' : 'less'}</span>`;
   };
   const rrM = acidRR(mod.acidDose), rrB = acidRR(base.acidDose);
   const tiles = [
     ['Acid time', hhmm(mod.acidMinutes) + delta(mod.acidMinutes, base.acidMinutes, hhmm), 'below pH 5.5, where enamel dissolves'],
     ['Longest stretch', `${mod.longest} min` + delta(mod.longest, base.longest, v => `${v} min`), `starting ${clock(mod.longestStart)}`],
+    ['Repair time', hhmm(mod.repairMinutes) + delta(mod.repairMinutes, base.repairMinutes, hhmm, true), 'back above pH 6.0, enamel regains minerals'],
     ['Acid while asleep', hhmm(mod.sleepAcid) + delta(mod.sleepAcid, base.sleepAcid, hhmm), 'saliva nearly stops in sleep'],
     ['Cavity pressure', `×${rrM.toFixed(2)}` + delta(Math.round(rrM * 100), Math.round(rrB * 100), v => `${(v / 100).toFixed(2)}`), 'vs. three snacks between meals'],
     ['Exposed roots', hhmm(mod.rootMinutes) + delta(mod.rootMinutes, base.rootMinutes, hhmm), 'below pH 6.2, if gums have receded'],
@@ -459,8 +471,12 @@ function acidTiles(st) {
   if (tg.ms.checked) why.push('more cavity bacteria make every dip deeper');
   if (tg.gum.checked && !tg.gum.disabled) why.push('gum after eating brings the pH back up faster');
   if (tg.water.checked) why.push('a water rinse after snacks helps a little');
+  if (tg.reflux.checked && !tg.reflux.disabled) why.push('night-time reflux connects with acid spikes while asleep, with no food involved, and with acid wear');
+  if (tg.apnea.checked && !tg.apnea.disabled) why.push('mouth breathing in sleep connects with a drier mouth at night, so anything eaten near bedtime (or reflux) lingers');
+  const same = base.acidMinutes === mod.acidMinutes;
+  const nightTip = same && tg.apnea.checked ? ' On this day nothing is eaten near bedtime, so try “Snacks + a cookie after brushing” or add reflux.' : '';
   document.getElementById('acid-note').textContent = changed
-    ? `Acid time goes from ${hhmm(base.acidMinutes)} to ${hhmm(mod.acidMinutes)}: ${why.join('; ')}.`
+    ? `${same ? `Acid time stays at ${hhmm(mod.acidMinutes)}` : `Acid time goes from ${hhmm(base.acidMinutes)} to ${hhmm(mod.acidMinutes)}`}: ${why.join('; ')}.${nightTip}`
     : `${st.d.label}: ${hhmm(mod.acidMinutes)} a day below pH 5.5, the longest stretch ${mod.longest} minutes. Tick a box above to change the mouth or the habits.`;
   // table: what each food adds
   const att = attribution(st.intakes, st.mouth, st.d.sleep);
@@ -482,7 +498,7 @@ function showAcidCursor(i) {
   db.setAttribute('cx', xx); db.setAttribute('cy', g.y(st.base.curve[m]));
   const last = [...st.intakes].filter(it => since6(it.t) <= i && FOODS[it.food].drop > 0).pop();
   const tip = document.getElementById('acid-tip');
-  tip.innerHTML = `<strong>${clock(m)}</strong><br>pH ${st.mod.curve[m].toFixed(2)}${st.changed ? ' with your changes' : ''}${st.changed ? `<br>pH ${st.base.curve[m].toFixed(2)} as described` : ''}${last ? `<br>Last: ${esc(FOODS[last.food].label)} at ${clock(last.t)}` : ''}${st.mod.curve[m] < ENAMEL_CRIT ? '<br><em>Enamel is dissolving</em>' : ''}`;
+  tip.innerHTML = `<strong>${clock(m)}</strong><br>pH ${st.mod.curve[m].toFixed(2)}${st.changed ? ' with your changes' : ''}${st.changed ? `<br>pH ${st.base.curve[m].toFixed(2)} as described` : ''}${last ? `<br>Last: ${esc(FOODS[last.food].label)} at ${clock(last.t)}` : ''}${st.mod.curve[m] < ENAMEL_CRIT ? '<br><em>Enamel is dissolving</em>' : st.mod.curve[m] >= REPAIR_LINE ? '<br><em>Repairing</em>' : ''}`;
   tip.hidden = false;
   const host = document.getElementById('acid-chart');
   const scale = svg.getBoundingClientRect().width / g.W;

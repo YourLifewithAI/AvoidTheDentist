@@ -13,10 +13,13 @@
 // (Imfeld telemetry) [V]; Stephan 1944: nadir in ~5-20 min, back in 30-60 min
 // [V]; saliva virtually zero in sleep (Schneyer 1956; Dawes 2008) [V]; starch
 // snacks drop slower but linger, longer with low saliva (Lingström 1993) [V];
-// sugar-free gum speeds recovery (Manning & Edgar 1993) [V], and so does
-// cheese (Rugg-Gunn 1975) [U]; caries-active mouths rest lower, dip deeper,
-// recover slower [V]; sugar at meals far less cariogenic than between meals
-// (Vipeholm, Gustafsson 1954) [U];
+// sugar-free gum speeds recovery (Manning & Edgar 1993) [V]; other foods in a
+// meal blunt a sugary drink's fall (Rugg-Gunn 1975) [V], cheese specifically [U];
+// caries-active mouths rest lower, dip deeper, recover slower [V]; sugar at meals
+// far less cariogenic than between meals (Vipeholm, Gustafsson 1954) [V];
+// reflux connects with erosion (meta-analysis OR ~5) [V], with decay only
+// weakly [V: mixed]; mouth breathing in sleep lowers intraoral pH (Choi 2016) [V].
+// Sources with links: docs/SOURCES.md.
 // beverage pH: sodas and sports drinks ~3.1, juices ~3.5 (Reddy 2016) [V].
 // Per-food depths and linger times are design estimates [D] in that frame.
 
@@ -26,6 +29,7 @@ export const SAFE_LINE = 5.7;
 const PH_FLOOR = 4.0;
 const K0 = 0.08; // per minute recovery rate at normal saliva (nadir 4.7 -> 5.5 in ~25 min)
 const SLEEP_SALIVA = 0.08; // saliva flow asleep, relative to awake
+export const REPAIR_LINE = 6.0; // above this, with saliva around, enamel regains minerals
 
 // drop: pH units below resting at the nadir (reference mouth); tDrop: minutes to
 // nadir; hold: minutes the food lingers near the nadir; sip: default minutes to
@@ -62,6 +66,7 @@ export const FOODS = {
   veggies: { label: 'Veggies', drop: 0.2, tDrop: 5, hold: 0, noSugar: true },
   cheese: { label: 'Cheese', drop: 0, tDrop: 1, hold: 0, noSugar: true, effect: { k: 2.5, minutes: 20, clear: 0.5 } },
   gum: { label: 'Sugar-free gum', drop: 0, tDrop: 1, hold: 0, noSugar: true, effect: { k: 2.0, minutes: 20, clear: 0.6 } },
+  reflux: { label: 'Reflux at night', drop: 1.3, tDrop: 1, hold: 4, drinkPH: 2.0, noSugar: true, body: true },
   water: { label: 'Water rinse', drop: 0, tDrop: 1, hold: 0, noSugar: true, effect: { k: 1.4, minutes: 10, clear: 0.4 } },
 };
 
@@ -69,11 +74,12 @@ export const FOODS = {
 // and plaque (PI 0..1, ~0.4 brushing twice); saliva 1 normal, ~0.35 dry mouth.
 // More bacteria and thicker plaque rest lower, dip deeper and clear slower;
 // less saliva buffers less [V, magnitudes D].
-export function mouthOf({ ms = 1, PI = 0.4, saliva = 1 } = {}) {
+// nightDry: extra drying in sleep (mouth breathing, sleep apnea), 1 = none.
+export function mouthOf({ ms = 1, PI = 0.4, saliva = 1, nightDry = 1 } = {}) {
   const rest = Math.max(6.1, Math.min(7.05, 6.95 - 0.2 * Math.max(0, ms - 1) - 0.3 * Math.max(0, PI - 0.45) - 0.25 * Math.max(0, 1 - saliva)));
   const dropScale = (0.9 + 0.25 * PI) * (0.93 + 0.07 * Math.min(3, ms));
   const clear = 1.1 - 0.25 * PI;
-  return { rest, dropScale, clear, saliva };
+  return { rest, dropScale, clear, saliva, nightDry };
 }
 
 // intakes: [{ t: minute of day (0..1439), food: id, sip?: minutes, size?: portions }]
@@ -85,7 +91,7 @@ export function simulateDay(intakes, mouth = mouthOf(), sleep = [23 * 60, 7 * 60
   const saliva = new Float64Array(1440), sleeping = new Uint8Array(1440);
   for (let m = 0; m < 1440; m++) {
     sleeping[m] = asleep(m) ? 1 : 0;
-    saliva[m] = mouth.saliva * (sleeping[m] ? SLEEP_SALIVA : m < 6 * 60 || m >= 22 * 60 ? nightAwake : 1);
+    saliva[m] = mouth.saliva * (sleeping[m] ? SLEEP_SALIVA * (mouth.nightDry ?? 1) : m < 6 * 60 || m >= 22 * 60 ? nightAwake : 1);
   }
   const H0 = Math.pow(10, -mouth.rest);
   const events = intakes.map(x => {
@@ -126,6 +132,7 @@ export function simulateDay(intakes, mouth = mouthOf(), sleep = [23 * 60, 7 * 60
   const curve = new Float32Array(1440);
   let pool = 0, next = 0, active = [];
   let acidMinutes = 0, acidDose = 0, rootMinutes = 0, rootDose = 0, safeMinutes = 0, sleepAcid = 0, lowest = 14;
+  let repairMinutes = 0, repairDose = 0; // remineralization: pH back above 6.0, faster with more saliva
   let run = 0, runStart = 0, longest = 0, longestStart = 0;
   for (let T = 0; T < 2880; T++) {
     const m = T % 1440;
@@ -149,6 +156,10 @@ export function simulateDay(intakes, mouth = mouthOf(), sleep = [23 * 60, 7 * 60
     if (pH < lowest) lowest = pH;
     if (pH < SAFE_LINE) safeMinutes++;
     if (pH < ROOT_CRIT) { rootMinutes++; rootDose += ROOT_CRIT - pH; }
+    if (pH >= REPAIR_LINE) {
+      repairMinutes++;
+      repairDose += Math.min(1, pH - REPAIR_LINE + 0.25) * (0.3 + 0.7 * Math.min(1, saliva[m]));
+    }
     if (pH < ENAMEL_CRIT) {
       acidMinutes++; acidDose += ENAMEL_CRIT - pH;
       if (sleeping[m]) sleepAcid++;
@@ -163,7 +174,7 @@ export function simulateDay(intakes, mouth = mouthOf(), sleep = [23 * 60, 7 * 60
     const contact = 2 + 0.6 * e.sip + 3 / Math.sqrt(Math.max(mouth.saliva, 0.1));
     erosion += contact * Math.max(0, 4.5 - e.f.drinkPH);
   }
-  return { curve, rest: mouth.rest, acidMinutes, acidDose, rootMinutes, rootDose, safeMinutes, sleepAcid, lowest, longest, longestStart, erosion };
+  return { curve, rest: mouth.rest, acidMinutes, acidDose, rootMinutes, rootDose, safeMinutes, sleepAcid, lowest, longest, longestStart, erosion, repairMinutes, repairDose };
 }
 
 // Which intakes cost the most acid time? (for the Acid Clock's "biggest dip" callouts)
@@ -238,6 +249,8 @@ export function buildDay(pl, ctx) {
   }
   if (sportActive) add(hm(17), kid ? 'juice' : 'sportsDrink', { sip: 30 });
   if (toddler && pl.bedtimeBottle) add(sleep[0] - 10, 'juiceBottle');
+  // acid reflux: stomach acid reaches the mouth after lying down (no food on the shelf)
+  if (pl.reflux && age >= 18) [30, 200, 380].forEach(d => add(sleep[0] + d, 'reflux'));
   intakes.sort((a, b) => a.t - b.t);
   return { intakes, sleep };
 }
@@ -251,6 +264,13 @@ const REF = (() => {
 export const REF_DOSE = REF.acidDose;
 export const REF_ROOT = REF.rootDose;
 export const REF_EROSION = 2 * (2 + 0.6 * 10 + 3) * (4.5 - 3.1); // two regular sodas
+export const REF_REPAIR = REF.repairDose;
+
+// Repair (remineralization) relative to the reference day: more time back above
+// 6.0 with saliva flowing = more chances for early lesions to harden again [V, shape D].
+export function repairRR(repairDose) {
+  return Math.max(0.4, Math.min(1.4, repairDose / REF_REPAIR));
+}
 
 // Caries pressure from a day's acid dose, relative to the reference day
 // (exponent and floor are calibration knobs [D]). Good fluoride use lets enamel
@@ -287,10 +307,12 @@ export const SAMPLE_DAYS = [
   { id: 'dryCandy', label: 'Dry mouth, sucking candies for relief', intakes: sorted([...meals(), { t: hm(10), food: 'candy' }, { t: hm(11, 30), food: 'candy' }, { t: hm(14), food: 'candy' }, { t: hm(16), food: 'candy' }, { t: hm(20, 30), food: 'candy' }]), saliva: 0.35 },
   { id: 'baker', label: 'Baker: tastings from 5 am', ...buildDay({ sugar: 3, sodas: 0, dietSodas: 0, energyDrinks: 0 }, { age: 35, job: 'baker', working: true }) },
   { id: 'nurse', label: 'Night nurse: snacks on the night shift', ...buildDay({ sugar: 3, sodas: 1, dietSodas: 0, energyDrinks: 0 }, { age: 35, job: 'nurse', working: true }) },
+  { id: 'reflux', label: 'Snacks + acid reflux at night', intakes: sorted([...meals(), ...SNACKS3, ...[hm(23, 30), hm(2, 20), hm(5, 20)].map(t => ({ t, food: 'reflux' }))]) },
+  { id: 'apnea', label: 'Snacks + a cookie after brushing, mouth breathing in sleep', intakes: sorted([...meals(), ...SNACKS3, { t: hm(22, 40), food: 'cookies' }]), nightDry: 0.4 },
   { id: 'toddler', label: 'Toddler: juice, cookies, candy', ...buildDay({ kidSugar: 3 }, { age: 2 }) },
   { id: 'bottle', label: 'Toddler + juice bottle in bed', ...buildDay({ kidSugar: 3, bedtimeBottle: true }, { age: 2 }) },
 ].map(d => ({ sleep: ADULT_SLEEP, saliva: 1, ...d }));
 
 export function runSample(d, mouth = {}) {
-  return simulateDay(d.intakes, mouthOf({ ...mouth, saliva: d.saliva }), d.sleep);
+  return simulateDay(d.intakes, mouthOf({ ...mouth, saliva: d.saliva, nightDry: d.nightDry ?? 1 }), d.sleep);
 }

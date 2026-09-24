@@ -26,7 +26,7 @@ const hhmm = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
 const days = SAMPLE_DAYS.map(d => {
   const r = runSample(d);
   return { id: d.id, label: d.label, acidMinutes: r.acidMinutes, sleepAcid: r.sleepAcid, lowest: +r.lowest.toFixed(2), longest: r.longest,
-    rr: +acidRR(r.acidDose).toFixed(2), rootMinutes: r.rootMinutes, erosion: Math.round(r.erosion) };
+    rr: +acidRR(r.acidDose).toFixed(2), rootMinutes: r.rootMinutes, erosion: Math.round(r.erosion), repairMinutes: r.repairMinutes };
 });
 
 let md = `# Simulation report (prototype model v0)
@@ -81,11 +81,12 @@ ${[34, 45, 62, 79].map(a => { const A = two.featured.snapBookIt[a], B = two.feat
 
 A day's meals, snacks and drinks become a 24-hour Stephan curve for a typical mouth. "Acid time" is minutes below
 pH 5.5 (enamel dissolves); exposed roots dissolve below ~6.2. Caries pressure is the day's acid dose (area below 5.5)
-relative to the first row, before fluoride. Erosion counts acidic drinks bathing the teeth (independent of sugar).
+relative to the first row, before fluoride. Repair time is minutes back above pH 6.0, when enamel regains minerals
+(weighted by saliva in the model: repair asleep is slow). Erosion counts acidic drinks bathing the teeth (independent of sugar).
 
-| Day | Acid time | ...of it asleep | Lowest pH | Longest stretch | Caries pressure | Below 6.2 (roots) | Erosion |
-|---|---:|---:|---:|---:|---:|---:|---:|
-${days.map(d => `| ${d.label} | ${hhmm(d.acidMinutes)} | ${d.sleepAcid ? hhmm(d.sleepAcid) : '-'} | ${d.lowest.toFixed(2)} | ${d.longest} min | x${d.rr.toFixed(2)} | ${hhmm(d.rootMinutes)} | ${d.erosion || '-'} |`).join('\n')}
+| Day | Acid time | ...of it asleep | Repair time | Lowest pH | Longest stretch | Caries pressure | Below 6.2 (roots) | Erosion |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+${days.map(d => `| ${d.label} | ${hhmm(d.acidMinutes)} | ${d.sleepAcid ? hhmm(d.sleepAcid) : '-'} | ${hhmm(d.repairMinutes)} | ${d.lowest.toFixed(2)} | ${d.longest} min | x${d.rr.toFixed(2)} | ${hhmm(d.rootMinutes)} | ${d.erosion || '-'} |`).join('\n')}
 
 ## 6. The Acid Clock across a life (${N} lives each)
 

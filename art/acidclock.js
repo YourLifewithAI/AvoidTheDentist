@@ -6,7 +6,7 @@ import { C, SKIN, HAIR, CLOTH } from './palette.js';
 import * as P from './sprites/people.js';
 import { PROP } from './sprites/props.js';
 import { EMOTE } from './sprites/emotes.js';
-import { simulateDay, mouthOf, ENAMEL_CRIT, ROOT_CRIT, SAMPLE_DAYS } from '../sim/stephan.js';
+import { simulateDay, mouthOf, ENAMEL_CRIT, ROOT_CRIT, REPAIR_LINE, SAMPLE_DAYS } from '../sim/stephan.js';
 import { simulateLife } from '../sim/model.js';
 import { MAYA_ACID, MAYA_ACID_MARKERS } from '../sim/lives.js';
 
@@ -59,6 +59,11 @@ export function drawAcidStrip(pix, x, y, w, h, day, opts = {}) {
     pix.vline(x + i, Math.min(y0, y1), Math.max(y0, y1), C.ink);
   }
   pix.frame(x - 1, y - 1, w + 2, h + 2, C.ink);
+  // acid vs. repair: a 2-px balance band under the strip (red: dissolving, teal: regaining minerals)
+  for (let i = 0; i < w; i++) {
+    const v = col[i] < ENAMEL_CRIT ? C.red1 : col[i] >= REPAIR_LINE ? C.teal2 : C.mist;
+    pix.vline(x + i, y + h + 2, y + h + 3, v);
+  }
   // moon + zzz in the night band
   const nightCols = [];
   for (let i = 0; i < w; i++) if (asleep(minuteAt(i))) nightCols.push(i);
@@ -86,9 +91,9 @@ export function drawAcidStrip(pix, x, y, w, h, day, opts = {}) {
     for (const [m, label] of [[6 * 60, '6am'], [12 * 60, 'noon'], [18 * 60, '6pm'], [0, 'midnight'], [6 * 60 + 1439, '6am']]) {
       const i = Math.round(((m - start + 1440) % 1440) / mpp) + (label === '6am' && m > 1440 ? w - 1 : 0);
       const cx = Math.min(x + w - 1, x + i);
-      pix.vline(cx, y + h + 1, y + h + 2, C.ink2);
+      pix.vline(cx, y + h + 4, y + h + 5, C.ink2);
       const tw = measure(label);
-      pix.text(label, Math.max(x - 1, Math.min(x + w - tw + 1, cx - Math.floor(tw / 2))), y + h + 4, C.shade);
+      pix.text(label, Math.max(x - 1, Math.min(x + w - tw + 1, cx - Math.floor(tw / 2))), y + h + 7, C.shade);
     }
   }
   return { yRoot, yEnamel };
@@ -147,18 +152,18 @@ function portrait(pix, x, y, w, h, wall, stripe, draw) {
 // Sheet: "the same day three ways" + acid time across one life.
 export function acidclock(data = acidclockData()) {
   const { days, life, markers } = data;
-  const pix = new Pix(320, 308).clear(C.paper);
+  const pix = new Pix(320, 314).clear(C.paper);
   pix.text('The Acid Clock', 160, 3, C.ink, { align: 'center' });
   pix.text('Plaque pH through one day. Below the red line, enamel dissolves.', 160, 12, C.shade, { align: 'center' });
-  pix.text('Dotted: where exposed roots dissolve. Blue: asleep, almost no saliva.', 160, 21, C.shade, { align: 'center' });
+  pix.text('Dotted: roots dissolve. Blue: asleep. Band: acid vs. repair.', 160, 21, C.shade, { align: 'center' });
 
   const SX = 72, SW = 216, SH = 30;
   const rows = [
     { key: 'asIs', y: 57, title: 'Her Tuesday at 30: snacks, two sodas sipped', wall: C.wallCream, stripe: C.wallCreamS,
       person: fy => P.drawPerson(pix, 16, fy, { head: 'bun', face: 'content', body: 'tee', arms: 'hold', look: LOOKS.young, after: [{ spr: PROP.soda, dx: 7, dy: -1 }] }) },
-    { key: 'better', y: 117, title: 'Same food: sweets as dessert, sodas with meals', wall: C.wallSage, stripe: C.wallSageS,
+    { key: 'better', y: 119, title: 'Same food: sweets as dessert, sodas with meals', wall: C.wallSage, stripe: C.wallSageS,
       person: fy => P.drawPerson(pix, 16, fy, { head: 'bun', face: 'grin', body: 'tee', arms: 'hold', look: LOOKS.young, after: [{ spr: PROP.cupcake, dx: 6, dy: -1 }] }) },
-    { key: 'dry', y: 177, title: 'Same Tuesday at 70, on a drying medication', wall: C.wallBlue, stripe: C.wallBlueS,
+    { key: 'dry', y: 181, title: 'Same Tuesday at 70, on a drying medication', wall: C.wallBlue, stripe: C.wallBlueS,
       person: fy => P.drawPerson(pix, 16, fy, { head: 'bob', face: 'worried', glasses: true, body: 'cardigan', arms: 'hold', look: LOOKS.older, after: [{ spr: PROP.pill, dx: 6, dy: 0 }] }) },
   ];
   rows.forEach((r, i) => {
@@ -175,14 +180,14 @@ export function acidclock(data = acidclockData()) {
   pix.text('4', SX - 6, rows[0].y + SH - 5, C.stone);
 
   // lifetime
-  const LY = 246, LH = 30, MAX = 600;
-  pix.hline(8, 312, 222, C.stone);
-  pix.text('Acid time per day, age 0 to 80: one life, from the sim', 160, 226, C.ink, { align: 'center' });
+  const LY = 252, LH = 30, MAX = 600;
+  pix.hline(8, 312, 228, C.stone);
+  pix.text('Acid time per day, age 0 to 80: one life, from the sim', 160, 232, C.ink, { align: 'center' });
   drawAcidLife(pix, SX, LY, 240, LH, life.yearly, markers, { max: MAX });
   pix.text('10h', SX - 16, LY - 1, C.stone);
   pix.text('0', SX - 7, LY + LH - 5, C.stone);
   // marker key along the bottom, wrapping
-  let kx = 8, ky = 291;
+  let kx = 8, ky = 297;
   for (const mk of markers) {
     const ic = PROP[mk.icon], label = `${mk.age}: ${mk.label}`;
     const w = ic.w + 2 + measure(label);
