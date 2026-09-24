@@ -91,6 +91,20 @@ Model parameters carry the same tags in `sim/params.js` and `sim/stephan.js`. Th
 | Typical US fees without insurance | [CareCredit cost guides](https://www.carecredit.com/dentistry/costs/) and research notes | V |
 | Traditional Medicare doesn't cover routine dental | [KFF](https://www.kff.org/medicare/coverage-of-dental-services-in-traditional-medicare/) | V |
 
-## To add with the tool shed (next)
+## The tool shed
 
-Silver diamine fluoride, resin infiltration (ICON), postbiotic toothpastes (*S. dentisani*), and microbiome testing. Each gets its own row and evidence badge before it appears in the game.
+Every tool also lists its source in `sim/toolshed.js`.
+
+| Tool | Evidence | Source | Badge |
+|---|---|---|---|
+| Silver diamine fluoride | ~81% of treated dentin lesions in baby teeth arrest; stains black | [Meta-analysis 2017](https://pubmed.ncbi.nlm.nih.gov/28972954/); [SDF vs NaF meta-analysis](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6376061/) | Strong |
+| Resin infiltration (ICON) | Firm evidence it arrests non-cavitated proximal lesions; less effect once decay is into dentin | [Systematic review 2023](https://pubmed.ncbi.nlm.nih.gov/36675656/) | Strong |
+| 5,000 ppm fluoride toothpaste | Prevents and arrests root caries in older adults vs. regular paste | [Network meta-analysis 2026](https://pubmed.ncbi.nlm.nih.gov/41720286/); [RCT, older adults](https://www.sciencedirect.com/science/article/abs/pii/S0300571219301265) | Strong |
+| Sugar-free gum | Prevented fraction ~28%; moderate-quality trials | [Newton 2020](https://pubmed.ncbi.nlm.nih.gov/31743654/) | Moderate |
+| Electric toothbrush | 11–21% less plaque; clinical importance unclear | [Yaacob 2014, Cochrane](https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002281.pub3/full) | Low |
+| Interdental cleaning | May reduce gingivitis/plaque; low certainty; no decay outcomes | [Worthington 2019, Cochrane](https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012018.pub2/full) | Low |
+| Xylitol toothpaste | May reduce decay 13% vs. fluoride alone; low quality | [Riley 2015, Cochrane](https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD010743.pub2/abstract) | Low |
+| *S. dentisani* / postbiotics | Fewer *S. mutans*, higher pH, transient colonization; no caries endpoints yet | [Systematic review 2025](https://pubmed.ncbi.nlm.nih.gov/41477312/) | Emerging |
+| Microbiome testing (shotgun) | Separates periodontitis from health well (AUC ~0.9), caries less well (~0.8); no outcome trials of testing | [Metagenomics review 2025](https://pubmed.ncbi.nlm.nih.gov/41800013/); [periodontitis signature](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11316925/) | Emerging |
+
+Model magnitudes for these tools (e.g., infiltration ×0.35 progression, 5,000 ppm ×0.6 root decay, postbiotic ×0.9 bacteria) are design estimates in the frame of the evidence (D).

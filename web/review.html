@@ -23,6 +23,10 @@
     --night-2: #262d55;
     --night-ink: #fbf3e4;
     --night-muted: #c3bad3;
+    --b-strong: #3f8a4a;
+    --b-moderate: #2d7f86;
+    --b-low: #b27a18;
+    --b-emerging: #8e62a8;
     --display: "Pixelify Sans", "Silkscreen", ui-monospace, monospace;
     --label: "Silkscreen", "Pixelify Sans", ui-monospace, monospace;
     --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -47,6 +51,10 @@
       --zero: #7c7699;
       --night: #11152e;
       --night-2: #1f2549;
+      --b-strong: #6fbf6a;
+      --b-moderate: #5fc2c0;
+      --b-low: #e3b252;
+      --b-emerging: #c29be0;
     }
   }
   :root[data-theme="dark"] {
@@ -68,6 +76,10 @@
     --zero: #7c7699;
     --night: #11152e;
     --night-2: #1f2549;
+    --b-strong: #6fbf6a;
+    --b-moderate: #5fc2c0;
+    --b-low: #e3b252;
+    --b-emerging: #c29be0;
   }
 
   body { background: var(--bg); color: var(--ink); font: 17px/1.6 var(--body); }
@@ -193,6 +205,24 @@
   .legend .ring::before { border-radius: 50%; background: transparent; border: 2px solid var(--c); width: 7px; height: 7px; }
   .acid-life-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; justify-content: space-between; }
 
+  /* garden + tool shed */
+  .garden-pair { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .garden-pair figure { margin: 0; display: grid; gap: 6px; }
+  .garden-pair figcaption { font-size: 15px; color: var(--ink-2); }
+  .range { display: grid; gap: 6px; flex: 1 1 260px; }
+  .range input { width: 100%; accent-color: var(--button); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button { font: 600 14px/1 var(--body); padding: 8px 12px; background: var(--surface); color: var(--ink); border: 2px solid var(--frame); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--button); color: var(--button-ink); }
+  .shed { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-top: 16px; }
+  .tool { background: var(--surface); border: 2px solid var(--rule); padding: 14px 16px; display: grid; gap: 7px; align-content: start; }
+  .tool h3 { font-size: 18px; }
+  .tool p { font-size: 15px; color: var(--ink-2); }
+  .tool .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 13px; color: var(--muted); }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font: 700 12px/1 var(--label); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink); }
+  .badge::before { content: ""; width: 10px; height: 10px; background: var(--c); border: 1px solid var(--frame); }
+  .tool button { justify-self: start; font: 600 14px/1 var(--body); padding: 7px 10px; background: transparent; color: var(--link); border: 2px solid var(--rule); cursor: pointer; }
+
   /* how it plays */
   .modes { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
   .mode { background: var(--surface); border: 2px solid var(--rule); padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
@@ -294,6 +324,9 @@
             <option value="gum">Chews sugar-free gum after eating</option>
             <option value="bedtimeSnack">Has a snack after brushing at night</option>
             <option value="dryMeds45">Starts a medication that dries the mouth at 45</option>
+            <option value="modernCare">Dentist offers resin infiltration and SDF</option>
+            <option value="highFluoride">Uses prescription 5,000 ppm toothpaste</option>
+            <option value="postbiotic">Uses a postbiotic toothpaste (emerging)</option>
             <option value="reflux40">Acid reflux at night from 40</option>
             <option value="apnea45">Sleep apnea from 45, untreated</option>
             <option value="apnea45treated">Sleep apnea from 45, treated</option>
@@ -366,6 +399,34 @@
     </div>
   </section>
 
+  <section id="garden">
+    <div class="section-head">
+      <div class="eyebrow">New · the backyard garden</div>
+      <h2>Your mouth's ecosystem, without showing a tooth</h2>
+      <p>Most tooth decay and gum disease comes from bacteria that habits feed. In the game that ecosystem is the garden behind the house. Flowers are the health-associated bacteria. Sugar weeds are the acid-loving decay bacteria, and they spread with frequent sugar and long acid time. Gum weeds are the anaerobes that thrive in inflamed gums, tartar and deep pockets. Low saliva shows as dry, cracked soil. A microbiome test is a soil test, and the hygienist is the gardener.</p>
+    </div>
+    <form class="lab-form" onsubmit="return false">
+      <div class="field"><label for="garden-life">Life</label><select id="garden-life"></select></div>
+      <div class="field"><label for="garden-tool">Try something from the tool shed</label><select id="garden-tool"></select></div>
+      <div class="range"><label for="garden-age">Age: <strong id="garden-age-out">30</strong></label><input type="range" id="garden-age" min="1" max="79" value="30"></div>
+    </form>
+    <div class="garden-pair" style="margin-top: 16px">
+      <figure class="frame"><canvas id="garden-a" width="160" height="80" aria-label="The garden as lived."></canvas><figcaption id="garden-a-cap"></figcaption></figure>
+      <figure class="frame"><canvas id="garden-b" width="160" height="80" aria-label="The same garden with the change, same luck."></canvas><figcaption id="garden-b-cap"></figcaption></figure>
+    </div>
+    <p id="garden-note" aria-live="polite" style="margin-top: 12px; color: var(--ink-2)"></p>
+  </section>
+
+  <section id="shed">
+    <div class="section-head">
+      <div class="eyebrow">New · the tool shed</div>
+      <h2>Every tool with its evidence, generics first</h2>
+      <p>Products, habits and treatments the game can point to. Each carries an evidence badge and a source. Newer options sit beside the proven ones, clearly labeled, and none of them works alone. Dentist-only items point to your dentist. “Try it” shows the change in the garden above, with the same luck.</p>
+    </div>
+    <div class="chips" id="shed-filter" role="group" aria-label="Filter the tool shed"></div>
+    <div class="shed" id="shed-grid"></div>
+  </section>
+
   <section id="art">
     <div class="section-head">
       <div class="eyebrow">Art samples</div>
@@ -375,6 +436,10 @@
     <div class="gallery">
       <div class="piece"><figure class="frame"><canvas data-sheet="acidclock" width="320" height="314" aria-label="The Acid Clock in pixel art: three versions of one day's plaque pH, and acid time per day across a life."></canvas></figure>
         <div class="text"><h3>The Acid Clock</h3><p>How the game shows a day: what she ate and drank sits on a shelf above the curve, night is shaded, and acid time is filled in. Same food eaten with meals: 1h 33m instead of 5h 33m. The same day on a drying medication at 70: over 8 hours. Below, her acid time for every year of one simulated life, with the choices that moved it.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="garden" width="320" height="212" aria-label="Four backyard gardens from four simulated lives."></canvas></figure>
+        <div class="text"><h3>The backyard garden</h3><p>Four lives, four gardens. Prevention Pro's is mostly flowers. The Soda Sipper's is overrun with sugar weeds. The Avoider's gum weeds creep in when nobody pulls them. On a drying medication, the soil cracks.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="toolshed" width="320" height="172" aria-label="The tool shed with shelves of options, each marked with an evidence badge."></canvas></figure>
+        <div class="text"><h3>The tool shed</h3><p>Shelves for brush and paste, food and drink, the dentist's chair, sleep and body, and tests. Each tool wears its evidence badge; a white tag means ask your dentist.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="mockup" width="320" height="180" aria-label="Main game screen mockup with status panel, wallet, event card and life timeline."></canvas></figure>
         <div class="text"><h3>The main screen</h3><p>Feelings instead of stats in the status panel, a wallet with speed controls, an event card (“It's been 18 months!”) and the life timeline. The postcards on the fridge are the reminders Maya keeps not answering.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="lineup" width="320" height="84" aria-label="Maya at eight ages, from baby to 75."></canvas></figure>

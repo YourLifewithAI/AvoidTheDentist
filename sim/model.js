@@ -41,6 +41,10 @@ export const DEFAULT_PLAN = {
   dryMouthMeds: false, // a daily medication that dries the mouth (adults; set with `phases`)
   reflux: false, // acid reflux at night (connects with erosion, and with decay through night acid)
   sleepApnea: false, // false | 'untreated' | 'treated': mouth breathing dries the mouth in sleep; connects with grinding
+  // --- the tool shed (see sim/toolshed.js)
+  modernCare: false, // the dentist offers resin infiltration for early lesions and SDF for kids' cavities
+  highFluoride: false, // prescription 5,000 ppm toothpaste (adults)
+  postbiotic: false, // a postbiotic / S. dentisani toothpaste (emerging)
   brushing: 'twice', // 'twice' | 'once' | 'rarely'
   fluorideToothpaste: true,
   interdental: 'sometimes', // 'daily' | 'sometimes' | 'never'
@@ -291,7 +295,10 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     // ---- microbiome: cariogenic load drifts toward what the diet feeds it
     if (age >= colonizeAge) {
       if (life.ms < 0.3) life.ms = life.ms0 = MS_PARENT[pl.parentsOral] * (pl.salivaSharing ? 1.1 : 1);
-      let target = 0.6 + 0.12 * sugarHits + 0.3 * (life.ms0 - 1); // early colonizers persist
+      // acid-loving bacteria are selected by acid time: the diet's Acid Clock on a standard
+      // mouth (so the bacteria don't feed back on themselves); early colonizers persist
+      const dietDay = acidDay(pl, { age, job: pl.job, working, sportActive }, { ms: 1, PI: 0.4, saliva: 1 });
+      let target = (0.6 + 0.36 * acidRR(dietDay.acidDose) + 0.3 * (life.ms0 - 1)) * (pl.postbiotic ? P.postbioticMs : 1);
       if (pl.knowsRisk && target > 1.2) target *= 0.85; // targeted prevention after testing
       life.ms += (target - life.ms) * (dt / 4);
     }
@@ -347,7 +354,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     let rootRisk = 0;
     if (recession > 0) {
       rootRisk = P.rootInit * recession * rootRR(day.rootDose, goodFluoride)
-        * (pl.fluorideToothpaste ? P.rr.fluorideToothpaste : 1) * (saliva < 1 ? P.rr.dryMouthResidual : 1);
+        * (pl.fluorideToothpaste ? P.rr.fluorideToothpaste : 1) * (saliva < 1 ? P.rr.dryMouthResidual : 1) * (pl.highFluoride ? P.highFluorideRoot : 1);
     }
 
     // ---- teeth: eruption, shedding, decay, failures, cracks
@@ -389,13 +396,13 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
       if (t.stage === 0 && t.resto !== 'crown' && t.resto !== 'rct') {
         if (clockFor(S, t, 'init').tick(baseInit * trr + (isPrim ? 0 : rootRisk), dt)) t.stage = 1;
       } else if (t.stage === 1) {
-        const arrest = P.prog.arrest * repairRR(day.repairDose) * (varnish ? 2.5 : 1) * (goodFluoride ? 1.3 : 0.7) / Math.max(0.5, Math.min(2.5, trr));
+        const arrest = P.prog.arrest * repairRR(day.repairDose) * (pl.highFluoride && adult ? P.highFluorideArrest : 1) * (varnish ? 2.5 : 1) * (goodFluoride ? 1.3 : 0.7) / Math.max(0.5, Math.min(2.5, trr));
         if (clockFor(S, t, 'arrest').tick(arrest, dt)) t.stage = 0;
-        else if (clockFor(S, t, 'prog').tick(P.prog.enamelToDentin * progF, dt)) t.stage = 2;
+        else if (clockFor(S, t, 'prog').tick(P.prog.enamelToDentin * progF * (t.infiltrated ? P.infiltrationProg : 1), dt)) t.stage = 2;
       } else if (t.stage === 2) {
-        if (clockFor(S, t, 'prog').tick(P.prog.dentinToDeep * progF, dt)) t.stage = 3;
+        if (clockFor(S, t, 'prog').tick(P.prog.dentinToDeep * progF * (t.sdfArrest ? 0.1 : 1), dt)) t.stage = 3;
       } else if (t.stage === 3) {
-        if (clockFor(S, t, 'prog').tick(P.prog.deepToPulp * progF, dt)) t.stage = 4;
+        if (clockFor(S, t, 'prog').tick(P.prog.deepToPulp * progF * (t.sdfArrest ? 0.1 : 1), dt)) t.stage = 4;
       } else if (t.stage === 4) {
         if (clockFor(S, t, 'prog').tick(P.prog.pulpToAbscess * (isPrim ? 1.5 : 1), dt)) t.stage = 5;
       }
@@ -444,7 +451,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
       // symptoms
       const sym = P.symptoms[t.stage];
       if (sym) {
-        const rate = sym.rate * (isPrim ? P.primaryPainFactor : 1);
+        const rate = sym.rate * (isPrim ? P.primaryPainFactor : 1) * (t.sdfArrest ? 0.2 : 1);
         if (clockFor(S, t, 'pain').tick(rate, dt)) {
           life.painDays += sym.days;
           life.counts.painEpisodes++;
@@ -465,7 +472,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     if (!kid && visibleIssue) life.selfConsciousMonths++;
 
     // acid wear: enamel softened by acidic drinks and reflux -> cold sensitivity (connects with erosion)
-    if (adult && day.erosion > REF_EROSION && clocks.sensitivity.tick(P.erosionSensitivity * (day.erosion / REF_EROSION - 1), dt)) life.painDays += 1;
+    if (adult && day.erosion > REF_EROSION && clocks.sensitivity.tick(P.erosionSensitivity * Math.min(2, day.erosion / REF_EROSION - 1), dt)) life.painDays += 1;
 
     // gum abscess / jaw pain
     if (pr.CAL >= 6 && clocks.perioAbscess.tick(0.3, dt)) { severePain = true; painWhy = painWhy || 'gum abscess'; life.painDays += 5; }
@@ -561,12 +568,23 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
         anxiety: +life.anxiety.toFixed(2), oop: Math.round(life.oop), wallet: Math.round(life.wallet),
         painDays: Math.round(life.painDays), selfConscious: +(life.selfConsciousMonths / 12).toFixed(1),
         walletNoDental: Math.round(life.walletNoDental),
-        acidMin: life.acidNow.acidMinutes, repairMin: life.acidNow.repairMinutes, rootMin: recession > 0 ? life.acidNow.rootMinutes : 0, sleepAcid: life.acidNow.sleepAcid,
+        acidMin: life.acidNow.acidMinutes, repairMin: life.acidNow.repairMinutes, garden: gardenOf(life, pr, saliva), rootMin: recession > 0 ? life.acidNow.rootMinutes : 0, sleepAcid: life.acidNow.sleepAcid,
       });
     }
   }
 
   return summarize(life, perm);
+}
+
+// The backyard garden: the mouth's ecosystem as the player sees it (0..1 each).
+// Sugar weeds = acid-loving decay bacteria (fed by sugar frequency and acid time);
+// gum weeds = anaerobes that thrive in inflamed gums, tartar and deep pockets;
+// flowers = the health-associated community; dry soil = low saliva. [D, from model state]
+function gardenOf(life, pr, saliva) {
+  const cl = v => Math.max(0, Math.min(1, v));
+  const sugar = life.ms < 0.3 ? 0 : cl(0.7 * (life.ms - 0.5) / 2.2 + 0.3 * (life.acidNow.acidMinutes / 600));
+  const gum = cl(0.6 * (pr.G - 0.25) / 0.6 + 0.25 * pr.calc + 0.15 * Math.min(1, pr.CAL / 5));
+  return { sugar: +sugar.toFixed(2), gum: +gum.toFixed(2), flowers: +cl(1 - 0.8 * Math.max(sugar, gum) - 0.2 * Math.min(sugar, gum)).toFixed(2), dry: +(1 - saliva).toFixed(2) };
 }
 
 function skipChance(life, pl, age, job, working) {
@@ -753,7 +771,17 @@ function visit(life, teeth, S, pl, age, m, kind, ctx) {
     if (t.needs === 'rct') { treatPulp(); continue; }
     if (t.needs === 'extract') { extract(); continue; }
 
-    if (t.stage === 1) { t.varnishUntil = m + 12; continue; } // watch & remineralize
+    if (t.stage === 1) {
+      t.varnishUntil = m + 12; // watch & remineralize
+      if (pl.modernCare && t.kind === 'permanent' && t.posterior && !t.infiltrated) { // seal the early lesion with resin
+        charge(life, P.fee.infiltration, 'basic', payer); t.infiltrated = true; ctx.ev('infiltration', { tooth: t.id });
+      }
+      continue;
+    }
+    if (pl.modernCare && t.kind === 'primary' && (t.stage === 2 || t.stage === 3) && !t.sdfArrest) { // paint it with SDF: no drill, a black stain
+      charge(life, P.fee.sdf, 'prev', payer);
+      if (S.u(`${t.id}:sdf`) < P.sdfArrest) { t.sdfArrest = true; ctx.ev('sdf', { tooth: t.id }); continue; }
+    }
     if (t.stage === 2) { charge(life, P.fee.fillS, 'basic', payer); c.fillings++; bump('filling'); t.resto = t.resto === 'fillS' || t.resto === 'fillL' ? 'fillL' : 'fillS'; t.stage = 0; continue; }
     if (t.stage === 3) { charge(life, P.fee.fillL, 'basic', payer); c.fillings++; bump('filling'); t.resto = 'fillL'; t.stage = 0; continue; }
     if (t.stage >= 4) { treatPulp(); continue; }

@@ -10,27 +10,27 @@ Simulated population: 3000 random US-like lives
 
 Metric                                       Model   Target       Source
 Caries experience, primary teeth, age 2-5    23.8%   23%          CDC OHSR 2019 [V]
-Caries experience, permanent, age 12-19      55.9%   ~57%         NHANES 2011-16 [U]
-Caries experience, permanent, age 20-64      93.8%   ~90%         NIDCR [U]
+Caries experience, permanent, age 12-19      55.7%   ~57%         NHANES 2011-16 [U]
+Caries experience, permanent, age 20-64      93.6%   ~90%         NIDCR [U]
 Untreated decay (deep), age 20-34            11.3%   ~22%         CDC OHSR 2024 [V]
-Untreated decay (any dentin), 20-34          30.6%   ~22%         CDC OHSR 2024 [V]
-Untreated decay, age 65+                      9.4%   13%          CDC OHSR 2024 [V]
+Untreated decay (any dentin), 20-34          30.9%   ~22%         CDC OHSR 2024 [V]
+Untreated decay, age 65+                      9.2%   13%          CDC OHSR 2024 [V]
 Mean natural teeth (dentate), 20-34           27.5   27.0         CDC OHSR 2024 [V]
 Mean natural teeth (dentate), 50-64           25.4   23.3         CDC OHSR 2024 [V]
 Mean natural teeth (dentate), 65-74           24.2   21.7         CDC OHSR 2024 [V]
 Mean natural teeth (dentate), 75-79           23.5   19.8 (75+)   CDC OHSR 2024 [V]
 No natural teeth, 50-64                       6.8%   5.9%         CDC OHSR 2024 [V]
 No natural teeth, 65-74                      14.3%   11.4%        CDC OHSR 2024 [V]
-No natural teeth, 75-79                      18.7%   19.7% (75+)  CDC OHSR 2024 [V]
+No natural teeth, 75-79                      19.0%   19.7% (75+)  CDC OHSR 2024 [V]
 Periodontitis (CAL >= 3 mm), 30+             38.7%   ~42%         Eke 2018 [U]
 Severe periodontitis (CAL >= 6 mm), 30+      10.4%   ~7.8%        Eke 2018 [U]
 Periodontitis (CAL >= 3 mm), 65+             65.7%   ~68%         Eke 2012 [U]
 Mean CAL progression 30-60 (mm/yr)           0.086   ~0.1         Needleman 2018 [V]
-High dental anxiety (>= 0.5), adults          8.5%   ~12-15%      Silveira 2021 / ADHS 2009 [U]
+High dental anxiety (>= 0.5), adults          8.3%   ~12-15%      Silveira 2021 / ADHS 2009 [U]
 
-Lifetime dental spending (out of pocket, incl. childhood): median $22,238, p10 $7,424, p90 $48,148
-Billed (all payers) median: $39,830  (US: ~$520/person/yr total dental spending -> ~$42k over 80 yrs [U])
-Per lifetime: visits 89.1, fillings 13.7, crowns 5.9, RCT 4.1, extractions 9.6, implants 1.0, SRP 0.3, dentures 0.2, ER 0.0, cracks 2.6, trauma 0.8
+Lifetime dental spending (out of pocket, incl. childhood): median $22,230, p10 $7,274, p90 $47,985
+Billed (all payers) median: $39,595  (US: ~$520/person/yr total dental spending -> ~$42k over 80 yrs [U])
+Per lifetime: visits 89.2, fillings 13.5, crowns 5.8, RCT 4.0, extractions 9.6, implants 1.0, SRP 0.3, dentures 0.2, ER 0.0, cracks 2.6, trauma 0.8
 ```
 
 Known gaps: people who keep their teeth keep ~2-3 more of them at 65+ than today's elders do. Part of this is a
@@ -44,24 +44,24 @@ Dental costs are lifetime out-of-pocket, including what parents paid during chil
 
 | Life | Median cost | 90th pct | Teeth lost by 50 / 65 / 80 | Fillings | Root canals | Implants | Pain days | Years hiding smile | Years with gum disease |
 |---|---:|---:|---|---:|---:|---:|---:|---:|---:|
-| Prevention Pro | $10,436 | $16,027 | 0.3 / 0.5 / 0.7 | 2.4 | 1.1 | 0.4 | 74 | 3.4 | 0 |
-| Typical | $12,219 | $20,557 | 0.4 / 0.8 / 1.3 | 10 | 1.8 | 0.7 | 81 | 4.2 | 0 |
-| The Baker | $15,732 | $26,348 | 0.5 / 0.9 / 1.6 | 15.5 | 2.6 | 0.9 | 63 | 5 | 0.1 |
-| The Soda Sipper | $68,825 | $85,145 | 9.6 / 23.9 / 27 | 8.7 | 16.4 | 0 | 562 | 38.9 | 62.4 |
-| The Grinder | $15,242 | $26,913 | 0.6 / 1.2 / 1.8 | 12.9 | 2.8 | 1 | 332 | 4.9 | 0 |
-| Grinder + night guard | $14,876 | $24,820 | 0.5 / 0.9 / 1.5 | 13.2 | 2.4 | 0.9 | 120 | 4.9 | 0.1 |
-| Hockey, no guard | $15,265 | $25,304 | 1 / 1.4 / 2 | 12.3 | 3.3 | 1.2 | 93 | 19 | 0.1 |
-| Hockey + guard | $14,914 | $24,295 | 0.7 / 1.1 / 1.7 | 11.8 | 2.6 | 1 | 89 | 11.1 | 0 |
-| The Avoider | $20,028 | $29,355 | 1.4 / 5.4 / 16.1 | 2.6 | 6.1 | 0 | 276 | 23.3 | 74.5 |
-| Late Bloomer (returns at 40) | $21,332 | $32,342 | 1.2 / 2 / 2.7 | 7.9 | 3.8 | 1.3 | 144 | 10 | 35.8 |
-| Vaginal birth, healthy parents | $11,850 | $19,975 | 0.4 / 0.7 / 1.2 | 8.9 | 1.7 | 0.7 | 80 | 4.2 | 0 |
-| C-section, parents w/ decay | $13,118 | $21,587 | 0.4 / 0.8 / 1.3 | 11.6 | 2 | 0.7 | 82 | 4.4 | 0 |
-| Smoker (quits at 50) | $21,310 | $30,933 | 0.7 / 1.4 / 2.1 | 11.7 | 1.9 | 1.3 | 109 | 6.7 | 0 |
-| Night snacker | $15,799 | $25,608 | 0.5 / 0.9 / 1.5 | 15 | 2.5 | 0.9 | 85 | 4.7 | 0 |
-| Sweets with meals + gum | $9,201 | $16,715 | 0.4 / 0.6 / 1 | 3.1 | 1.2 | 0.6 | 77 | 3.8 | 0 |
-| Dry-mouth meds from 55 | $13,322 | $22,208 | 0.4 / 0.8 / 1.3 | 11.7 | 2 | 0.7 | 82 | 4.3 | 0 |
-| Maya: "Book it" | $14,562 | $24,047 | 0.4 / 0.8 / 1.4 | 12 | 2.1 | 0.8 | 60 | 4.9 | 0.1 |
-| Maya: "Later..." | $27,206 | $40,652 | 0.7 / 3.4 / 9.7 | 5.4 | 5.6 | 2.7 | 132 | 16.2 | 39.5 |
+| Prevention Pro | $10,410 | $16,407 | 0.3 / 0.5 / 0.8 | 2.4 | 1.1 | 0.4 | 74 | 3.4 | 0 |
+| Typical | $12,109 | $20,557 | 0.4 / 0.7 / 1.2 | 9.5 | 1.8 | 0.7 | 80 | 4.1 | 0 |
+| The Baker | $14,889 | $25,031 | 0.5 / 0.9 / 1.5 | 14.4 | 2.4 | 0.9 | 62 | 4.9 | 0 |
+| The Soda Sipper | $68,467 | $85,841 | 9 / 23.5 / 26.7 | 8.7 | 16.4 | 0 | 379 | 39.1 | 62.4 |
+| The Grinder | $15,242 | $26,903 | 0.6 / 1.1 / 1.8 | 12.7 | 2.8 | 1 | 332 | 4.9 | 0 |
+| Grinder + night guard | $14,768 | $24,745 | 0.5 / 0.9 / 1.5 | 13.1 | 2.3 | 0.9 | 119 | 4.9 | 0 |
+| Hockey, no guard | $15,387 | $25,539 | 1 / 1.4 / 2 | 12.3 | 3.3 | 1.2 | 93 | 19.2 | 0.1 |
+| Hockey + guard | $14,969 | $24,263 | 0.7 / 1.1 / 1.7 | 11.8 | 2.6 | 1 | 89 | 11.3 | 0 |
+| The Avoider | $19,620 | $29,107 | 1.3 / 5.4 / 16 | 2.4 | 6 | 0 | 274 | 23 | 74.5 |
+| Late Bloomer (returns at 40) | $21,130 | $32,731 | 1.2 / 1.9 / 2.7 | 7.6 | 3.8 | 1.3 | 144 | 9.9 | 35.8 |
+| Vaginal birth, healthy parents | $11,794 | $19,975 | 0.4 / 0.7 / 1.2 | 8.7 | 1.7 | 0.7 | 80 | 4.1 | 0 |
+| C-section, parents w/ decay | $12,815 | $21,391 | 0.4 / 0.8 / 1.3 | 11.1 | 2 | 0.7 | 82 | 4.3 | 0.1 |
+| Smoker (quits at 50) | $20,904 | $30,044 | 0.7 / 1.4 / 2.1 | 11.2 | 1.8 | 1.3 | 108 | 6.7 | 0 |
+| Night snacker | $16,841 | $26,854 | 0.5 / 0.9 / 1.6 | 16.4 | 2.8 | 0.9 | 85 | 4.9 | 0.1 |
+| Sweets with meals + gum | $8,998 | $16,450 | 0.4 / 0.6 / 1 | 2.4 | 1.2 | 0.6 | 76 | 3.8 | 0 |
+| Dry-mouth meds from 55 | $13,232 | $21,929 | 0.4 / 0.8 / 1.3 | 11.2 | 2 | 0.7 | 81 | 4.2 | 0 |
+| Maya: "Book it" | $13,852 | $23,635 | 0.4 / 0.8 / 1.4 | 11.1 | 2 | 0.8 | 59 | 4.8 | 0 |
+| Maya: "Later..." | $26,408 | $40,993 | 0.6 / 3.3 / 9.6 | 5.1 | 5.3 | 2.6 | 128 | 16.2 | 39.5 |
 
 ## 3. Which single choice matters most? (300 paired lives, same luck)
 
@@ -69,56 +69,59 @@ Each row changes one thing about a typical life and compares it with the same li
 
 | Choice | Lifetime cost | Teeth lost by 80 | Pain days | Years hiding smile |
 |---|---:|---:|---:|---:|
-| Sips 3 sodas a day (vs 1) | +$17,204 | +2.2 | +245 | +4 |
-| Only goes when it hurts (vs yearly) | +$15,217 | +9.1 | +151 | +13.2 |
-| No dental insurance as an adult | +$14,580 | 0 | +1 | 0 |
-| Brushes once a day (vs twice) | +$12,168 | +1.1 | +7 | +2.5 |
-| Smokes from 18 | +$12,035 | +1.7 | +44 | +3.3 |
-| No fluoride toothpaste | +$7,187 | +0.7 | +9 | +1.2 |
-| Vapes from 18 | +$6,182 | +0.6 | +3 | +1.3 |
-| Warehouse lifting, no night guard | +$3,964 | +0.6 | +254 | +0.5 |
-| Baker, tasting all day (vs office) | +$3,409 | +0.3 | -18 | +0.6 |
-| Hockey 8-30, no mouthguard | +$3,316 | +0.8 | +12 | +13.9 |
-| Knows the first aid for a knocked-out tooth | +$3,266 | +0.7 | +12 | +10.3 |
-| A snack after brushing at night | +$3,204 | +0.3 | +4 | +0.3 |
-| First visit only for pain (vs 3) | +$2,891 | +0.7 | +20 | +1.4 |
-| Warehouse lifting + night guard | +$2,717 | +0.3 | +40 | +0.5 |
-| Hockey 8-30, custom mouthguard | +$2,496 | +0.5 | +8 | +6 |
-| Dry-mouth medication from 45 | +$1,873 | +0.1 | +2 | +0.2 |
-| Sleep apnea from 45, untreated | +$1,540 | +0.1 | +8 | +0.2 |
-| Acid reflux at night from 40 | +$1,048 | +0.1 | +20 | 0 |
-| Checkups every 6 months (vs yearly) | +$1,025 | -0.2 | -4 | -0.3 |
-| C-section + parents with decay | +$700 | +0.1 | +1 | +0.2 |
-| Anxious parents + general dentist | +$331 | +0.1 | +2 | +0.1 |
-| Books next visit before leaving | +$148 | 0 | 0 | 0 |
-| First visit at 1 (vs 3) | +$12 | 0 | 0 | 0 |
-| Bedtime bottle as a toddler | +$1 | 0 | 0 | 0 |
-| Sleep apnea from 45, treated | +$1 | 0 | 0 | 0 |
-| Water rinse after snacks | -$749 | -0.1 | -1 | -0.1 |
-| Sealants as a kid | -$956 | -0.1 | -2 | 0 |
-| Sugar-free gum after eating | -$1,142 | -0.1 | -2 | -0.2 |
-| Cleans between teeth daily | -$1,459 | -0.2 | -1 | -0.3 |
-| Sweets as dessert with meals (vs snacks) | -$2,667 | -0.2 | -4 | -0.3 |
-| Picks the cheapest fix every time | -$4,989 | +2.4 | 0 | +2.7 |
+| Sips 3 sodas a day (vs 1) | +$15,232 | +1.8 | +90 | +3.1 |
+| Only goes when it hurts (vs yearly) | +$15,212 | +9.1 | +149 | +13.1 |
+| No dental insurance as an adult | +$14,427 | 0 | +1 | +0.2 |
+| Brushes once a day (vs twice) | +$12,211 | +1.1 | +7 | +2.4 |
+| Smokes from 18 | +$12,030 | +1.8 | +44 | +3.4 |
+| No fluoride toothpaste | +$7,070 | +0.7 | +9 | +1.1 |
+| Vapes from 18 | +$6,152 | +0.6 | +3 | +1.4 |
+| A snack after brushing at night | +$4,507 | +0.4 | +5 | +0.6 |
+| Warehouse lifting, no night guard | +$4,014 | +0.5 | +255 | +0.6 |
+| Hockey 8-30, no mouthguard | +$3,617 | +0.8 | +12 | +14 |
+| Knows the first aid for a knocked-out tooth | +$3,552 | +0.7 | +12 | +10.5 |
+| Baker, tasting all day (vs office) | +$3,114 | +0.3 | -18 | +0.8 |
+| First visit only for pain (vs 3) | +$3,013 | +0.7 | +20 | +1.5 |
+| Hockey 8-30, custom mouthguard | +$2,809 | +0.5 | +8 | +6.1 |
+| Warehouse lifting + night guard | +$2,743 | +0.3 | +40 | +0.6 |
+| Dry-mouth medication from 45 | +$1,629 | +0.1 | +2 | +0.2 |
+| Sleep apnea from 45, untreated | +$1,510 | +0.1 | +8 | +0.2 |
+| Checkups every 6 months (vs yearly) | +$1,318 | -0.1 | -4 | -0.4 |
+| Acid reflux at night from 40 | +$908 | +0.1 | +21 | +0.2 |
+| C-section + parents with decay | +$761 | +0.1 | +1 | +0.2 |
+| Anxious parents + general dentist | +$193 | +0.1 | +2 | +0.2 |
+| Books next visit before leaving | +$150 | 0 | 0 | 0 |
+| Bedtime bottle as a toddler | +$93 | 0 | 0 | +0.1 |
+| First visit at 1 (vs 3) | +$65 | 0 | +1 | +0.1 |
+| Sleep apnea from 45, treated | +$17 | 0 | 0 | 0 |
+| Modern care: resin infiltration + SDF | -$260 | -0.1 | -2 | 0 |
+| Postbiotic toothpaste (emerging) | -$330 | 0 | 0 | +0.1 |
+| Prescription 5,000 ppm toothpaste | -$537 | 0 | -1 | 0 |
+| Water rinse after snacks | -$611 | 0 | -1 | 0 |
+| Sealants as a kid | -$831 | -0.1 | -1 | 0 |
+| Sugar-free gum after eating | -$1,196 | -0.1 | -2 | -0.2 |
+| Cleans between teeth daily | -$1,311 | -0.2 | 0 | -0.2 |
+| Sweets as dessert with meals (vs snacks) | -$2,583 | -0.2 | -4 | -0.3 |
+| Picks the cheapest fix every time | -$4,873 | +2.4 | 0 | +3.1 |
 
 ## 4. Maya at 34: "Book it" or "Later..." (400 same-luck pairs)
 
 - Median extra cost by 45: **$0** (almost nothing: the bill comes later)
-- Median extra cost by 80: **$11,459**
+- Median extra cost by 80: **$11,674**
 - Median extra teeth lost by 80: **4**
-- Share of pairs where "Later..." ends worse: **94%**
-- Share where "Later..." is cheaper but costs teeth: **8%**
+- Share of pairs where "Later..." ends worse: **93%**
+- Share where "Later..." is cheaper but costs teeth: **5%**
 
-Featured pair (seed 50, used in the art sample):
+Featured pair (seed 81, used in the art sample):
 
 | Age | "Book it": spent / teeth lost / pain days | "Later...": spent / teeth lost / pain days |
 |---|---|---|
-| 34 | $1,070 / 0 / 4 | $1,070 / 0 / 4 |
-| 45 | $1,155 / 0 / 6 | $1,966 / 0 / 30 |
-| 62 | $3,054 / 0 / 6 | $8,778 / 1 / 64 |
-| 79 | $10,136 / 1 / 11 | $22,288 / 6 / 112 |
+| 34 | $959 / 0 / 4 | $143 / 0 / 11 |
+| 45 | $1,187 / 0 / 5 | $2,608 / 0 / 55 |
+| 62 | $1,927 / 0 / 9 | $10,266 / 1 / 73 |
+| 79 | $19,197 / 1 / 9 | $26,941 / 5 / 85 |
 
-"Later..." life, from 34 on: 52: crack; 56: extraction (perio); 68: enduredPain (broken tooth); 77: extraction (perio); 77: extraction (perio); 77: implant; 77: extraction (caries); 78: enduredPain (loose tooth); 79: extraction (perio); 79: extraction (perio); 79: partialDenture; 79: enduredPain (abscess).
+"Later..." life, from 34 on: 34: enduredPain (toothache); 34: enduredPain (abscess); 35: enduredPain (abscess); 37: enduredPain (toothache); 44: enduredPain (toothache); 51: crack; 60: enduredPain (toothache); 60: extraction (caries); 60: implant; 72: extraction (perio); 72: extraction (perio); 72: implant; 76: extraction (caries); 76: crack.
 
 ## 5. The Acid Clock: one day of plaque pH (sim/stephan.js)
 
@@ -153,21 +156,21 @@ saliva change), and minutes below 6.2 once roots are exposed.
 
 | Life | Toddler (2-3) | Kid (6-12) | Teen (13-17) | Working (25-55) | Retired (66-79) | Roots, retired |
 |---|---:|---:|---:|---:|---:|---:|
-| Prevention Pro | 67 | 67 | 73 | 110 | 106 | 49 |
-| Typical | 161 | 160 | 166 | 213 | 240 | 477 |
-| The Baker | 161 | 160 | 166 | 328 | 245 | 499 |
-| The Soda Sipper | 161 | 160 | 441 | 590 | 673 | 946 |
-| The Grinder | 161 | 160 | 166 | 232 | 241 | 484 |
-| Grinder + night guard | 161 | 160 | 166 | 232 | 241 | 483 |
-| Hockey, no guard | 161 | 199 | 217 | 221 | 240 | 477 |
-| Hockey + guard | 161 | 199 | 217 | 221 | 240 | 477 |
-| The Avoider | 161 | 160 | 166 | 213 | 240 | 524 |
-| Late Bloomer (returns at 40) | 161 | 160 | 166 | 213 | 240 | 504 |
-| Vaginal birth, healthy parents | 153 | 155 | 161 | 205 | 231 | 459 |
-| C-section, parents w/ decay | 182 | 174 | 175 | 224 | 253 | 507 |
-| Smoker (quits at 50) | 161 | 160 | 166 | 213 | 240 | 533 |
-| Night snacker | 161 | 288 | 295 | 352 | 464 | 777 |
-| Sweets with meals + gum | 66 | 55 | 58 | 99 | 84 | 149 |
-| Dry-mouth meds from 55 | 161 | 160 | 166 | 217 | 310 | 613 |
-| Maya: "Book it" | 147 | 146 | 166 | 328 | 245 | 498 |
-| Maya: "Later..." | 147 | 146 | 166 | 328 | 245 | 531 |
+| Prevention Pro | 67 | 67 | 74 | 110 | 107 | 50 |
+| Typical | 161 | 159 | 166 | 208 | 239 | 475 |
+| The Baker | 161 | 159 | 166 | 314 | 243 | 496 |
+| The Soda Sipper | 161 | 159 | 433 | 535 | 606 | 923 |
+| The Grinder | 161 | 159 | 166 | 230 | 242 | 485 |
+| Grinder + night guard | 161 | 159 | 166 | 230 | 242 | 485 |
+| Hockey, no guard | 161 | 200 | 221 | 218 | 239 | 476 |
+| Hockey + guard | 161 | 200 | 221 | 218 | 239 | 476 |
+| The Avoider | 161 | 159 | 166 | 208 | 239 | 523 |
+| Late Bloomer (returns at 40) | 161 | 159 | 166 | 208 | 239 | 502 |
+| Vaginal birth, healthy parents | 152 | 154 | 161 | 202 | 230 | 458 |
+| C-section, parents w/ decay | 180 | 171 | 175 | 219 | 252 | 506 |
+| Smoker (quits at 50) | 161 | 159 | 166 | 208 | 239 | 532 |
+| Night snacker | 161 | 302 | 314 | 367 | 494 | 801 |
+| Sweets with meals + gum | 63 | 53 | 53 | 91 | 78 | 142 |
+| Dry-mouth meds from 55 | 161 | 159 | 166 | 212 | 309 | 611 |
+| Maya: "Book it" | 147 | 145 | 166 | 314 | 243 | 495 |
+| Maya: "Later..." | 147 | 145 | 166 | 314 | 243 | 528 |

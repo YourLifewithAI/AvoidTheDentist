@@ -71,6 +71,12 @@ export const P = {
   // too); connects with grinding [V: mixed] and drier plaque at the gumline [U/D]. Treatment
   // (CPAP or an advancement appliance) reduced sleep bruxism in ~60% in a pilot study [V: small]
   apnea: { nightDry: 0.4, nightDryTreated: 0.8, brux: { untreated: 0.15, treated: 0 }, gums: 0.05 },
+  // tool shed: newer treatments [V where noted]
+  infiltrationProg: 0.35, // resin infiltration (ICON): enamel/early-dentin proximal lesions progress ~1/3 as often [V; magnitude D]
+  sdfArrest: 0.81, // silver diamine fluoride: ~81% of treated dentin lesions arrest in baby teeth [V]
+  highFluorideRoot: 0.6, // 5,000 ppm toothpaste (prescription): fewer new root lesions [V; magnitude D]
+  highFluorideArrest: 1.5, // ...and more existing lesions harden [V; magnitude D]
+  postbioticMs: 0.9, // S. dentisani / postbiotics: lower S. mutans, higher pH while used; no caries-endpoint trials yet [mechanism V; effect D]
   erosionSensitivity: 0.6, // [D] cold-sensitivity episodes/yr per extra "two sodas" of daily acid bath // [V/D] hyposalivation: unstimulated flow <0.1 vs ~0.3-0.4 mL/min
 
   // --- symptoms (episodes per year while in a state) [D]
@@ -129,7 +135,7 @@ export const P = {
     fluoride: 35, sealant: 42, fillS: 210, fillL: 300, bonding: 250,
     rctAnterior: 950, rctPremolar: 1050, rctMolar: 1175, core: 300, crown: 1300, retreat: 1200,
     extraction: 200, surgicalExtraction: 345, graft: 500, implant: 4500, bridge: 3800, partial: 2000, denture: 1750,
-    srp: 970, perioMaint: 160, nightGuard: 400, mouthguardCustom: 300, mouthguardBoil: 25,
+    srp: 970, infiltration: 250, sdf: 40, perioMaint: 160, nightGuard: 400, mouthguardCustom: 300, mouthguardBoil: 25,
     braces: 6000, wisdom: 2750, ga: 10000, er: 1900, cbt: 900, sedation: 350, flipper: 500, periImplant: 900,
   },
   insurance: {

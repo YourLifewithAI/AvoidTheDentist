@@ -10,6 +10,8 @@ import * as sheets from '../art/sheets.js';
 import { SAMPLE_DAYS, simulateDay, mouthOf, FOODS, attribution, acidRR, ENAMEL_CRIT, ROOT_CRIT, REPAIR_LINE } from '../sim/stephan.js';
 import { simulateLife } from '../sim/model.js';
 import { LIVES, MAYA_ACID, MAYA_ACID_MARKERS } from '../sim/lives.js';
+import { drawGarden } from '../art/garden.js';
+import { TOOLS, BADGES } from '../sim/toolshed.js';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DATA = JSON.parse(document.getElementById('page-data').textContent);
@@ -639,3 +641,94 @@ function drawAcidLifeChart() {
 }
 drawAcid();
 drawAcidLifeChart();
+
+// ---------------------------------------------------------------------------
+// The backyard garden: the mouth's ecosystem for one life, as lived and with one
+// tool from the shed (same luck).
+
+const gardenLife = document.getElementById('garden-life');
+const gardenTool = document.getElementById('garden-tool');
+const gardenAge = document.getElementById('garden-age');
+const GARDEN_LIVES = [
+  ['typical', 'A typical US life', LIVES.typical], ['soda', 'The Soda Sipper', LIVES.soda], ['avoider', 'The Avoider', LIVES.avoider],
+  ['baker', 'The Baker', LIVES.baker], ['nightSnacker', 'Night snacker', LIVES.nightSnacker], ['dryMouth', 'Dry-mouth medication from 55', LIVES.dryMouth],
+  ['prevention', 'Prevention Pro', LIVES.prevention],
+];
+gardenLife.innerHTML = GARDEN_LIVES.map(([id, l]) => `<option value="${id}">${esc(l)}</option>`).join('');
+const TRYABLE = TOOLS.filter(t => t.set);
+gardenTool.innerHTML = `<option value="">Nothing, just compare ages</option>` + TRYABLE.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')
+  + `<option value="__cleanings">Cleanings every 6 months</option>`;
+const gardenCache = new Map();
+function lifeWith(lifeId, toolId) {
+  const key = lifeId + '|' + toolId;
+  if (!gardenCache.has(key)) {
+    const base = GARDEN_LIVES.find(l => l[0] === lifeId)[2];
+    const tool = TOOLS.find(t => t.id === toolId);
+    const set = toolId === '__cleanings' ? { visits: 'every6' } : tool ? tool.set : {};
+    gardenCache.set(key, simulateLife({ ...base, ...set, name: key }, 12, { log: false }));
+  }
+  return gardenCache.get(key);
+}
+const pct = v => Math.round(v * 100) + '%';
+function drawGardenPair() {
+  const age = +gardenAge.value;
+  document.getElementById('garden-age-out').textContent = age;
+  const toolId = gardenTool.value;
+  const A = lifeWith(gardenLife.value, ''), B = toolId ? lifeWith(gardenLife.value, toolId) : null;
+  const gA = A.yearly.find(y => y.age === age).garden;
+  // with no tool picked, the right-hand garden is the same life 10 years later
+  const ageB = B ? age : Math.min(79, age + 10);
+  const gB = (B || A).yearly.find(y => y.age === ageB).garden;
+  for (const [id, g] of [['garden-a', gA], ['garden-b', gB]]) {
+    const pix = new Pix(160, 80);
+    drawGarden(pix, 0, 0, 160, 80, g);
+    const cv = document.getElementById(id);
+    blit(cv, pix);
+    if (!fits.has(cv)) mount(cv);
+  }
+  const label = g => `sugar weeds ${pct(g.sugar)} · gum weeds ${pct(g.gum)} · flowers ${pct(g.flowers)}${g.dry > 0.3 ? ' · dry soil' : ''}`;
+  const tool = TOOLS.find(t => t.id === toolId);
+  const toolName = toolId === '__cleanings' ? 'cleanings every 6 months' : tool ? tool.name.toLowerCase() : '';
+  document.getElementById('garden-a-cap').textContent = `As lived, age ${age}: ${label(gA)}`;
+  document.getElementById('garden-b-cap').textContent = B ? `With ${toolName}, age ${age}: ${label(gB)}` : `The same life at ${ageB}: ${label(gB)}`;
+  const d = B ? Math.round((gB.sugar - gA.sugar) * 100) : 0, dg = B ? Math.round((gB.gum - gA.gum) * 100) : 0;
+  document.getElementById('garden-note').textContent = B
+    ? (d === 0 && dg === 0 ? `No change in the garden at ${age}. ${tool && tool.badge === 'emerging' ? 'That can be the honest answer for an emerging tool.' : 'This tool works elsewhere: teeth, injuries or comfort.'}` : `Sugar weeds ${d > 0 ? '+' : ''}${d} points, gum weeds ${dg > 0 ? '+' : ''}${dg} points, same luck. Tools stack with habits; none works alone.`)
+    : 'Pick something from the tool shed to see the same life, with the same luck, using it.';
+}
+gardenLife.addEventListener('change', drawGardenPair);
+gardenTool.addEventListener('change', drawGardenPair);
+gardenAge.addEventListener('input', drawGardenPair);
+drawGardenPair();
+
+// ---------------------------------------------------------------------------
+// The tool shed: cards with evidence badges, filterable.
+
+const FILTERS = [['all', 'All'], ['strong', 'Strong'], ['moderate', 'Moderate'], ['low', 'Low certainty'], ['emerging', 'Emerging'], ['generic', 'Generic'], ['dentist', "Ask your dentist"]];
+const shedFilter = document.getElementById('shed-filter');
+shedFilter.innerHTML = FILTERS.map(([id, l], i) => `<button type="button" data-f="${id}" aria-pressed="${i === 0}">${l}</button>`).join('');
+function drawShed(f = 'all') {
+  const list = TOOLS.filter(t => f === 'all' || t.badge === f || (f === 'generic' && t.generic) || (f === 'dentist' && t.dentistOnly));
+  document.getElementById('shed-grid').innerHTML = list.map(t => `
+    <article class="tool">
+      <span class="badge" style="--c: var(--b-${t.badge})">${BADGES[t.badge].label}</span>
+      <h3>${esc(t.name)}</h3>
+      <p>${esc(t.what)}</p>
+      <p><strong>What's known:</strong> ${esc(t.known)} <a href="${t.source.url}" target="_blank" rel="noopener">${esc(t.source.label)}</a></p>
+      <p><strong>In the game:</strong> ${esc(t.game)}</p>
+      <div class="meta">${t.generic ? '<span>Generic options exist</span>' : '<span>Specific products</span>'}${t.dentistOnly ? '<span>Ask your dentist</span>' : ''}</div>
+      ${t.set ? `<button type="button" data-try="${t.id}">Try it in the garden</button>` : ''}
+    </article>`).join('');
+}
+shedFilter.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  for (const x of shedFilter.querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b));
+  drawShed(b.dataset.f);
+});
+document.getElementById('shed-grid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-try]'); if (!b) return;
+  gardenTool.value = b.dataset.try;
+  drawGardenPair();
+  document.getElementById('garden').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+});
+drawShed();

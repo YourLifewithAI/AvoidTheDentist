@@ -1,0 +1,136 @@
+// The tool shed: products, habits and treatments the game can point to, each
+// with an evidence badge and a source. Rules (docs/GAME_PLAN.md §14):
+// - the model never knows about products; recommendations come after the Life
+//   Story, from what drove the outcome
+// - generics first; pay never buys placement; dentist-only items point to the dentist
+// - Emerging items are "see for yourself" tools, never a cure, and never alone
+// - `set` is the plan change that tries it in the What-If Lab (null = no model effect)
+//
+// badge: 'strong' | 'moderate' | 'low' | 'emerging'
+//   strong   = consistent systematic-review evidence of an outcome that matters
+//   moderate = trials show a benefit, with variable quality or size
+//   low      = low-certainty evidence or a benefit of unclear clinical size
+//   emerging = mechanism and early human data, no outcome trials yet
+
+export const BADGES = {
+  strong: { label: 'Strong evidence', short: 'Strong' },
+  moderate: { label: 'Moderate evidence', short: 'Moderate' },
+  low: { label: 'Low certainty', short: 'Low' },
+  emerging: { label: 'Emerging', short: 'Emerging' },
+};
+
+export const SHELVES = [
+  { id: 'brush', label: 'Brush & paste' },
+  { id: 'food', label: 'Food & drink' },
+  { id: 'chair', label: "At the dentist's" },
+  { id: 'body', label: 'Sleep & body' },
+  { id: 'tests', label: 'Tests' },
+];
+
+export const TOOLS = [
+  // --- brush & paste
+  { id: 'fluoridePaste', shelf: 'brush', name: 'Fluoride toothpaste, twice a day', badge: 'strong', generic: true, icon: 'paste',
+    what: 'Any fluoride toothpaste (1,000–1,450 ppm). Spit, don\'t rinse, especially at night.',
+    known: 'Prevents about a quarter of new cavities compared with non-fluoride paste.',
+    source: { label: 'Marinho 2003, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002278/full' },
+    game: 'Decay ×0.76, and halves the extra risk from a heavy Acid Clock.', set: { fluorideToothpaste: true, brushing: 'twice' } },
+  { id: 'electricBrush', shelf: 'brush', name: 'Electric toothbrush', badge: 'low', generic: true, icon: 'eBrush',
+    what: 'A powered brush, ideally with a two-minute timer.',
+    known: '11–21% less plaque and less gingivitis than a manual brush; clinical importance unclear.',
+    source: { label: 'Yaacob 2014, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002281.pub3/full' },
+    game: 'Less plaque: calmer gums and a slightly shallower Acid Clock.', set: { electricBrush: true } },
+  { id: 'interdental', shelf: 'brush', name: 'Cleaning between teeth', badge: 'low', generic: true, icon: 'picks',
+    what: 'Interdental brushes or floss, daily. Brushes may work better than floss.',
+    known: 'May reduce gingivitis and plaque; low to very low certainty; no trials measured decay.',
+    source: { label: 'Worthington 2019, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012018.pub2/full' },
+    game: 'Less plaque between teeth: fewer gum weeds.', set: { interdental: 'daily' } },
+  { id: 'xylitolPaste', shelf: 'brush', name: 'Xylitol toothpaste', badge: 'low', generic: true, icon: 'paste',
+    what: 'Fluoride toothpaste with 10% xylitol.',
+    known: 'May reduce decay by about 13% more than fluoride alone; low-quality evidence.',
+    source: { label: 'Riley 2015, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD010743.pub2/abstract' },
+    game: 'No extra effect in the model (evidence too uncertain).', set: null },
+  { id: 'postbiotic', shelf: 'brush', name: 'Postbiotic toothpaste (e.g. from S. dentisani)', badge: 'emerging', generic: false, icon: 'paste',
+    what: 'Pastes with compounds from health-associated bacteria that push back on acid-loving species.',
+    known: 'Small trials: fewer S. mutans and higher pH while used, with brief colonization. No trials yet with cavities as the outcome.',
+    source: { label: 'Systematic review 2025, J Oral Microbiol', url: 'https://pubmed.ncbi.nlm.nih.gov/41477312/' },
+    game: 'Fewer sugar weeds while used (the measured mechanism). Any effect on cavities comes only through that.', set: { postbiotic: true } },
+  { id: 'highFluoride', shelf: 'brush', name: 'Prescription 5,000 ppm fluoride toothpaste', badge: 'strong', generic: true, dentistOnly: true, icon: 'paste',
+    what: 'For high-risk mouths, especially exposed roots, dry mouth or braces. Ask your dentist.',
+    known: 'Prevents new root cavities and hardens existing ones in older adults, more than regular paste.',
+    source: { label: 'Network meta-analysis 2026', url: 'https://pubmed.ncbi.nlm.nih.gov/41720286/' },
+    game: 'Root decay ×0.6 and more early lesions harden.', set: { highFluoride: true } },
+  // --- food & drink
+  { id: 'withMeals', shelf: 'food', name: 'Sweets as dessert, not snacks', badge: 'strong', generic: true, icon: 'cupcake',
+    what: 'Same sweets, eaten with a meal instead of between meals.',
+    known: 'Sugar between meals, especially sticky sweets, caused far more decay than sugar at meals.',
+    source: { label: 'Vipeholm study (1954)', url: 'https://www.dentalcare.com/en-us/ce-courses/ce713/vipeholm-study' },
+    game: 'Three snacks\' acid time: 2h 06m. As dessert: 57m.', set: { withMeals: true } },
+  { id: 'gum', shelf: 'food', name: 'Sugar-free gum after eating', badge: 'moderate', generic: true, icon: 'gum',
+    what: 'Chew for about 20 minutes after meals and snacks.',
+    known: 'About 28% fewer new cavities; trials of moderate quality with variable effect.',
+    source: { label: 'Newton 2020, JDR Clin Transl Res', url: 'https://pubmed.ncbi.nlm.nih.gov/31743654/' },
+    game: 'Saliva returns faster: acid time 2h 06m → 1h 11m.', set: { gum: true } },
+  { id: 'waterBottle', shelf: 'food', name: 'A water bottle instead of sipping', badge: 'moderate', generic: true, icon: 'water',
+    what: 'Keep sodas and sweet coffee to meals; sip water in between.',
+    known: 'Sugar frequency drives decay; sipping keeps plaque pH down for hours.',
+    source: { label: 'Stephan curve, dentalcare CE713', url: 'https://www.dentalcare.com/en-us/ce-courses/ce713/stephan-curve' },
+    game: 'Two sodas sipped: 5h 33m of acid. With meals: 3h 18m.', set: { sipping: false } },
+  // --- at the dentist's
+  { id: 'sealants', shelf: 'chair', name: 'Sealants on new molars', badge: 'strong', generic: true, dentistOnly: true, icon: 'sticker',
+    what: 'A thin coating in the grooves of back teeth, ideally soon after they come in (around 6 and 12).',
+    known: 'Large reduction in chewing-surface decay while the sealant stays on.',
+    source: { label: 'Ahovuo-Saloranta 2017, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD001830.pub5/full' },
+    game: 'Chewing-surface decay ×0.25 while retained.', set: { sealants: true } },
+  { id: 'varnish', shelf: 'chair', name: 'Fluoride varnish', badge: 'strong', generic: true, dentistOnly: true, icon: 'paste',
+    what: 'Painted on at checkups, especially for kids and high-risk adults.',
+    known: 'About 43% fewer cavities in permanent teeth, 37% in baby teeth.',
+    source: { label: 'Marinho 2013, Cochrane', url: 'https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002279.pub2/full' },
+    game: 'Applied at visits when an early lesion is found.', set: { visits: 'every6' } },
+  { id: 'sdf', shelf: 'chair', name: 'Silver diamine fluoride (SDF)', badge: 'strong', generic: true, dentistOnly: true, icon: 'pill',
+    what: 'A liquid painted on a cavity to stop it. No drill, no needle. It stains the decay black.',
+    known: 'About 81% of treated cavities in baby teeth stop progressing.',
+    source: { label: 'Meta-analysis, JADA / PubMed 28972954', url: 'https://pubmed.ncbi.nlm.nih.gov/28972954/' },
+    game: 'Kids\' cavities painted instead of drilled; most stop.', set: { modernCare: true } },
+  { id: 'infiltration', shelf: 'chair', name: 'Resin infiltration (e.g. ICON)', badge: 'strong', generic: false, dentistOnly: true, icon: 'sticker',
+    what: 'Seals an early, not-yet-broken lesion between teeth with resin. No drilling.',
+    known: 'Firm evidence that it stops early proximal lesions; less effect once decay reaches dentin.',
+    source: { label: 'Systematic review 2023', url: 'https://pubmed.ncbi.nlm.nih.gov/36675656/' },
+    game: 'Early lesions progress about a third as often.', set: { modernCare: true } },
+  { id: 'nightGuard', shelf: 'chair', name: 'Custom night guard', badge: 'low', generic: false, dentistOnly: true, icon: 'guard',
+    what: 'Made by your dentist if you grind. It protects teeth; it doesn\'t stop the habit.',
+    known: 'Protection is plausible; effect on grinding itself not shown.',
+    source: { label: 'Research notes', url: 'https://github.com/YourLifewithAI/AvoidTheDentist/blob/claude/keen-davinci-xhh5au/docs/research/clinical-evidence.md' },
+    game: 'Cracks and jaw pain from grinding drop while worn.', set: { nightGuard: true } },
+  { id: 'mouthguard', shelf: 'chair', name: 'Sports mouthguard', badge: 'moderate', generic: true, icon: 'guard',
+    what: 'Custom from the dentist or boil-and-bite, for contact sports.',
+    known: 'Fewer dental injuries (unverified pooled estimate ×~0.55).',
+    source: { label: 'Knapik 2007 (to verify)', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Knapik+2007+mouthguards+sport+injury+prevention+effectiveness' },
+    game: 'Sports injuries ×0.45–0.55.', set: { guard: 'custom' } },
+  // --- sleep & body ("connects with")
+  { id: 'sleepCare', shelf: 'body', name: 'Get snoring and sleep apnea checked', badge: 'low', generic: true, icon: 'calendar',
+    what: 'Ask your doctor. CPAP or a dentist-made advancement appliance can help.',
+    known: 'Apnea connects with grinding and a dry mouth at night; treatment reduced grinding in about 60% in a small study.',
+    source: { label: 'Pilot study 2023', url: 'https://pubmed.ncbi.nlm.nih.gov/36867294/' },
+    game: 'Treated apnea: less grinding, a less dry mouth at night.', set: { sleepApnea: 'treated' } },
+  { id: 'refluxCare', shelf: 'body', name: 'Mention heartburn or reflux', badge: 'strong', generic: true, icon: 'calendar',
+    what: 'Tell your doctor and your dentist. Don\'t brush right after reflux; rinse with water.',
+    known: 'Reflux connects strongly with acid wear (erosion).',
+    source: { label: 'Meta-analysis 2022', url: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9316498/' },
+    game: 'Night acid with no food on the shelf; acid wear and cold sensitivity.', set: null },
+  { id: 'dryMouthCare', shelf: 'body', name: 'Dry mouth: sip water, sugar-free lozenges', badge: 'low', generic: true, icon: 'water',
+    what: 'If a medication dries your mouth, ask about alternatives. Never use sugary candies for relief.',
+    known: 'Low saliva slows acid recovery and repair; relief products have low-certainty evidence for comfort.',
+    source: { label: 'Dawes 2008, JADA', url: 'https://pubmed.ncbi.nlm.nih.gov/18460676/' },
+    game: 'Candies for relief: 8h of acid a day. Sugar-free: none.', set: null },
+  // --- tests
+  { id: 'microbiomeTest', shelf: 'tests', name: 'Oral microbiome test (shotgun sequencing)', badge: 'emerging', generic: false, icon: 'calendar',
+    what: 'A "soil test" for the garden: which bacteria are there, and how much. Re-test after a change and see for yourself.',
+    known: 'Sequencing can tell periodontitis from health well (AUC ~0.9) and decay less well (~0.8). No trials yet show testing alone improves outcomes.',
+    source: { label: 'Metagenomics review 2025', url: 'https://pubmed.ncbi.nlm.nih.gov/41800013/' },
+    game: 'Reveals your garden and hidden risk; the benefit comes from what you change.', set: { knowsRisk: true } },
+  { id: 'riskCheck', shelf: 'tests', name: 'A caries risk assessment at your checkup', badge: 'moderate', generic: true, dentistOnly: true, icon: 'calendar',
+    what: 'Your dentist sets your checkup interval and prevention plan by your risk.',
+    known: 'Low-risk adults do about as well with longer recall intervals; high-risk mouths need more.',
+    source: { label: 'Clarkson 2020, INTERVAL (to verify)', url: 'https://pubmed.ncbi.nlm.nih.gov/?term=Clarkson+2020+INTERVAL+dental+recalls+trial' },
+    game: 'Personalized advice: targeted prevention for high-risk mouths.', set: { knowsRisk: true } },
+];
