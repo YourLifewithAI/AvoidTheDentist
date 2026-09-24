@@ -212,7 +212,7 @@
 
 <header class="hero">
   <div class="wrap hero-grid">
-    <div class="eyebrow">Game plan · checkpoint M0 · September 2026</div>
+    <div class="eyebrow">Game plan v0.2 · the Acid Clock · September 2026</div>
     <h1>Avoid the Dentist</h1>
     <p class="lede">A cozy pixel-art life-sim about the everyday choices that add up to a lifetime of teeth, comfort, confidence and money. You watch a person live, never a close-up of a tooth.</p>
     <div class="stage"><canvas id="house" width="320" height="180" aria-label="Pixel-art cutaway of Maya's house. The scene changes with her choice at 34 and her age."></canvas></div>
@@ -440,36 +440,34 @@ flowchart LR
       <table>
         <thead><tr><th>Measure</th><th class="num">Model</th><th class="num">US data</th><th>Source</th></tr></thead>
         <tbody>
-          <tr><td>Tooth decay in baby teeth, ages 2–5</td><td class="num">27.8%</td><td class="num">23%</td><td>CDC 2019</td></tr>
-          <tr><td>Tooth decay in adult teeth, ages 12–19</td><td class="num">59.6%</td><td class="num">~57%</td><td>NHANES (to verify)</td></tr>
-          <tr><td>Natural teeth left, ages 50–64 (people with teeth)</td><td class="num">25.1</td><td class="num">23.3</td><td>CDC 2024</td></tr>
-          <tr><td>Natural teeth left, ages 65–74</td><td class="num">23.8</td><td class="num">21.7</td><td>CDC 2024</td></tr>
-          <tr><td>No natural teeth, ages 65–74</td><td class="num">13.7%</td><td class="num">11.4%</td><td>CDC 2024</td></tr>
-          <tr><td>No natural teeth, ages 75–79</td><td class="num">18.7%</td><td class="num">19.7% (75+)</td><td>CDC 2024</td></tr>
+          <tr><td>Tooth decay in baby teeth, ages 2–5</td><td class="num">23.7%</td><td class="num">23%</td><td>CDC 2019</td></tr>
+          <tr><td>Tooth decay in adult teeth, ages 12–19</td><td class="num">55.5%</td><td class="num">~57%</td><td>NHANES (to verify)</td></tr>
+          <tr><td>Natural teeth left, ages 50–64 (people with teeth)</td><td class="num">25.4</td><td class="num">23.3</td><td>CDC 2024</td></tr>
+          <tr><td>Natural teeth left, ages 65–74</td><td class="num">24.3</td><td class="num">21.7</td><td>CDC 2024</td></tr>
+          <tr><td>No natural teeth, ages 65–74</td><td class="num">13.9%</td><td class="num">11.4%</td><td>CDC 2024</td></tr>
+          <tr><td>No natural teeth, ages 75–79</td><td class="num">18.3%</td><td class="num">19.7% (75+)</td><td>CDC 2024</td></tr>
           <tr><td>Gum disease (periodontitis), adults 30+</td><td class="num">38.4%</td><td class="num">~42%</td><td>Eke 2018 (to verify)</td></tr>
-          <tr><td>Severe gum disease, adults 30+</td><td class="num">10.3%</td><td class="num">~7.8%</td><td>Eke 2018 (to verify)</td></tr>
-          <tr><td>High dental anxiety, adults</td><td class="num">10.0%</td><td class="num">~12–15%</td><td>Silveira 2021 (to verify)</td></tr>
-          <tr><td>Lifetime dental spending, all payers (median)</td><td class="num">$41,811</td><td class="num">~$42,000</td><td>~$520 per person per year (to verify)</td></tr>
+          <tr><td>Severe gum disease, adults 30+</td><td class="num">10.2%</td><td class="num">~7.8%</td><td>Eke 2018 (to verify)</td></tr>
+          <tr><td>High dental anxiety, adults</td><td class="num">8.3%</td><td class="num">~12–15%</td><td>Silveira 2021 (to verify)</td></tr>
+          <tr><td>Lifetime dental spending, all payers (median)</td><td class="num">$39,313</td><td class="num">~$42,000</td><td>~$520 per person per year (to verify)</td></tr>
         </tbody>
       </table>
     </div>
-    <p style="margin-top: 16px; color: var(--ink-2)">Where the model misses: people who keep their teeth keep about two more of them at 65+ than today's elders do. Part of that is a cohort effect, since today's 75-year-olds grew up before fluoride toothpaste, but it needs a dental advisor's review.</p>
+    <p style="margin-top: 16px; color: var(--ink-2)">Where the model misses: dental fear sits a little below target now that the Acid Clock produces slightly less adult decay (fewer bad visits). People who keep their teeth keep about two more of them at 65+ than today's elders do. Part of that is a cohort effect, since today's 75-year-olds grew up before fluoride toothpaste, but it needs a dental advisor's review.</p>
   </section>
 
   <section id="decisions">
     <div class="section-head">
-      <div class="eyebrow">Your call</div>
-      <h2>Decisions I need from you</h2>
+      <div class="eyebrow">Your answers, and what's still open</div>
+      <h2>Decisions</h2>
     </div>
     <ol class="decisions">
-      <li><strong>Primary audience.</strong> Adults and parents at home (my recommendation), dental teams chairside, or teens in schools?</li>
-      <li><strong>Distribution.</strong> A free public game, a white-label tool for practices with a “book with us” button, or both?</li>
-      <li><strong>Water fluoridation.</strong> Include it as a birth circumstance with its honest, low-certainty modern evidence, or leave it out of v1?</li>
-      <li><strong>Numbers during play.</strong> My proposal: none while playing, then the Life Story ledger, 100 Lives and an optional “Why?” view afterwards.</li>
-      <li><strong>Costs.</strong> US-only for v1, or is there another market to plan for now?</li>
-      <li><strong>Art.</strong> Keep building with the code-drawn toolkit, or bring in a pixel artist for animation polish at M3?</li>
-      <li><strong>Clinical advisor.</strong> Is there a dentist or hygienist who can review about 40 parameters and the card copy?</li>
-      <li><strong>Name.</strong> Keep <em>Avoid the Dentist</em>, or consider <em>Small Now, Big Later</em>, <em>Open Wide, Live Long</em> or <em>Tooth &amp; Consequences</em>?</li>
+      <li><strong>Audience: adults, young adults and parents at home.</strong> “Live a Life” is the default mode, and cards are written for grown-ups and parents.</li>
+      <li><strong>A free public game that clinics can use for education.</strong> Embeddable and kiosk-friendly, with no clinic branding required.</li>
+      <li><strong>Fluoride as part of the balance, not the water debate.</strong> Water fluoridation stays a small, neutral birth circumstance. The emphasis moves to the daily ebb and flow of demineralization and remineralization, which the Acid Clock already shows from the acid side. Proposed next: draw the repair side, and add a smear-or-pea-size toothpaste choice for parents with mild fluorosis as a possible outcome.</li>
+      <li><strong>Clinical advisor: you.</strong> First review: the Acid Clock food table and critical pH values, then the parameters flagged <code>[U]</code>.</li>
+      <li><strong>Considering: recommendations with affiliate links.</strong> Proposed guardrails: the model never knows about products; every item carries an evidence badge; emerging items such as microbiome tests are framed as “see for yourself” tracking; pay can't buy placement; generic options are shown where they exist; and dentist-only items point to the dentist.</li>
+      <li><strong>Still open:</strong> no numbers during play (my proposal), US-only costs for v1, code-drawn art or a pixel artist, and the name.</li>
     </ol>
   </section>
 </main>
