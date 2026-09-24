@@ -1,0 +1,11 @@
+{
+  "name": "avoid-the-dentist",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A cozy pixel-art life-sim about the everyday choices that shape a lifetime of dental health.",
+  "scripts": {
+    "art": "node tools/render-art.mjs",
+    "sim": "node sim/run.mjs"
+  }
+}
