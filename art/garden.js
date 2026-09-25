@@ -186,3 +186,39 @@ export function toolshed() {
   pix.text('Dentist', 264, ly, C.ink);
   return pix;
 }
+
+// Sheet: how much toothpaste for little kids. Numbers from the sim (sim-report.json `paste`).
+export const PASTE_DEFAULT = {
+  recommended: { fluorosis: 0.65, moderate: 0.017, ecc5: 0.28 }, pea: { fluorosis: 0.72, moderate: 0.017, ecc5: 0.28 },
+  lots: { fluorosis: 0.81, moderate: 0.027, ecc5: 0.28 }, none: { fluorosis: 0.5, moderate: 0.007, ecc5: 0.45 },
+};
+export function toothpaste(data = PASTE_DEFAULT) {
+  const pix = new Pix(320, 120).clear(C.paper);
+  pix.text('How much toothpaste for little kids?', 160, 3, C.ink, { align: 'center' });
+  const pct = v => Math.round(v * 100) + '%';
+  const panels = [
+    ['brushSmear', 'Rice grain, <3', data.recommended, true],
+    ['brushPea', 'Pea, 3 to 6', data.pea, true],
+    ['brushRibbon', 'Full ribbon', data.lots, false],
+    [null, 'No fluoride', data.none, false],
+  ];
+  panels.forEach(([spr, label, d, good], i) => {
+    const x = 6 + i * 78, y = 16;
+    pix.panel(x, y, 74, 70, C.cream, C.ink);
+    if (spr) pix.sprite(PROP[spr], x + 13, y + 16, { scale: 4 });
+    else { pix.sprite(PROP.toothbrush, x + 21, y + 22, { scale: 4 }); pix.line(x + 14, y + 38, x + 60, y + 12, C.red1); }
+    pix.text(label, x + 37, y + 42, C.ink, { align: 'center' });
+    pix.text(`fluorosis ${pct(d.fluorosis)}`, x + 37, y + 52, C.shade, { align: 'center' });
+    pix.text(`cavities ${pct(d.ecc5)}`, x + 37, y + 61, d.ecc5 > 0.35 ? C.red0 : C.shade, { align: 'center' });
+    if (good) pix.sprite(EMOTE_STAR, x + 64, y + 3);
+  });
+  pix.text('Cavities by age 5. Fluorosis: mostly very mild white flecks.', 160, 92, C.shade, { align: 'center' });
+  pix.text('The smear keeps the protection and limits swallowing.', 160, 102, C.shade, { align: 'center' });
+  return pix;
+}
+const EMOTE_STAR = sprite(`
+..y..
+.yyy.
+yyyyy
+.y.y.
+`, { y: 'gold2' });

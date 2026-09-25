@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { runMany } from './run.mjs';
 import { LIVES, MAYA_BOOK_IT, MAYA_LATER } from './lives.js';
 import { SAMPLE_DAYS, runSample, acidRR } from './stephan.js';
+import { simulateLife } from './model.js';
 
 const N = +(process.argv[2] || 400);
 const node = process.execPath;
@@ -22,6 +23,15 @@ sh('./levers.mjs', String(Math.min(N, 300)), tmp);
 const levers = JSON.parse((await import('node:fs')).readFileSync(tmp, 'utf8'));
 (await import('node:fs')).unlinkSync(tmp);
 const two = JSON.parse(sh('./twolives.mjs', String(N)));
+// toddler toothpaste: fluorosis and early decay, 400 typical lives per option
+const paste = Object.fromEntries(['recommended', 'pea', 'lots', 'none'].map(k => {
+  let f = 0, mod = 0, ecc = 0;
+  for (let s = 1; s <= N; s++) {
+    const l = simulateLife({ ...LIVES.typical, kidPaste: k }, s, { log: false });
+    f += l.fluorosis !== 'none'; mod += l.fluorosis === 'moderate'; ecc += l.yearly.find(y => y.age === 5).primDmf > 0;
+  }
+  return [k, { fluorosis: +(f / N).toFixed(3), moderate: +(mod / N).toFixed(3), ecc5: +(ecc / N).toFixed(3) }];
+}));
 const hhmm = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
 const days = SAMPLE_DAYS.map(d => {
   const r = runSample(d);
@@ -96,7 +106,15 @@ saliva change), and minutes below 6.2 once roots are exposed.
 | Life | Toddler (2-3) | Kid (6-12) | Teen (13-17) | Working (25-55) | Retired (66-79) | Roots, retired |
 |---|---:|---:|---:|---:|---:|---:|
 ${presets.map(r => `| ${r.name} | ${r.acid.toddler} | ${r.acid.kid} | ${r.acid.teen} | ${r.acid.adult} | ${r.acid.elder} | ${r.acid.elderRoot} |`).join('\n')}
+
+## 7. Toothpaste for little kids (${N} typical lives each)
+
+Fluorosis grade is settled by age 6 from fluoride swallowed while the front teeth form (water + toothpaste).
+
+| Toddler toothpaste | Fluorosis, very mild or worse | Moderate | Cavities in baby teeth by 5 |
+|---|---:|---:|---:|
+${Object.entries(paste).map(([k, v]) => `| ${{ recommended: 'Smear under 3, pea 3-6 (ADA)', pea: 'Pea-sized from the first tooth', lots: 'A full ribbon', none: 'No fluoride paste before 6' }[k]} | ${Math.round(v.fluorosis * 100)}% | ${(v.moderate * 100).toFixed(1)}% | ${Math.round(v.ecc5 * 100)}% |`).join('\n')}
 `;
 writeFileSync(new URL('../docs/SIM_REPORT.md', import.meta.url), md);
-writeFileSync(new URL('../docs/sim-report.json', import.meta.url), JSON.stringify({ N, presets, levers, two, acid: { days } }, null, 2));
+writeFileSync(new URL('../docs/sim-report.json', import.meta.url), JSON.stringify({ N, presets, levers, two, acid: { days }, paste }, null, 2));
 console.log(md);

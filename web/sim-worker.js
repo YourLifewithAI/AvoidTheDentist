@@ -26,6 +26,8 @@ export const CHANGES = {
   gum: { gum: true },
   bedtimeSnack: { bedtimeSnack: true },
   dryMeds45: { phases: [{ age: 45, set: { dryMouthMeds: true } }] },
+  kidPasteLots: { kidPaste: 'lots' },
+  kidPasteNone: { kidPaste: 'none' },
   modernCare: { modernCare: true },
   highFluoride: { highFluoride: true },
   postbiotic: { postbiotic: true },

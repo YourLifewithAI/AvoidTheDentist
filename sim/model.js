@@ -24,6 +24,7 @@ export const DEFAULT_PLAN = {
   kidDentist: 'pediatric', // 'pediatric' | 'general'
   bedtimeBottle: false,
   kidBrushing: 'twice', // 'twice' | 'once' | 'rarely'
+  kidPaste: 'recommended', // 'recommended' (smear <3, pea 3-6) | 'pea' | 'lots' | 'none' (no fluoride paste before 6)
   kidSugar: 3, // sugar hits per day
   salivaSharing: true,
   sealants: true,
@@ -279,7 +280,8 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     }
     const sportActive = pl.sport !== 'none' && age >= pl.sportFrom && age < pl.sportUntil;
     if (sportActive && pl.sport === 'running') sugarHits += 1; // sports drinks & gels
-    const goodFluoride = brushing === 'twice' && pl.fluorideToothpaste;
+    const pasteF = pl.fluorideToothpaste && !(age < 6 && pl.kidPaste === 'none'); // fluoride toothpaste in use today
+    const goodFluoride = brushing === 'twice' && pasteF;
     const smoker = !kid && pl.smoking === 'smoker';
     const vaper = !kid && pl.smoking === 'vaper';
     const dryMouth = dryMouthLater && age >= 60;
@@ -309,7 +311,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
 
     // ---- caries risk multiplier (mouth level)
     let rr = acidRR(day.acidDose, goodFluoride) * enamel;
-    if (pl.fluorideToothpaste) rr *= P.rr.fluorideToothpaste;
+    if (pasteF) rr *= P.rr.fluorideToothpaste;
     if (pl.fluoridatedWater) rr *= P.rr.waterFluoride;
     if (brushing === 'once') rr *= P.rr.brushOnce;
     else if (brushing === 'rarely') rr *= P.rr.brushRarely;
@@ -468,6 +470,18 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
         charge(life, upkeep[1], 'major', adult ? 'self' : 'parents');
         ev('prosthesisRedo', { what: upkeep[2] });
       }
+    }
+    // fluorosis: settled once the front teeth have formed (age 6); moderate shows as patches
+    if (m === 6 * 12) {
+      const F = (plan.fluoridatedWater ? 1 : 0.3) + (P.kidPasteF[plan.kidPaste] ?? P.kidPasteF.recommended);
+      const fl = P.fluorosis, u = S.u('trait:fluorosis');
+      life.fluorosis = u < fl.moderate[0] + fl.moderate[1] * Math.pow(F, 1.5) ? 'moderate' : u < fl.mild[0] + fl.mild[1] * F ? 'mild' : u < fl.veryMild[0] + fl.veryMild[1] * F ? 'veryMild' : 'none';
+      if (life.fluorosis !== 'none') ev('fluorosis', { grade: life.fluorosis });
+    }
+    if (life.fluorosis === 'moderate' && !life.fluorosisFixed) {
+      if (age >= 16 && age < 26 && m % 12 === 0 && S.u(`fluorosisFix:${Math.floor(age)}`) < P.fluorosisFixPerYear) {
+        life.fluorosisFixed = true; charge(life, P.fee.fluorosisFix, 'none', age < 18 ? 'parents' : 'self'); ev('cosmeticFix', { what: 'fluorosis' });
+      } else if (age >= 13) visibleIssue = true;
     }
     if (!kid && visibleIssue) life.selfConsciousMonths++;
 
@@ -878,6 +892,7 @@ function summarize(life, perm) {
     selfConsciousYears: +(life.selfConsciousMonths / 12).toFixed(1), gumDiseaseYears: +(life.gumDiseaseMonths / 12).toFixed(1),
     anxietyPeak: +life.anxietyPeak.toFixed(2), anxietyEnd: +last.anxiety.toFixed(2),
     diabetic: life.diabetic,
+    fluorosis: life.fluorosis || 'none',
     events: life.events,
     yearly: life.yearly,
   };

@@ -59,6 +59,16 @@ Model parameters carry the same tags in `sim/params.js` and `sim/stephan.js`. Th
 | Diabetes and periodontitis (RR ~1.86) | [Nascimento 2018](https://link.springer.com/article/10.1007/s00592-018-1120-4) | V |
 | Gum treatment lowers HbA1c ~0.43 points | [Simpson 2022, Cochrane CD004714](https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD004714.pub4/full) | V |
 
+## Toothpaste for little kids and fluorosis
+
+| Claim in the game | Source | Status |
+|---|---|---|
+| A rice-grain smear under 3, a pea-sized amount from 3 to 6 | [ADA guideline 2014, JADA](https://jada.ada.org/article/S0002-8177(14)60226-9/fulltext) | V |
+| 61% of US 16–17 year-olds have very mild or worse fluorosis (NHANES 2011–12) | [Wiener 2018, J Dent Hyg](https://pubmed.ncbi.nlm.nih.gov/29500282/) | V |
+| Starting fluoride paste under 12 months weakly linked to fluorosis; amount of paste not clearly linked | [Wong, Cochrane CD007693 (2024 update)](https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD007693.pub3/full) | V |
+| Moderate or worse fluorosis is uncommon | Dean-index survey trends | U |
+| Model fluoride-exposure weights and grade probabilities | `sim/params.js` | D |
+
 ## Gums, restorations, trauma
 
 | Claim in the game | Source | Status |

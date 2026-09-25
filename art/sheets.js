@@ -484,3 +484,4 @@ export function palette() {
 
 export { acidclock } from './acidclock.js';
 export { garden, toolshed } from './garden.js';
+export { toothpaste } from './garden.js';
