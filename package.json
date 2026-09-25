@@ -7,9 +7,11 @@
   "scripts": {
     "art": "node tools/render-art.mjs",
     "sim": "node sim/run.mjs",
-    "review": "node tools/build-review.mjs"
+    "review": "node tools/build-review.mjs",
+    "app": "node tools/build-app.mjs site"
   },
   "devDependencies": {
-    "esbuild": "0.24.0"
+    "esbuild": "0.24.0",
+    "qrcode": "^1.5.4"
   }
 }

@@ -42,6 +42,7 @@ export const DEFAULT_PLAN = {
   dryMouthMeds: false, // a daily medication that dries the mouth (adults; set with `phases`)
   reflux: false, // acid reflux at night (connects with erosion, and with decay through night acid)
   sleepApnea: false, // false | 'untreated' | 'treated': mouth breathing dries the mouth in sleep; connects with grinding
+  grinds: false, // knows they clench or grind (adds to the hidden grinding trait)
   // --- the tool shed (see sim/toolshed.js)
   modernCare: false, // the dentist offers resin infiltration for early lesions and SDF for kids' cavities
   highFluoride: false, // prescription 5,000 ppm toothpaste (adults)
@@ -324,7 +325,7 @@ export function simulateLife(planIn, seed = 1, opts = {}) {
     const kidHighRisk = pl.knowsRisk && rr > 1.6;
 
     // ---- bruxism
-    let brux = bruxBase + (apnea ? P.apnea.brux[apnea] : 0) + (working ? job.brux : 0) + (pl.energyDrinks > 0 ? 0.05 : 0) + (smoker ? 0.05 : 0) + (age > 45 ? 0.05 : 0);
+    let brux = bruxBase + (pl.grinds && !kid ? 0.3 : 0) + (apnea ? P.apnea.brux[apnea] : 0) + (working ? job.brux : 0) + (pl.energyDrinks > 0 ? 0.05 : 0) + (smoker ? 0.05 : 0) + (age > 45 ? 0.05 : 0);
     brux = Math.min(1, brux);
     const guardOn = life.hasNightGuard ? P.nightGuardProtection * P.nightGuardAdherence : 0;
     const bruxEff = brux * (1 - guardOn);

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="A cozy pixel-art life-sim: see how everyday choices play out for your teeth over a whole life. No sign-up, nothing leaves your phone.">
+<meta name="theme-color" content="#1b2040">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Avoid the Dentist</title>
+<style>
+  :root {
+    --bg: #f6eee0; --surface: #fffaf0; --ink: #2b2135; --ink-2: #4a3f55; --muted: #6f6376; --rule: #dccbb4;
+    --link: #1f6571; --button: #2d7480; --button-ink: #fffaf0; --frame: #2b2135; --shadow: #d8c6ad;
+    --worse: #d0563a; --better: #1f7fb3;
+    --b-strong: #3f8a4a; --b-moderate: #2d7f86; --b-low: #b27a18; --b-emerging: #8e62a8;
+    --night: #1b2040; --night-ink: #fbf3e4;
+    --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --bg: #1b2040; --surface: #252c54; --ink: #fbf3e4; --ink-2: #ddd4e6; --muted: #aaa1bd; --rule: #39416e;
+      --link: #8fd3c0; --frame: #0d1026; --shadow: #0d1026; --worse: #dd6a45; --better: #3597c9;
+      --b-strong: #6fbf6a; --b-moderate: #5fc2c0; --b-low: #e3b252; --b-emerging: #c29be0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 var(--font); -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); }
+  h1, h2, h3 { line-height: 1.15; margin: 0; text-wrap: balance; }
+  h1 { font-size: 34px; letter-spacing: -0.01em; }
+  h2 { font-size: 24px; }
+  h3 { font-size: 18px; }
+  p { margin: 0; }
+  a { color: var(--link); }
+  :focus-visible { outline: 3px solid var(--better); outline-offset: 2px; }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; margin: 0 auto; max-width: 100%; }
+  .screen { display: grid; gap: 16px; }
+  .screen[hidden], [hidden] { display: none !important; }
+  [tabindex="-1"]:focus { outline: none; }
+  .frame { background: #151a33; border: 3px solid #0b0e20; padding: 6px; box-shadow: 4px 4px 0 var(--shadow); }
+  .lede { color: var(--ink-2); font-size: 18px; }
+  .note { color: var(--muted); font-size: 14px; }
+  .btn, .opt { font: 600 17px/1.25 var(--font); padding: 14px 16px; border: 2px solid var(--frame); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; width: 100%; box-shadow: 3px 3px 0 var(--shadow); touch-action: manipulation; }
+  .btn.primary, .opt.primary { background: var(--button); color: var(--button-ink); text-align: center; }
+  .opt[aria-pressed="true"] { background: var(--button); color: var(--button-ink); }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  .link { background: none; border: 0; color: var(--link); font: 600 16px var(--font); padding: 8px 0; cursor: pointer; text-decoration: underline; }
+  .bar { height: 8px; background: var(--rule); } .bar > div { height: 100%; background: var(--button); transition: width 0.2s; }
+  .options { display: grid; gap: 10px; }
+  .story { display: grid; gap: 2px; text-align: left; font: 16px/1.35 var(--font); padding: 12px 14px; border: 2px solid var(--frame); background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .story span { color: var(--ink-2); font-size: 15px; }
+  #feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; min-height: 180px; align-content: start; }
+  #feed li { background: var(--surface); border: 2px solid var(--rule); padding: 8px 10px; font-size: 16px; }
+  #feed li:first-child { border-color: var(--frame); }
+  .age { display: inline-block; min-width: 2.2em; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { background: var(--surface); border: 2px solid var(--rule); padding: 10px 12px; display: grid; gap: 2px; }
+  .tile .label { font-size: 14px; color: var(--muted); } .tile .value { font-size: 28px; font-weight: 800; line-height: 1.1; } .tile .sub { font-size: 13px; color: var(--ink-2); }
+  .card { background: var(--surface); border: 2px solid var(--rule); padding: 14px; display: grid; gap: 10px; }
+  .card .frame { background: var(--bg); border-color: var(--frame); box-shadow: none; }
+  .gardens { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gardens figure { margin: 0; display: grid; gap: 4px; } .gardens figcaption { font-size: 13px; color: var(--ink-2); }
+  .tool { background: var(--surface); border: 2px solid var(--rule); padding: 12px 14px; display: grid; gap: 6px; }
+  .tool p { font-size: 15px; color: var(--ink-2); } .known { font-size: 14px !important; }
+  .badge { display: inline-flex; gap: 6px; align-items: center; font: 800 12px/1 var(--font); letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge::before { content: ""; width: 10px; height: 10px; background: var(--c); border: 1px solid var(--frame); }
+  .buy { justify-self: start; font-weight: 700; padding: 8px 12px; border: 2px solid var(--frame); text-decoration: none; background: var(--button); color: var(--button-ink); }
+  .ask { font-weight: 600; color: var(--ink) !important; }
+  footer { margin-top: 28px; padding-top: 16px; border-top: 2px solid var(--rule); color: var(--muted); font-size: 14px; display: grid; gap: 6px; }
+  .welcome-title { background: var(--night); color: var(--night-ink); margin: -16px -16px 0; padding: 22px 16px 16px; display: grid; gap: 12px; }
+  .welcome-title .lede { color: var(--night-ink); }
+</style>
+</head>
+<body>
+<main>
+  <section class="screen" id="welcome">
+    <div class="welcome-title">
+      <h1>Avoid the Dentist</h1>
+      <div class="frame"><canvas id="welcome-scene" width="320" height="180" aria-label="A cozy pixel-art house at dusk."></canvas></div>
+      <p class="lede">Live a whole life in two minutes and see how everyday choices play out for your teeth, your wallet and your smile.</p>
+    </div>
+    <button class="btn primary" id="go-build" type="button">Build a life like mine</button>
+    <button class="btn" id="go-stories" type="button">Pick a story</button>
+    <p class="note">No sign-up and no personal information. Everything runs on your phone, and nothing you tap is sent or saved anywhere.</p>
+  </section>
+
+  <section class="screen" id="build" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button><span class="note" id="q-progress"></span></div>
+    <div class="bar"><div id="q-bar"></div></div>
+    <h2 id="q-text"></h2>
+    <p class="note" id="q-help"></p>
+    <div class="options" id="q-options"></div>
+    <button class="link" id="q-back" type="button">← Back</button>
+    <p class="note">Your answers shape a life from your teens on; childhood follows the first question. Nothing is saved.</p>
+  </section>
+
+  <section class="screen" id="stories" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button></div>
+    <h2>Pick a story</h2>
+    <div class="options" id="story-list"></div>
+  </section>
+
+  <section class="screen" id="play" hidden>
+    <div class="row"><h2 id="play-title">Your life</h2><strong id="play-age">Age 0</strong></div>
+    <div class="frame"><canvas id="scene" width="320" height="180" aria-label="The house as the years go by."></canvas></div>
+    <div class="bar"><div id="play-bar"></div></div>
+    <ul id="feed" aria-live="polite"></ul>
+    <button class="btn" id="skip" type="button">Skip to the end</button>
+  </section>
+
+  <section class="screen" id="story" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button></div>
+    <h2 id="story-title">Your life story</h2>
+    <div class="tiles" id="tiles"></div>
+    <p id="whatelse" class="lede"></p>
+
+    <div class="card">
+      <h3>A day, the way your teeth feel it</h3>
+      <div class="frame"><canvas id="acid" width="240" height="60" aria-label="Plaque pH through a workday at 35. Red fill is time below 5.5."></canvas></div>
+      <p id="acid-note"></p>
+    </div>
+
+    <div class="card">
+      <h3>Your mouth's garden</h3>
+      <p class="note">Flowers are healthy bacteria. Sugar weeds are acid-loving decay bacteria. Low purple weeds are gum-disease bacteria. Dry soil means low saliva.</p>
+      <div class="gardens">
+        <figure><canvas id="garden35" width="160" height="80" aria-label="The garden at 35."></canvas><figcaption id="garden35-cap"></figcaption></figure>
+        <figure><canvas id="garden70" width="160" height="80" aria-label="The garden at 70."></canvas><figcaption id="garden70-cap"></figcaption></figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Change one thing</h3>
+      <p class="note">Same person, same luck, one different choice.</p>
+      <div class="options" id="changes"></div>
+      <p id="change-out" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h3>100 lives like this one</h3>
+      <p class="note">Luck is real. Here is how the same choices play out for 100 people.</p>
+      <button class="btn" id="hundred" type="button">Live it 100 times</button>
+      <div id="hundred-out" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h3>From the tool shed</h3>
+      <p class="note">Picked from what shaped this life. Each tool shows how strong the evidence is. None of them works alone: habits come first.</p>
+      <div class="options" id="tools"></div>
+      <details><summary>Curious about emerging tools?</summary><div class="options" id="emerging" style="margin-top:10px"></div></details>
+      <p class="note" id="disclosure" hidden></p>
+    </div>
+
+    <button class="btn primary" id="again" type="button">Replay with new luck</button>
+    <button class="btn" type="button" data-home>Try a different life</button>
+  </section>
+
+  <footer>
+    <p>For education only, not medical advice. Your dental team can tell you what fits your mouth.</p>
+    <p>Private by design: no accounts, no tracking, no data leaves this page.</p>
+  </footer>
+</main>
+<script>/*APP*/</script>
+</body>
+</html>
