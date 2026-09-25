@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="A cozy pixel-art life-sim: see how everyday choices play out for your teeth over a whole life. No sign-up, nothing leaves your phone.">
+<meta name="theme-color" content="#1b2040">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Avoid the Dentist</title>
+<style>
+  :root {
+    --bg: #f6eee0; --surface: #fffaf0; --ink: #2b2135; --ink-2: #4a3f55; --muted: #6f6376; --rule: #dccbb4;
+    --link: #1f6571; --button: #2d7480; --button-ink: #fffaf0; --frame: #2b2135; --shadow: #d8c6ad;
+    --worse: #d0563a; --better: #1f7fb3;
+    --b-strong: #3f8a4a; --b-moderate: #2d7f86; --b-low: #b27a18; --b-emerging: #8e62a8;
+    --night: #1b2040; --night-ink: #fbf3e4;
+    --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --bg: #1b2040; --surface: #252c54; --ink: #fbf3e4; --ink-2: #ddd4e6; --muted: #aaa1bd; --rule: #39416e;
+      --link: #8fd3c0; --frame: #0d1026; --shadow: #0d1026; --worse: #dd6a45; --better: #3597c9;
+      --b-strong: #6fbf6a; --b-moderate: #5fc2c0; --b-low: #e3b252; --b-emerging: #c29be0; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 var(--font); -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); }
+  h1, h2, h3 { line-height: 1.15; margin: 0; text-wrap: balance; }
+  h1 { font-size: 34px; letter-spacing: -0.01em; }
+  h2 { font-size: 24px; }
+  h3 { font-size: 18px; }
+  p { margin: 0; }
+  a { color: var(--link); }
+  :focus-visible { outline: 3px solid var(--better); outline-offset: 2px; }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; margin: 0 auto; max-width: 100%; }
+  .screen { display: grid; gap: 16px; }
+  .screen[hidden], [hidden] { display: none !important; }
+  [tabindex="-1"]:focus { outline: none; }
+  .frame { background: #151a33; border: 3px solid #0b0e20; padding: 6px; box-shadow: 4px 4px 0 var(--shadow); }
+  .lede { color: var(--ink-2); font-size: 18px; }
+  .note { color: var(--muted); font-size: 14px; }
+  .btn, .opt { font: 600 17px/1.25 var(--font); padding: 14px 16px; border: 2px solid var(--frame); background: var(--surface); color: var(--ink); cursor: pointer; text-align: left; width: 100%; box-shadow: 3px 3px 0 var(--shadow); touch-action: manipulation; }
+  .btn.primary, .opt.primary { background: var(--button); color: var(--button-ink); text-align: center; }
+  .opt[aria-pressed="true"] { background: var(--button); color: var(--button-ink); }
+  .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  .link { background: none; border: 0; color: var(--link); font: 600 16px var(--font); padding: 8px 0; cursor: pointer; text-decoration: underline; }
+  .bar { height: 8px; background: var(--rule); } .bar > div { height: 100%; background: var(--button); transition: width 0.2s; }
+  .options { display: grid; gap: 10px; }
+  .story { display: grid; gap: 2px; text-align: left; font: 16px/1.35 var(--font); padding: 12px 14px; border: 2px solid var(--frame); background: var(--surface); color: var(--ink); cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .story span { color: var(--ink-2); font-size: 15px; }
+  #feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; min-height: 180px; align-content: start; }
+  #feed li { background: var(--surface); border: 2px solid var(--rule); padding: 8px 10px; font-size: 16px; }
+  #feed li:first-child { border-color: var(--frame); }
+  .age { display: inline-block; min-width: 2.2em; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { background: var(--surface); border: 2px solid var(--rule); padding: 10px 12px; display: grid; gap: 2px; }
+  .tile .label { font-size: 14px; color: var(--muted); } .tile .value { font-size: 28px; font-weight: 800; line-height: 1.1; } .tile .sub { font-size: 13px; color: var(--ink-2); }
+  .card { background: var(--surface); border: 2px solid var(--rule); padding: 14px; display: grid; gap: 10px; }
+  .card .frame { background: var(--bg); border-color: var(--frame); box-shadow: none; }
+  .gardens { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .gardens figure { margin: 0; display: grid; gap: 4px; } .gardens figcaption { font-size: 13px; color: var(--ink-2); }
+  .tool { background: var(--surface); border: 2px solid var(--rule); padding: 12px 14px; display: grid; gap: 6px; }
+  .tool p { font-size: 15px; color: var(--ink-2); } .known { font-size: 14px !important; }
+  .badge { display: inline-flex; gap: 6px; align-items: center; font: 800 12px/1 var(--font); letter-spacing: 0.05em; text-transform: uppercase; }
+  .badge::before { content: ""; width: 10px; height: 10px; background: var(--c); border: 1px solid var(--frame); }
+  .buy { justify-self: start; font-weight: 700; padding: 8px 12px; border: 2px solid var(--frame); text-decoration: none; background: var(--button); color: var(--button-ink); }
+  .ask { font-weight: 600; color: var(--ink) !important; }
+  footer { margin-top: 28px; padding-top: 16px; border-top: 2px solid var(--rule); color: var(--muted); font-size: 14px; display: grid; gap: 6px; }
+  .welcome-title { background: var(--night); color: var(--night-ink); margin: -16px -16px 0; padding: 22px 16px 16px; display: grid; gap: 12px; }
+  .welcome-title .lede { color: var(--night-ink); }
+</style>
+</head>
+<body>
+<main>
+  <section class="screen" id="welcome">
+    <div class="welcome-title">
+      <h1>Avoid the Dentist</h1>
+      <div class="frame"><canvas id="welcome-scene" width="320" height="180" aria-label="A cozy pixel-art house at dusk."></canvas></div>
+      <p class="lede">Live a whole life in two minutes and see how everyday choices play out for your teeth, your wallet and your smile.</p>
+    </div>
+    <button class="btn primary" id="go-build" type="button">Build a life like mine</button>
+    <button class="btn" id="go-stories" type="button">Pick a story</button>
+    <p class="note">No sign-up and no personal information. Everything runs on your phone, and nothing you tap is sent or saved anywhere.</p>
+  </section>
+
+  <section class="screen" id="build" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button><span class="note" id="q-progress"></span></div>
+    <div class="bar"><div id="q-bar"></div></div>
+    <h2 id="q-text"></h2>
+    <p class="note" id="q-help"></p>
+    <div class="options" id="q-options"></div>
+    <button class="link" id="q-back" type="button">← Back</button>
+    <p class="note">Your answers shape a life from your teens on; childhood follows the first question. Nothing is saved.</p>
+  </section>
+
+  <section class="screen" id="stories" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button></div>
+    <h2>Pick a story</h2>
+    <div class="options" id="story-list"></div>
+  </section>
+
+  <section class="screen" id="play" hidden>
+    <div class="row"><h2 id="play-title">Your life</h2><strong id="play-age">Age 0</strong></div>
+    <div class="frame"><canvas id="scene" width="320" height="180" aria-label="The house as the years go by."></canvas></div>
+    <div class="bar"><div id="play-bar"></div></div>
+    <ul id="feed" aria-live="polite"></ul>
+    <button class="btn" id="skip" type="button">Skip to the end</button>
+  </section>
+
+  <section class="screen" id="story" hidden>
+    <div class="row"><button class="link" type="button" data-home>← Home</button></div>
+    <h2 id="story-title">Your life story</h2>
+    <div class="tiles" id="tiles"></div>
+    <p id="whatelse" class="lede"></p>
+
+    <div class="card">
+      <h3>A day, the way your teeth feel it</h3>
+      <div class="frame"><canvas id="acid" width="240" height="60" aria-label="Plaque pH through a workday at 35. Red fill is time below 5.5."></canvas></div>
+      <p id="acid-note"></p>
+    </div>
+
+    <div class="card">
+      <h3>Your mouth's garden</h3>
+      <p class="note">Flowers are healthy bacteria. Sugar weeds are acid-loving decay bacteria. Low purple weeds are gum-disease bacteria. Dry soil means low saliva.</p>
+      <div class="gardens">
+        <figure><canvas id="garden35" width="160" height="80" aria-label="The garden at 35."></canvas><figcaption id="garden35-cap"></figcaption></figure>
+        <figure><canvas id="garden70" width="160" height="80" aria-label="The garden at 70."></canvas><figcaption id="garden70-cap"></figcaption></figure>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Change one thing</h3>
+      <p class="note">Same person, same luck, one different choice.</p>
+      <div class="options" id="changes"></div>
+      <p id="change-out" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h3>100 lives like this one</h3>
+      <p class="note">Luck is real. Here is how the same choices play out for 100 people.</p>
+      <button class="btn" id="hundred" type="button">Live it 100 times</button>
+      <div id="hundred-out" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h3>From the tool shed</h3>
+      <p class="note">Picked from what shaped this life. Each tool shows how strong the evidence is. None of them works alone: habits come first.</p>
+      <div class="options" id="tools"></div>
+      <details><summary>Curious about emerging tools?</summary><div class="options" id="emerging" style="margin-top:10px"></div></details>
+      <p class="note" id="disclosure" hidden></p>
+    </div>
+
+    <button class="btn primary" id="again" type="button">Replay with new luck</button>
+    <button class="btn" type="button" data-home>Try a different life</button>
+  </section>
+
+  <footer>
+    <p>For education only, not medical advice. Your dental team can tell you what fits your mouth.</p>
+    <p>Private by design: no accounts, no tracking, no data leaves this page.</p>
+  </footer>
+</main>
+<script>(()=>{var s={ink:"#2b2135",ink2:"#453449",shade:"#6b5566",stone:"#9b8a93",mist:"#c9bdc0",paper:"#efe3d3",cream:"#fbf3e4",white:"#fffaf0",wood0:"#4e2f2f",wood1:"#764537",wood2:"#a0613f",wood3:"#c9884f",wood4:"#e3b073",red0:"#7a2e3a",red1:"#b5473f",red2:"#de6a4f",red3:"#f09a73",gold0:"#9a5b2b",gold1:"#d48f38",gold2:"#f0bd52",gold3:"#fae28e",green0:"#2e4a3f",green1:"#3f6f4c",green2:"#62a15a",green3:"#9fcf73",green4:"#d4eaa0",teal0:"#1f4a5a",teal1:"#2d7480",teal2:"#4aa8a0",teal3:"#8fd3c0",blue0:"#232d57",blue1:"#34518f",blue2:"#4f7fc4",blue3:"#86b4e6",blue4:"#c6e2f5",plum0:"#3b2552",plum1:"#5e3d78",plum2:"#8e62a8",plum3:"#bf97d1",pink1:"#c95e8a",pink2:"#e88fa8",pink3:"#f6c1c8",wallCream:"#f3e2c0",wallCreamS:"#dcc59e",wallSage:"#cfdcb4",wallSageS:"#aebf92",wallRose:"#efcabf",wallRoseS:"#d6a79d",wallBlue:"#c8dfe6",wallBlueS:"#a5c3cf",wallLilac:"#ddd0e8",wallLilacS:"#bfaed0",night0:"#151a33",night1:"#222a4e",night2:"#333a68",dusk0:"#4f4577",dusk1:"#8a5b86",dusk2:"#cf7a7f",dusk3:"#f0a77a",dusk4:"#f8d493",day0:"#7fb8e8",day1:"#a9d3f2",day2:"#d4ecfa",glow0:"#ffd27a",glow1:"#ffe6a3",mouth:"#7a2e3a",tongue:"#d8616a"},Le={porcelain:["#e0a58a","#f7cfb1","#fde8d4","#f19b92"],peach:["#c9855f","#e8ad83","#f5cda6","#e5836f"],tan:["#a4633f","#c98a5e","#e0aa7b","#c9674f"],brown:["#74432c","#9c6242","#b8805b","#b0503e"],deep:["#4d2c20","#6e422f","#8a5a41","#8c3f31"]},ie={black:["#231b2b","#3d3149","#62536f"],brown:["#4b2d22","#744733","#9d6645"],auburn:["#6e2c20","#a4462f","#cf6a41"],blonde:["#b0813b","#dcb25e","#f3dc91"],pepper:["#4f4a58","#7d7887","#a9a4b2"],grey:["#7f7a88","#aca7b4","#d6d2dc"],white:["#b3aebb","#dcd9e3","#f6f5fa"]},$={red:[s.red0,s.red1,s.red2],coral:[s.red1,s.red2,s.red3],mustard:[s.gold0,s.gold1,s.gold2],butter:[s.gold1,s.gold2,s.gold3],sage:[s.green1,s.green2,s.green3],forest:[s.green0,s.green1,s.green2],teal:[s.teal0,s.teal1,s.teal2],mint:[s.teal1,s.teal2,s.teal3],denim:[s.blue0,s.blue1,s.blue2],sky:[s.blue1,s.blue2,s.blue3],plum:[s.plum0,s.plum1,s.plum2],lilac:[s.plum1,s.plum2,s.plum3],rose:[s.pink1,s.pink2,s.pink3],brown:[s.wood0,s.wood1,s.wood2],khaki:[s.wood2,s.wood3,s.wood4],charcoal:[s.ink,s.ink2,s.shade],grey:[s.shade,s.stone,s.mist],white:[s.mist,s.paper,s.white],black:["#1b1622",s.ink,s.ink2]},No=new Map;function Ue(e){if(e==null)return null;if(Array.isArray(e))return e;let o=No.get(e);if(o)return o;let t=e.replace("#","");return o=[parseInt(t.slice(0,2),16),parseInt(t.slice(2,4),16),parseInt(t.slice(4,6),16),t.length>6?parseInt(t.slice(6,8),16):255],No.set(e,o),o}function Z(e,o,t){let r=Ue(e),n=Ue(o),a=Math.round(r[0]+(n[0]-r[0])*t),i=Math.round(r[1]+(n[1]-r[1])*t),l=Math.round(r[2]+(n[2]-r[2])*t);return"#"+[a,i,l].map(c=>c.toString(16).padStart(2,"0")).join("")}var $o={" ":["..","..","..","..","..",".."],A:[".##.","#..#","#..#","####","#..#","#..#"],B:["###.","#..#","###.","#..#","#..#","###."],C:[".###","#...","#...","#...","#...",".###"],D:["###.","#..#","#..#","#..#","#..#","###."],E:["####","#...","###.","#...","#...","####"],F:["####","#...","###.","#...","#...","#..."],G:[".###","#...","#...","#.##","#..#",".###"],H:["#..#","#..#","####","#..#","#..#","#..#"],I:["###",".#.",".#.",".#.",".#.","###"],J:["...#","...#","...#","...#","#..#",".##."],K:["#..#","#.#.","##..","#.#.","#..#","#..#"],L:["#...","#...","#...","#...","#...","####"],M:["#...#","##.##","#.#.#","#...#","#...#","#...#"],N:["#..#","##.#","#.##","#..#","#..#","#..#"],O:[".##.","#..#","#..#","#..#","#..#",".##."],P:["###.","#..#","#..#","###.","#...","#..."],Q:[".##.","#..#","#..#","#..#","#.#.",".#.#"],R:["###.","#..#","#..#","###.","#.#.","#..#"],S:[".###","#...",".##.","...#","...#","###."],T:["#####","..#..","..#..","..#..","..#..","..#.."],U:["#..#","#..#","#..#","#..#","#..#",".##."],V:["#...#","#...#","#...#",".#.#.",".#.#.","..#.."],W:["#...#","#...#","#...#","#.#.#","##.##","#...#"],X:["#..#","#..#",".##.",".##.","#..#","#..#"],Y:["#...#","#...#",".#.#.","..#..","..#..","..#.."],Z:["####","...#","..#.",".#..","#...","####"],a:["....","....",".###","#..#","#..#",".###"],b:["#...","#...","###.","#..#","#..#","###."],c:["...","...",".##","#..","#..",".##"],d:["...#","...#",".###","#..#","#..#",".###"],e:["....","....",".##.","####","#...",".###"],f:[".##","#..","###","#..","#..","#.."],g:["....","....",".###","#..#","#..#",".###","...#",".##."],h:["#...","#...","###.","#..#","#..#","#..#"],i:["#",".","#","#","#","#"],j:["..#","...","..#","..#","..#","..#","#.#",".#."],k:["#...","#...","#.#.","##..","#.#.","#..#"],l:["#.","#.","#.","#.","#.",".#"],m:[".....",".....","####.","#.#.#","#.#.#","#.#.#"],n:["....","....","###.","#..#","#..#","#..#"],o:["....","....",".##.","#..#","#..#",".##."],p:["....","....","###.","#..#","#..#","###.","#...","#..."],q:["....","....",".###","#..#","#..#",".###","...#","...#"],r:["...","...","#.#","##.","#..","#.."],s:["....","....",".###","##..","..##","###."],t:[".#.",".#.","###",".#.",".#.","..#"],u:["....","....","#..#","#..#","#..#",".###"],v:["...","...","#.#","#.#","#.#",".#."],w:[".....",".....","#...#","#.#.#","#.#.#",".#.#."],x:["....","....","#..#",".##.",".##.","#..#"],y:["....","....","#..#","#..#","#..#",".###","...#",".##."],z:["....","....","####","..#.",".#..","####"],0:[".##.","#..#","#..#","#..#","#..#",".##."],1:[".#.","##.",".#.",".#.",".#.","###"],2:[".##.","#..#","...#","..#.",".#..","####"],3:["###.","...#",".##.","...#","...#","###."],4:["..#.",".##.","#.#.","####","..#.","..#."],5:["####","#...","###.","...#","...#","###."],6:[".##.","#...","###.","#..#","#..#",".##."],7:["####","...#","..#.","..#.",".#..",".#.."],8:[".##.","#..#",".##.","#..#","#..#",".##."],9:[".##.","#..#","#..#",".###","...#",".##."],".":[".",".",".",".",".","#"],",":["..","..","..","..","..",".#","#."],"!":["#","#","#","#",".","#"],"?":[".##.","#..#","..#.",".#..","....",".#.."],"'":["#","#"],'"':["#.#","#.#"],":":[".",".","#",".",".","#"],";":["..","..",".#","..","..",".#","#."],"-":["...","...","...","###"],"+":["...","...",".#.","###",".#."],"=":["...","...","###","...","###"],"/":["...#","..#.","..#.",".#..",".#..","#..."],"%":["#..#","...#","..#.",".#..","#...","#..#"],"(":[".#","#.","#.","#.","#.",".#"],")":["#.",".#",".#",".#",".#","#."],"&":[".#..","#.#.",".#..","#.##","#..#",".##."],"#":[".....",".#.#.","#####",".#.#.","#####",".#.#."],$:["..#..",".####","#.#..",".###.","..#.#","####.","..#.."],"<":["..#",".#.","#..",".#.","..#"],">":["#..",".#.","..#",".#.","#.."],"*":["...","#.#",".#.","#.#"],_:["....","....","....","....","....","....","####"],"\u2665":[".....","##.##","#####","#####",".###.","..#.."],"\u25B6":["#...","##..","###.","##..","#..."],"\u275A":["##.##","##.##","##.##","##.##","##.##"],"\u2022":["..","..","##","##"],"\u2026":[".....",".....",".....",".....",".....","#.#.#"],"\xD7":["...","...","#.#",".#.","#.#"],"\u2192":[".....","...#.","#####","...#."],"\u2191":[".#.","###",".#.",".#.",".#."],"\u2193":[".#.",".#.",".#.","###",".#."],"\xB7":[".",".",".","#"]},Ne={};for(let e in $o){let o=$o[e];Ne[e]={w:Math.max(...o.map(t=>t.length)),rows:o}}var kt=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]],we=class e{constructor(o,t){this.w=o,this.h=t,this.data=new Uint8ClampedArray(o*t*4)}clear(o){let[t,r,n,a]=Ue(o)||[0,0,0,0],i=this.data;for(let l=0;l<i.length;l+=4)i[l]=t,i[l+1]=r,i[l+2]=n,i[l+3]=a;return this}px(o,t,r,n=1,a="normal"){if(r==null||(o=Math.floor(o),t=Math.floor(t),o<0||t<0||o>=this.w||t>=this.h))return;let i=Ue(r),l=i[3]/255*n;if(l<=0)return;let c=this.data,d=(t*this.w+o)*4,p=i[0],k=i[1],b=i[2];if(a==="multiply"?(p=c[d]*p/255,k=c[d+1]*k/255,b=c[d+2]*b/255):a==="screen"?(p=255-(255-c[d])*(255-p)/255,k=255-(255-c[d+1])*(255-k)/255,b=255-(255-c[d+2])*(255-b)/255):a==="add"&&(p=c[d]+p,k=c[d+1]+k,b=c[d+2]+b),l>=1&&a==="normal"){c[d]=p,c[d+1]=k,c[d+2]=b,c[d+3]=255;return}let v=c[d+3]/255,M=l+v*(1-l);M<=0||(c[d]=(p*l+c[d]*v*(1-l))/M,c[d+1]=(k*l+c[d+1]*v*(1-l))/M,c[d+2]=(b*l+c[d+2]*v*(1-l))/M,c[d+3]=M*255)}get(o,t){if(o<0||t<0||o>=this.w||t>=this.h)return null;let r=(t*this.w+o)*4,n=this.data;return[n[r],n[r+1],n[r+2],n[r+3]]}rect(o,t,r,n,a,i=1,l="normal"){for(let c=0;c<n;c++)for(let d=0;d<r;d++)this.px(o+d,t+c,a,i,l);return this}frame(o,t,r,n,a){return this.hline(o,o+r-1,t,a),this.hline(o,o+r-1,t+n-1,a),this.vline(o,t,t+n-1,a),this.vline(o+r-1,t,t+n-1,a),this}panel(o,t,r,n,a,i,l){return l&&(this.rect(o+1,t+n,r-1,1,l),this.rect(o+r,t+1,1,n-1,l)),this.rect(o+1,t+1,r-2,n-2,a),this.hline(o+1,o+r-2,t,i),this.hline(o+1,o+r-2,t+n-1,i),this.vline(o,t+1,t+n-2,i),this.vline(o+r-1,t+1,t+n-2,i),this}hline(o,t,r,n,a=1){for(let i=Math.min(o,t);i<=Math.max(o,t);i++)this.px(i,r,n,a);return this}vline(o,t,r,n,a=1){for(let i=Math.min(t,r);i<=Math.max(t,r);i++)this.px(o,i,n,a);return this}line(o,t,r,n,a){o|=0,t|=0,r|=0,n|=0;let i=Math.abs(r-o),l=o<r?1:-1,c=-Math.abs(n-t),d=t<n?1:-1,p=i+c;for(;this.px(o,t,a),!(o===r&&t===n);){let k=2*p;k>=c&&(p+=c,o+=l),k<=i&&(p+=i,t+=d)}return this}disc(o,t,r,n,a=1,i="normal"){for(let l=-r;l<=r;l++)for(let c=-r;c<=r;c++)c*c+l*l<=r*r+r*.8&&this.px(o+c,t+l,n,a,i);return this}dither(o,t,r,n,a,i=.5,l=1){let c=i*16;for(let d=0;d<n;d++)for(let p=0;p<r;p++)kt[t+d&3][o+p&3]<c&&this.px(o+p,t+d,a,l);return this}gradient(o,t,r,n,a,i=3){let l=a.length,c=n/l;for(let d=0;d<l;d++){let p=Math.round(t+d*c),k=Math.round(t+(d+1)*c);if(this.rect(o,p,r,k-p,a[d]),d>0)for(let b=0;b<i;b++)this.dither(o,p+b,r,1,a[d-1],.75-b/i*.75+.06)}return this}glow(o,t,r,n,a=.5,i="screen"){for(let l=-r;l<=r;l++)for(let c=-r;c<=r;c++){let d=Math.sqrt(c*c+l*l)/r;if(d>=1)continue;let p=Math.ceil((1-d)*3)/3;this.px(o+c,t+l,n,a*p*p,i)}return this}sprite(o,t,r,n={}){return yt(this,o,t,r,n),this}blit(o,t,r,n=1){for(let a=0;a<o.h;a++)for(let i=0;i<o.w;i++){let l=o.get(i,a);l[3]&&this.px(t+i,r+a,l,n)}return this}text(o,t,r,n,a={}){return vt(this,o,t,r,n,a)}scaled(o){let t=new e(this.w*o,this.h*o),r=this.data,n=t.data;for(let a=0;a<t.h;a++){let i=a/o|0;for(let l=0;l<t.w;l++){let c=(i*this.w+(l/o|0))*4,d=(a*t.w+l)*4;n[d]=r[c],n[d+1]=r[c+1],n[d+2]=r[c+2],n[d+3]=r[c+3]}}return t}},bt={o:"ink",O:"ink2",h:"hair.1",H:"hair.0",i:"hair.2",s:"skin.1",S:"skin.0",l:"skin.2",b:"skin.3",e:"ink",w:"white",m:"mouth",n:"tongue",c:"top.1",C:"top.0",d:"top.2",p:"bottom.1",P:"bottom.0",q:"bottom.2",f:"shoes.1",F:"shoes.0",g:"shoes.2",x:"acc.1",X:"acc.0",y:"acc.2",u:"acc2.1",U:"acc2.0",v:"acc2.2",k:"cream",K:"mist",t:"stone",T:"shade"};function h(e,o={},t={}){let r=e.replace(/^\n+|\s+$/g,"").split(`
+`).map(a=>a.replace(/^\s*\|?/,"").replace(/\|\s*$/,"")),n=Math.max(...r.map(a=>a.length));return typeof process!="undefined"&&process.env&&process.env.STRICT_SPRITES&&r.forEach((a,i)=>{a.length!==n&&console.warn(`sprite row ${i} has ${a.length} cols (expected ${n}): "${a}"`)}),{w:n,h:r.length,rows:r.map(a=>a.padEnd(n,".")),key:{...bt,...o},...t}}function Go(e,o){var r,n;if(e==null)return null;if(Array.isArray(e)||e[0]==="#")return e;let t=e.indexOf(".");if(t>0){let a=e.slice(0,t),i=+e.slice(t+1),l=o&&o[a]||wt[a];return l?(r=l[i])!=null?r:l[l.length-1]:null}return(n=s[e])!=null?n:null}var wt={skin:["#c9855f","#e8ad83","#f5cda6","#e5836f"],hair:["#4b2d22","#744733","#9d6645"],top:[s.teal0,s.teal1,s.teal2],bottom:[s.blue0,s.blue1,s.blue2],shoes:[s.ink,s.wood0,s.wood1],acc:[s.gold0,s.gold1,s.gold2],acc2:[s.mist,s.paper,s.white]};function yt(e,o,t,r,n={}){let{look:a,flip:i=!1,alpha:l=1,mode:c="normal",recolor:d}=n,p={};for(let k in o.key)p[k]=Go(o.key[k],a);if(n.key)for(let k in n.key)p[k]=Go(n.key[k],a);for(let k=0;k<o.h;k++){let b=o.rows[k];for(let v=0;v<o.w;v++){let M=b[v];if(M==="."||M===" ")continue;let C=p[M];if(C===void 0)continue;d&&(C=d(C,M));let E=n.scale||1;E===1?e.px(t+(i?o.w-1-v:v),r+k,C,l,c):e.rect(t+(i?o.w-1-v:v)*E,r+k*E,E,E,C,l,c)}}}function oo(e,o={}){var a;let t=(a=o.spacing)!=null?a:1,r=0,n=0;for(let i of e){if(i===`
+`){n=Math.max(n,r-t),r=0;continue}let l=Ne[i]||Ne["?"];r+=l.w+t}return Math.max(n,r-t)}function vt(e,o,t,r,n,a={}){var b,v;let i=(b=a.spacing)!=null?b:1,l=(v=a.lineHeight)!=null?v:9,c=a.shadow,d=t,p=r;a.align==="center"&&(d=t-Math.floor(oo(o,a)/2)),a.align==="right"&&(d=t-oo(o,a));let k=d;for(let M of o){if(M===`
+`){d=k,p+=l;continue}let C=Ne[M]||Ne["?"];for(let E=0;E<C.rows.length;E++)for(let u=0;u<C.w;u++)C.rows[E][u]==="#"&&(c&&e.px(d+u,p+E+1,c),e.px(d+u,p+E,n));d+=C.w+i}return d}var le={};le.short=h(`
+.....oooooo.....
+...oohhhhhhoo...
+..ohhhhhhhhhho..
+.ohhiihhhhhhhHo.
+.ohiihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhhshhhhshhHo.
+.ohssssssssssHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.bun=h(`
+......oooo......
+.....ohhiHo.....
+.....ohhhHo.....
+.....ooHHoo.....
+...oohhhhhhoo...
+..ohhhhhhhhhho..
+.ohhiihhhhhhhHo.
+.ohiihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhhhhhhsshhHo.
+.ohhhssssssssHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.bob=h(`
+.....oooooo.....
+...oohhhhhhoo...
+..ohhhhhhhhhho..
+.ohhiihhhhhhhHo.
+.ohiihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhssssssssHHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohssssssssSSHo.
+.ohosssssssSoHo.
+.oo.osssssSo.oo.
+`);le.curly=h(`
+....oo.oo.oo....
+..oohhohhohhoo..
+.ohhihhhhhhhhhho
+.ohiihhhhhhhhHHo
+ohhiihhhhhhhhhHo
+ohhhhhhhhhhhhhHo
+ohhhhshhshhshhHo
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.buzz=h(`
+................
+.....oooooo.....
+...ooHhhhhHoo...
+..oHhhhhhhhhHo..
+.oHhhhhhhhhhhHo.
+.ohsssssssssSHo.
+.osssssssssssSo.
+.osssssssssssSo.
+.osssssssssssSo.
+.osssssssssssSo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.long=h(`
+.....oooooo.....
+...oohhhhhhoo...
+..ohhhhhhhhhho..
+.ohhiihhhhhhhHo.
+.ohiihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhssssssssHHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohssssssssSSHo.
+.ohosssssssSoHo.
+.ohhosssssSohHo.
+`);var qo={};qo.long=h(`
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+................
+.ohh........hHo.
+.ohh........hHo.
+.ohho......ohHo.
+.ohho......ohHo.
+..oo........oo..
+`);le.pigtails=h(`
+.....oooooo.....
+...oohhhhhhoo...
+..ohhhhhhhhhho..
+oohhiihhhhhhhHoo
+ohohiihhhhhhhHoH
+ohohhhhhhhhhhHoH
+oohhhhhhhhhhhHoo
+.ohhssssssssHHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.spiky=h(`
+...o..o..o......
+..oho.oho.ohoo..
+..ohhohhhohhHo..
+.ohhiihhhhhhhHo.
+.ohiihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohhhshhhshhhHo.
+.ohssssssssssHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.balding=h(`
+................
+.....oooooo.....
+...oollsssSoo...
+..olsssssssSSo..
+.ohlssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.curlyShort=h(`
+................
+....oo.oo.oo....
+...ohhohhohhoo..
+..ohiihhhhhhHo..
+.ohhihhhhhhhhHo.
+.ohhhhhhhhhhhHo.
+.ohshhshhshhsHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+.ohsssssssssSHo.
+..ossssssssSSo..
+..osssssssssSo..
+...osssssssSo...
+`);le.toddler=h(`
+......oo........
+.....ohho.......
+....oohhHoo.....
+...ohhhhhhHo....
+...ohhshhshHo...
+...osssssssSo...
+...osssssssSo...
+...osssssssSo...
+...osssssssSo...
+....ossssssSo...
+.....oooooo.....
+`);le.baby=h(`
+.......oo.......
+......oho.......
+.....oooooo.....
+....olssssSo....
+...osssssssSo...
+...osssssssSo...
+...osssssssSo...
+...osssssssSo...
+....ossssssSo...
+.....oooooo.....
+`);var xt={neutral:h(`
+..........
+..e....e..
+..e....e..
+.b......b.
+....mm....
+..........
+`),smile:h(`
+..........
+..e....e..
+..e....e..
+.b......b.
+...m..m...
+....mm....
+`),grin:h(`
+..........
+..e....e..
+.e.e..e.e.
+.b......b.
+...mwwm...
+....nn....
+`),wince:h(`
+.e......e.
+..e....e..
+.e......e.
+.b......b.
+...m.mm...
+....m.....
+`),sleep:h(`
+..........
+..........
+..ee..ee..
+.b......b.
+.....m....
+..........
+`),worried:h(`
+...e..e...
+..e....e..
+..e....e..
+.b......b.
+...mmm....
+......m...
+`),sad:h(`
+...e..e...
+..e....e..
+..e....e..
+.b......b.
+....mm....
+...m..m...
+`),surprised:h(`
+..........
+..e....e..
+..e....e..
+.b......b.
+....mm....
+....mm....
+`),clench:h(`
+.ee....ee.
+...e..e...
+..e....e..
+.b......b.
+...mwwm...
+...mmmm...
+`),content:h(`
+..........
+..........
+.e.e..e.e.
+.b......b.
+...m..m...
+....mm....
+`)},St={neutral:h(`
+........
+..e..e..
+..e..e..
+.b....b.
+...mm...
+........
+`),smile:h(`
+........
+..e..e..
+..e..e..
+.b....b.
+..m..m..
+...mm...
+`),happy:h(`
+........
+..e..e..
+.e.ee.e.
+.b....b.
+...mm...
+...nn...
+`),cry:h(`
+........
+.ee..ee.
+..w..w..
+.bw..wb.
+...mm...
+...mm...
+`),sleep:h(`
+........
+........
+.ee..ee.
+.b....b.
+...m....
+........
+`)},Mt=h(`
+..........
+.TTT..TTT.
+.T.TTTT.T.
+.TTT..TTT.
+..........
+..........
+`,{T:"stone"}),re={};re.tee=h(`
+..ocooooooooco..
+..occcccccccCo..
+..odcccccccCCo..
+..odcccccccCCo..
+..occccccccCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.shirtTie=h(`
+..ocooooooooco..
+..occcuxxucccCo.
+..odcccxXccCCo..
+..odcccxXccCCo..
+..occccxXccCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.apron=h(`
+..ocooooooooco..
+..occuccccuCCo..
+..odcuuuuuuCCo..
+..odcuuuuuuCCo..
+..occuuUUuuCCo..
+..ouuuuuuuuUUo..
+...ouuuuuuuUo...
+....ouuuuuUo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.scrubs=h(`
+..ocooooooooco..
+..occccsscccCo..
+..odkccccccCCo..
+..odcccccccCCo..
+..occccccccCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.vest=h(`
+..oxooooooooxo..
+..oxxxccccxXXo..
+..oxxxccccxXXo..
+..oxxxccccxXXo..
+..ouuuccccuUUo..
+..oxxxccccxXXo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.jersey=h(`
+..ocooooooooco..
+..occccccccCCo..
+..ouuuuuuuuUUo..
+..occccccccCCo..
+..occccccccCCo..
+..ouuuuuuuuUUo..
+...opppppppPo...
+....opppppPo....
+....oxxooxXo....
+....oxxooxXo....
+...offfoofffo...
+....ttt..ttt....
+`);re.cardigan=h(`
+..oxooooooooxo..
+..oxxcccccxXXo..
+..oxxcccccxXXo..
+..oxxccccxxXXo..
+..oxxxcccxxXXo..
+..oxxxcccxxXXo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.hoodie=h(`
+..oCooooooooCo..
+..oCccuccuccCo..
+..odccuccuCCCo..
+..odcccccccCCo..
+..occCCCCCcCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.skirt=h(`
+..ocooooooooco..
+..occcccccccCo..
+..odcccccccCCo..
+..odcccccccCCo..
+..occccccccCCo..
+..occccccccCCo..
+...opppppppPo...
+..opppppppppPo..
+..oooooooooooo..
+....osSoosSo....
+...offfoofffo...
+....ooo..ooo....
+`);re.teen=h(`
+..ocooooooooco..
+..occcccccccCo..
+..odcccccccCCo..
+..occccccccCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.teenHoodie=h(`
+..oCooooooooCo..
+..oCccuccuccCo..
+..odccuccuCCCo..
+..occCCCCCcCCo..
+..occccccccCCo..
+...opppppppPo...
+....opppppPo....
+....oppoopPo....
+....oppoopPo....
+...offfoofffo...
+....ooo..ooo....
+`);re.kid=h(`
+...oooooooooo...
+...occcccccCo...
+...odccccCCCo...
+...occccccCCo...
+...opppppppPo...
+....osSoosSo....
+...offfoofffo...
+....ooo..ooo....
+`);re.kidDress=h(`
+...oooooooooo...
+...occcccccCo...
+...odccccCCCo...
+..occcccccccCo..
+..oooooooooooo..
+....osSoosSo....
+...offfoofffo...
+....ooo..ooo....
+`);re.toddler=h(`
+....occcccCo....
+...oscpcpcCSo...
+....opppppPo....
+....oppooPPo....
+....offoofFo....
+.....oo..oo.....
+`);re.baby=h(`
+....occcccCo....
+...osccccccSo...
+..oocccccccCoo..
+.offoooooooooffo
+..oo........oo..
+`);var ce={};ce.down=h(`
+................
+................
+....C......C....
+....C......C....
+...sC......CS...
+...sC......CS...
+..oso......oSo..
+...o........o...
+`);function $e(e,o,t,r){var v;let n=typeof r.head=="string"?le[r.head]:r.head,a=typeof r.body=="string"?re[r.body]:r.body,i=r.arms===null?null:typeof r.arms=="object"?r.arms:ce[r.arms||"down"],l=n&&n.w===16&&(r.head==="toddler"||r.head==="baby"),c=typeof r.face=="string"?l?St[r.face]:xt[r.face]:r.face,d={look:r.look,flip:r.flip},p=t-a.h,k=p-n.h;r.back&&e.sprite(typeof r.back=="string"?qo[r.back]:r.back,o,k,d),e.sprite(a,o,p,d);let b=i&&((v=r.armsOver)!=null?v:i.over);if(i&&!b&&e.sprite(i,o,p-(i.oy||0),d),e.sprite(n,o,k,d),c&&e.sprite(c,o+(c.w===8?4:3),k+n.h-6,d),r.glasses&&e.sprite(Mt,o+3,k+n.h-6,d),r.hat){let M=typeof r.hat=="string"?We[r.hat]:r.hat;e.sprite(M,o,k+n.h-7-M.h+(r.hatDrop||0),d)}i&&b&&e.sprite(i,o,p-(i.oy||0),d);for(let M of r.props||[])e.sprite(M.spr,o+M.dx,p+M.dy,{look:M.look||r.look,flip:M.flip});for(let M of r.after||[])e.sprite(M.spr,o+M.dx,p+M.dy,{look:M.look||r.look,flip:M.flip});return{headY:k,bodyY:p}}ce.cheek=h(`
+...........osso.
+...........osSo.
+............osSo
+............osSo
+............ocCo
+............ocCo
+....C.........o.
+....C...........
+...sC...........
+...sC...........
+..oso...........
+...o............
+`,{},{oy:4,over:!0});ce.cover=h(`
+......oooo......
+.....osssso.....
+.....oSssSo.....
+......osSo......
+......osSo......
+.....ocCo...C...
+....ocCo....C...
+...ocCo.....CS..
+....oo......CS..
+............oSo.
+.............o..
+`,{},{oy:3,over:!0});ce.hold=h(`
+................
+................
+....C......C....
+...sC......CS...
+...sss....ssS...
+...ooo....ooo...
+`,{},{over:!0});ce.carry=h(`
+................
+..oooooooooooo..
+.oyyyyyXXyyyyyo.
+.oxxxxxXXxxxxxo.
+osoxxxxXXxxxxoSo
+osoxxxxxxxxxxoSo
+.ooxxxxxxxxxxoo.
+..oxxxxxxxxxxo..
+..oXxxxxxxxxXo..
+..oooooooooooo..
+`,{x:"wood3",X:"wood2",y:"wood4"},{over:!0});ce.wave=h(`
+............osso
+............osSo
+............osSo
+...........osSo.
+...........osSo.
+...........osSo.
+...........ocCo.
+...........ocCo.
+....C......oCo..
+....C...........
+...sC...........
+...sC...........
+..oso...........
+...o............
+`,{},{oy:6,over:!0});ce.teen=h(`
+................
+................
+....C......C....
+...sC......CS...
+...sC......CS...
+..oso......oSo..
+...o........o...
+`);ce.kid=h(`
+................
+.....C....C.....
+....sC....CS....
+...oso....oSo...
+....o......o....
+`);ce.kidBrush=h(`
+..........osso..
+.......wwxxsSo..
+..........osSo..
+...........oSo..
+.....C..........
+....sC..........
+...oso..........
+....o...........
+`,{x:"teal2",w:"white"},{oy:3,over:!0});ce.kidBalloon=h(`
+............o...
+...........oso..
+.....C.....oSo..
+....sC.....oCo..
+...oso......o...
+....o...........
+`,{},{oy:1,over:!0});ce.sleeves=h(`
+................
+................
+....C......C....
+....C......C....
+...cC......CC...
+...cC......CC...
+..oso......oSo..
+...o........o...
+`);ce.cane=h(`
+................
+................
+....C......C....
+....C......C....
+...cC......CC...
+...cC......CCoo.
+..oso......oSoxo
+...o........oxo.
+.............xo.
+.............xo.
+.............xo.
+.............xo.
+.............oo.
+`,{x:"wood2"});var We={};We.chef=h(`
+....oo.oo.oo....
+...okkokkokko...
+..okkkkkkkkkKo..
+..okkkkkkkkkKo..
+...okkkkkkkKo...
+...oKKKKKKKKo...
+...okkkkkkkKo...
+..oooooooooooo..
+`);We.hardhat=h(`
+.....oooooo.....
+...ooxxyxxxoo...
+..oxxxyxxxxxXo..
+..oxxxxxxxxxXo..
+.oooooooooooooo.
+`,{x:"gold2",X:"gold1",y:"gold3"});We.helmet=h(`
+.....oooooo.....
+...ooxxxxxxoo...
+..oxyyxxxxxxXo..
+.oxyxxkkkxxxXXo.
+.oxxxxxxxxxxXXo.
+.ooooxxxxxxoooo.
+.oTo........oTo.
+.oTTTTTTTTTTTTo.
+`,{x:"acc.1",X:"acc.0",y:"acc.2",k:"white",T:"mist"});We.cap=h(`
+.....oooooo.....
+...ooxxxxxxoo...
+..oxxyxxxxxxXo..
+..oxxxxxxxxxXo..
+..ooooooooooooo.
+.........oxxxxo.
+.........oooooo.
+`);var T={};T.mug=h(`
+ooooo.
+oyyyo.
+oxxxoo
+oxxxoo
+.ooo..
+`,{x:"red2",y:"wood1"});T.steam=h(`
+.k..
+..k.
+.k..
+`,{k:"mist"});T.cupcake=h(`
+..or..
+.oxxo.
+oxkxxo
+oyYyYo
+.oyYo.
+..oo..
+`,{r:"red1",x:"pink2",k:"pink3",y:"gold2",Y:"gold1"});T.donut=h(`
+.oooo.
+oxkxxo
+xro.kx
+oxxrxo
+.oooo.
+`,{x:"pink2",k:"cream",r:"teal2"});T.soda=h(`
+.tt.
+oxxo
+oxwo
+oxxo
+oxxo
+.oo.
+`,{x:"red1",w:"cream",t:"stone"});T.dietSoda=h(`
+.tt.
+oxxo
+oxwo
+oxxo
+oxxo
+.oo.
+`,{x:"mist",w:"red1",t:"stone"});T.energy=h(`
+.tt.
+oxxo
+oyxo
+oxyo
+oxxo
+.oo.
+`,{x:"ink2",y:"green3",t:"stone"});T.water=h(`
+.oo.
+.xx.
+oyyo
+oyko
+oyyo
+oyyo
+.oo.
+`,{x:"teal1",y:"blue3",k:"white"});T.phone=h(`
+oooo
+obbo
+obko
+obbo
+oooo
+`,{b:"blue2",k:"blue4"});T.phoneRing=h(`
+k....k
+.k..k.
+......
+`,{k:"gold2"});T.icepack=h(`
+.oooo.
+obkbbo
+obbbbo
+.oooo.
+`,{b:"blue3",k:"blue4"});T.icecream=h(`
+.oo.
+oxko
+oxxo
+oyyo
+.oy.
+.oo.
+`,{x:"pink3",k:"white",y:"wood4"});T.spoon=h(`
+.oo
+oxo
+.o.
+.o.
+.o.
+`,{x:"mist"});T.toothbrush=h(`
+okkoo...
+.oooxxxx
+`,{k:"white",x:"teal2"});T.apple=h(`
+..g.
+.oo.
+oxko
+oxxo
+.oo.
+`,{x:"red1",k:"red3",g:"green1"});T.laptop=h(`
+.oooooooo.
+.obbbbbbo.
+.obkbbbbo.
+.obbbbbbo.
+oooooooooo
+otttttttto
+.oooooooo.
+`,{b:"blue1",k:"blue3",t:"stone"});T.balloon=h(`
+.oooo.
+oxkxxo
+okxxxo
+oxxxXo
+oxxXXo
+.oXXo.
+..oo..
+`,{x:"teal2",k:"teal3",X:"teal1"});T.sticker=h(`
+.o.
+oxo
+.o.
+`,{x:"gold2"});T.rattle=h(`
+.oo.
+oxko
+oxxo
+.oo.
+..o.
+..o.
+`,{x:"pink2",k:"pink3"});T.sippy=h(`
+.oo.
+oxxo
+okko
+okko
+.oo.
+`,{x:"teal2",k:"gold2"});T.backpack=h(`
+.oooo.
+oxxxxo
+oxkkxo
+oxxxxo
+.oooo.
+`,{x:"red1",k:"red2"});T.book=h(`
+oooooo
+oxkkxo
+oxkkxo
+oooooo
+`,{x:"teal1",k:"cream"});T.floss=h(`
+.ooo.
+oxkxo
+oxxxo
+.ooo.
+`,{x:"teal2",k:"white"});T.guard=h(`
+.oooo.
+oxkkxo
+.oooo.
+`,{x:"blue3",k:"blue4"});T.gum=h(`
+oooooo
+oxkxxo
+oooooo
+`,{x:"green3",k:"white"});T.candy=h(`
+o.ooo.o
+oxokoxo
+o.ooo.o
+`,{x:"pink2",k:"pink3"});T.ticket=h(`
+oooooooo
+okkrkkko
+okkrkkko
+oooooooo
+`,{k:"cream",r:"red1"});T.pill=h(`
+.oo.
+oxko
+okko
+.oo.
+`,{x:"red1",k:"white"});T.guitar=h(`
+.....oo.
+.....ok.
+....oxo.
+....oxo.
+...oxo..
+..oyyo..
+.oyyyyo.
+.oykkyo.
+.oyyyyo.
+oyyooyyo
+oyyooyyo
+oyyyyyyo
+.oyyyyo.
+..oooo..
+`,{x:"wood1",y:"gold1",k:"wood0"});T.suitcase=h(`
+...ooo....
+...o.o....
+.oooooooo.
+oxxkxxkxxo
+oxxkxxkxxo
+oxxkxxkxxo
+oxxxxxxxxo
+.oooooooo.
+`,{x:"teal1",k:"teal2"});T.soup=h(`
+.k.k.
+..k..
+ooooo
+oyyyo
+.ooo.
+`,{y:"gold2",k:"mist"});T.billStack=h(`
+.ooooo.
+okkrkko
+ooooooo
+okkkkko
+ooooooo
+okrrkko
+ooooooo
+`,{k:"cream",r:"red1"});T.eBrush=h(`
+.ww.
+.ww.
+.oo.
+oxko
+oxxo
+oxko
+oxxo
+oxxo
+oyyo
+oooo
+`,{w:"white",x:"white",k:"teal2",y:"teal1"});T.paste=h(`
+..oo....
+.okkoooo
+oxxxxkko
+oxxxxkko
+.oooooooo
+`,{x:"red1",k:"white"});T.picks=h(`
+o..o..o.
+k..k..k.
+ok.ok.ok
+.x..x..x
+.x..x..x
+.o..o..o
+`,{k:"white",x:"teal2"});T.sportsDrink=h(`
+.oo.
+.xx.
+oyyo
+oyko
+oyyo
+oyyo
+oooo
+`,{x:"blue1",y:"blue2",k:"blue4"});T.iceCup=h(`
+.kwkw.
+okkkkko
+.oxxxo.
+.oxxxo.
+..ooo..
+`,{k:"blue4",w:"white",x:"red2"});T.calendar=h(`
+.o..o.
+oooooo
+orrrro
+okkkko
+okrkko
+okkkko
+oooooo
+`,{r:"red1",k:"cream"});T.bike=h(`
+.........oo.
+..oooo..o...
+.o.o..oooooo
+o..oooo.o..o
+o.o.o.o.oo.o
+.o...o...oo.
+`,{o:"ink"});T.car=h(`
+...oooo...
+..oxkkxo..
+.oxxxxxxo.
+oxxxxxxxxo
+oxoooooxxo
+.o.o..o.o.
+`,{x:"teal2",k:"blue4"});T.key=h(`
+.oo......
+oxxo.....
+oxxooooo.
+.oo..o.o.
+`,{x:"gold2"});T.cookie=h(`
+.ooo.
+oxkxo
+oxxko
+okxxo
+.ooo.
+`,{x:"wood3",k:"wood0"});T.chips=h(`
+ooooo
+oxxxo
+oxkxo
+oxxxo
+ooooo
+`,{x:"gold2",k:"red1"});T.juiceBox=h(`
+...o
+oooo
+oxxo
+okxo
+oxxo
+oooo
+`,{x:"gold1",k:"green3"});T.bottle=h(`
+.oo.
+.xx.
+oooo
+okko
+okko
+.oo.
+`,{x:"gold3",k:"gold2"});T.cheese=h(`
+....oo
+..ooxo
+ooxkxo
+oooooo
+`,{x:"gold2",k:"gold1"});T.plate=h(`
+..oooo..
+.oygrgo.
+oxxxxxxo
+.oooooo.
+`,{x:"white",y:"wood3",g:"green2",r:"red2"});T.brushSmear=h(`
+..p.........
+.wwwwoxxxxxx
+.wwwwo......
+`,{w:"white",p:"blue3",x:"teal2"});T.brushPea=h(`
+..pp........
+.pppp.......
+.wwwwoxxxxxx
+.wwwwo......
+`,{w:"white",p:"blue3",x:"teal2"});T.brushRibbon=h(`
+pkpkpk......
+kpkpkpk.....
+.wwwwoxxxxxx
+.wwwwo......
+`,{w:"white",p:"blue3",k:"white",x:"teal2"});var to={sweat:h(`
+.o.
+obo
+okb
+.o.
+`,{b:"blue3",k:"blue4"}),pain:h(`
+..r
+.r.
+...
+rrr
+...
+.r.
+..r
+`,{r:"red1"}),shiver:h(`
+b.
+.b
+b.
+.b
+`,{b:"blue3"}),grr:h(`
+w.w.w
+.w.w.
+`,{w:"white"}),zzz:h(`
+kkk....
+..k....
+.k.kkk.
+kkk..k.
+....k..
+....kkk
+`,{k:"cream"}),sparkle:h(`
+..y..
+..y..
+yykyy
+..y..
+..y..
+`,{y:"gold2",k:"gold3"}),sparkleSm:h(`
+.y.
+yky
+.y.
+`,{y:"gold2",k:"gold3"}),note:h(`
+..oo
+..oo
+..o.
+.oo.
+ooo.
+.o..
+`,{o:"ink2"}),heart:h(`
+.r.r.
+rrrrr
+.rrr.
+..r..
+`,{r:"red2"}),exclaim:h(`
+oo
+oo
+oo
+..
+oo
+`,{o:"red1"}),dollar:h(`
+.g.
+ggg
+g..
+ggg
+..g
+ggg
+.g.
+`,{g:"green1"})};function j(e,o,t,r,n,a,i,l,c=s.ink){e.rect(o,t,r,n,a),i&&e.hline(o+1,o+r-2,t+1,i),l&&e.vline(o+r-2,t+1,t+n-2,l),c&&e.frame(o,t,r,n,c)}var z={cat:h(`
+.o.o......
+oxoxo.....
+oxkxxooooo
+oxexxxxxxXo
+.oxxxXxXxXo
+..oooooooo.
+`,{x:"gold1",X:"gold0",k:"gold2",e:"ink"}),catSleep:h(`
+.o.o.......
+oxoxooooo..
+oxxxxxxxxo.
+oKxxXxxXxxo
+.oooooooooo
+`,{x:"gold1",X:"gold0",K:"gold2"}),trophy:h(`
+ooooo
+oxkxo
+.oxo.
+..o..
+.oxo.
+ooooo
+`,{x:"gold2",k:"gold3"}),plantSmall:h(`
+.g.g.
+gGgGg
+.gGg.
+.ooo.
+.oxo.
+.ooo.
+`,{g:"green2",G:"green1",x:"red2"}),guitar:h(`
+..oo.
+..ox.
+..ox.
+.oxxo
+oxkxxo
+oxoxxo
+oxxxxo
+.oooo.
+`,{x:"wood3",k:"wood4"}),plane:h(`
+...o...
+..oxo..
+ooxxxoo
+..oxo..
+.oxxxo.
+`,{x:"white"}),house:h(`
+..o..
+.oxo.
+oxxxo
+ohkho
+ohkho
+`,{x:"red1",h:"cream",k:"wood2"}),pagoda:h(`
+..o..
+ooxoo
+.oxo.
+oooxo
+.oxo.
+`,{x:"red1"}),car:h(`
+.ooo..
+oxkxo.
+oxxxxo
+.o..o.
+`,{x:"teal2",k:"blue4"}),star:h(`
+.o.
+oxo
+.o.
+`,{x:"gold2"}),fruit:h(`
+.g.r..
+oyxrro
+oooooo
+.oxxo.
+`,{g:"green2",r:"red1",y:"gold2",x:"teal2"}),sodaCan:h(`
+.t.
+oxo
+owo
+oxo
+`,{x:"red1",w:"cream",t:"stone"}),cookieJar:h(`
+.oo.
+oxxo
+okko
+oyyo
+oyyo
+.oo.
+`,{x:"wood2",k:"blue4",y:"wood3"}),cake:h(`
+..r...
+.okkko.
+okpkpko
+oyyyyyo
+.ooooo.
+..oxo..
+.ooooo.
+`,{r:"red1",k:"cream",p:"pink2",y:"gold2",x:"mist"}),bills:h(`
+.oooo..
+okkkoo.
+okrrkko
+okkkkko
+okkkkko
+.ooooo.
+`,{k:"cream",r:"red1"}),coffeeMaker:h(`
+ooooo
+oxxxo
+oxbbo
+oxoooo
+oxkko.
+ooooo.
+`,{x:"ink2",b:"wood1",k:"mist"}),mailbox:h(`
+.oooo..
+oxxxxoo
+oxxxxor
+oXXXXor
+.oooo..
+...o...
+...o...
+...o...
+...o...
+...o...
+..ooo..
+`,{x:"blue2",X:"blue1",r:"red1"})},F={window(e,o,t,r,n,a,i){j(e,o,t,r,n,s.cream,null,null);let l=o+2,c=t+2,d=r-4,p=n-4,k=a==="day"?s.day1:a==="night"?s.night0:s.night2,b=a==="day"?s.day2:a==="night"?s.night1:s.dusk1,v=a==="day"?s.cream:a==="night"?s.night2:s.dusk2;if(e.gradient(l,c,d,p,[k,b,v],2),a!=="day"&&(e.px(l+2,c+2,s.cream),e.px(l+d-3,c+4,s.mist)),e.vline(o+(r>>1),c,c+p-1,s.cream),e.hline(l,l+d-1,t+(n>>1),s.cream),e.px(l+1,c+p-3,s.white,.5),e.px(l+2,c+p-4,s.white,.5),e.rect(o-2,t+n,r+4,2,s.wood3),e.hline(o-2,o+r+1,t+n+1,s.wood1),e.frame(o-2,t+n,r+4,2,s.ink),i){let M=Z(i,s.ink,.35),C=Z(i,s.white,.25);e.rect(o-3,t-2,r+6,2,s.wood1);for(let E of[o-3,o+r-1]){for(let u=0;u<n+2;u++){let X=u>(n>>1)-1&&u<(n>>1)+2?2:4,B=E<o?0:4-X;for(let H=0;H<X;H++)e.px(E+B+H,t+u,H===0?C:H===X-1?M:i)}e.hline(E,E+3,t+(n>>1),s.gold1)}}},frame(e,o,t,r,n,a){j(e,o,t,r,n,s.wood2,null,null);let i=o+1,l=t+1,c=r-2,d=n-2;if(e.rect(i,l,c,d,s.day1),a==="mountain"){for(let p=0;p<c;p++){let k=Math.max(0,(c>>1)-Math.abs(p-(c>>1))-1);e.vline(i+p,l+d-k-1,l+d-1,s.green1),k>3&&e.px(i+p,l+d-k-1,s.white)}e.px(i+c-2,l+1,s.gold2)}else a==="family"&&(e.rect(i,l,c,d,s.gold3),e.rect(i+1,l+2,2,3,s.wood1),e.rect(i+4,l+1,2,4,s.red1),e.rect(i+7,l+3,2,2,s.teal1))},dresser(e,o,t){j(e,o,t,20,16,s.wood2,s.wood3,s.wood1);for(let r of[5,10])e.hline(o+1,o+18,t+r,s.wood1);for(let r of[3,8,13])e.px(o+6,t+r,s.gold2),e.px(o+13,t+r,s.gold2);e.rect(o+1,t+16,2,0,s.ink),j(e,o+3,t-3,5,3,s.red1,s.red2,null),j(e,o+12,t-5,5,5,s.wood3,null,null),e.rect(o+13,t-4,3,3,s.pink3)},bed(e,o,t,r,n){j(e,o,t,5,18,s.wood2,s.wood3,s.wood1),e.rect(o+1,t+2,3,1,s.wood1),j(e,o+41,t+7,4,11,s.wood2,s.wood3,s.wood1),j(e,o+4,t+13,38,4,s.wood1,s.wood2,null);let a=Z(r,s.ink,.35),i=Z(r,s.white,.3);e.rect(o+5,t+8,36,5,s.cream),e.rect(o+13,t+7,28,6,r),e.hline(o+13,o+40,t+7,i);for(let l=o+15;l<o+41;l+=5)e.px(l,t+9,i),e.px(l+2,t+11,a);e.hline(o+13,o+40,t+12,a),e.frame(o+4,t+6,38,8,s.ink),e.rect(o+5,t+5,8,4,s.white),e.hline(o+5,o+12,t+8,s.mist),e.frame(o+5,t+4,8,5,s.ink),n&&n(e,o+3,t-8)},nightstand(e,o,t,r){j(e,o,t,9,12,s.wood2,s.wood3,s.wood1),e.hline(o+1,o+7,t+5,s.wood1),e.px(o+4,t+3,s.gold2),r&&(e.rect(o+5,t-2,3,2,s.teal2),e.frame(o+5,t-2,3,2,s.ink))},lamp(e,o,t,r){r&&e.glow(o+3,t+3,16,s.glow0,.35);let n=h(`
+.ooooo.
+okkkkko
+okkkkKo
+oookooo
+...o...
+..ooo..
+..oxo..
+.ooooo.
+`,{k:r?"glow1":"cream",K:r?"glow0":"mist",x:"teal2"});e.sprite(n,o,t+2)},mirror(e,o,t){j(e,o,t,12,13,s.gold1,null,null),e.rect(o+1,t+1,10,11,s.blue4),e.line(o+3,t+9,o+8,t+3,s.white),e.line(o+3,t+10,o+4,t+9,s.white),e.rect(o+1,t+1,10,11,s.blue3,.25)},sink(e,o,t,r){if(j(e,o,t,14,5,s.white,null,s.mist),e.hline(o+2,o+11,t+1,s.mist),e.rect(o+6,t-3,2,3,s.stone),e.rect(o+6,t-3,4,1,s.stone),e.frame(o+5,t-4,3,4,s.ink),j(e,o+5,t+5,4,15,s.white,null,s.mist),r&&r!=="none"){let n=o+10,a=t-4;j(e,n,a,4,4,s.teal2,null,null),r==="electric"?(e.rect(n+1,a-5,2,5,s.white),e.px(n+1,a-3,s.teal1),e.px(n+2,a-3,s.teal1),e.frame(n,a-6,4,6,s.ink)):(e.vline(n+1,a-5,a,r==="dusty"?s.stone:s.pink1),e.px(n+1,a-6,s.white),e.px(n+2,a-6,s.white),e.vline(n+2,a-4,a,s.blue2),e.px(n+2,a-5,s.white),e.px(n+3,a-5,s.white)),r==="dusty"&&(e.px(n-1,a-7,s.mist),e.px(n+3,a-8,s.mist),e.line(n+4,a-6,n+6,a-8,s.mist))}},towel(e,o,t,r){e.hline(o-1,o+8,t,s.stone),e.px(o-1,t-1,s.ink2),e.px(o+8,t-1,s.ink2);let n=Z(r,s.ink,.3);j(e,o,t+1,8,11,r,Z(r,s.white,.3),n),e.hline(o+1,o+6,t+8,s.white)},tub(e,o,t){j(e,o,t,30,11,s.white,null,s.mist),e.hline(o,o+29,t+1,s.mist),e.rect(o+2,t+2,26,2,s.blue4);for(let[r,n]of[[o+6,t-1],[o+9,t-2],[o+19,t-1],[o+23,t-2],[o+14,t-1]])e.px(r,n,s.white),e.px(r+1,n,s.blue4);e.rect(o+25,t-4,2,4,s.stone),e.rect(o+23,t-4,3,1,s.stone);for(let r of[o+2,o+25])e.rect(r,t+11,3,3,s.gold1),e.px(r,t+13,s.gold0)},books(e,o,t,r){let n=[s.red1,s.teal1,s.gold1,s.plum2,s.green2,s.blue2,s.pink1,s.wood2,s.teal2],a=o;for(let i=0;i<r;i++){let l=5+i*7%3,c=n[i%n.length];e.rect(a,t+7-l,1,l,c),e.px(a,t+7-l+1,Z(c,s.white,.4)),a+=1+(i%4===3?1:0)}e.frame(o-1,t-1,a-o+1,9,null)},trophy(e,o,t){e.sprite(z.trophy,o,t)},plantSmall(e,o,t){e.sprite(z.plantSmall,o,t+2)},desk(e,o,t){j(e,o,t,26,3,s.wood3,s.wood4,null),j(e,o+16,t+3,9,7,s.wood2,null,s.wood1),e.px(o+20,t+5,s.gold2),e.rect(o+1,t+3,2,13,s.wood1),e.rect(o+23,t+10,2,6,s.wood1),e.vline(o,t+3,t+15,s.ink),e.vline(o+3,t+3,t+15,s.ink)},laptopOpen(e,o,t,r){r&&e.glow(o+5,t+3,10,s.blue3,.25),j(e,o,t,10,7,s.blue1,null,null),e.rect(o+1,t+1,8,5,r?s.blue3:s.blue1),e.hline(o+2,o+5,t+2,s.white),e.hline(o+2,o+7,t+4,s.blue4),e.rect(o-2,t+7,13,1,s.stone),e.hline(o-2,o+10,t+7,s.mist),e.px(o-3,t+7,s.ink)},chair(e,o,t,r){let n=Z(r,s.ink,.35);j(e,o,t-8,3,14,r,null,n),j(e,o,t+4,9,3,r,Z(r,s.white,.3),null),e.vline(o+1,t+7,t+15,s.ink),e.vline(o+7,t+7,t+15,s.ink)},bookshelf(e,o,t){j(e,o,t,22,38,s.wood1,null,null),e.rect(o+2,t+2,18,34,s.wood0);for(let r=0;r<4;r++){let n=t+2+r*9;e.rect(o+1,n+8,20,1,s.wood2),r===1?(e.rect(o+4,n+2,6,6,s.gold1),e.rect(o+5,n+3,4,4,s.pink3),e.sprite(z.plantSmall,o+13,n+2)):r===3?(e.rect(o+3,n+4,8,4,s.red1),e.hline(o+3,o+10,n+4,s.red2),e.rect(o+3,n+1,8,3,s.teal1),e.hline(o+3,o+10,n+1,s.teal2),this.books(e,o+13,n+1,5)):this.books(e,o+3,n+1,12-r*2)}},dreamBoard(e,o,t,r=2){j(e,o,t,26,17,s.wood1,null,null),e.rect(o+1,t+1,24,15,s.wood3),e.dither(o+1,t+1,24,15,s.gold1,.3),[[z.pagoda,o+3,t+3,s.day2],[z.guitar,o+11,t+3,s.cream],[z.house,o+18,t+4,s.green4],[z.car,o+4,t+10,s.pink3]].forEach(([a,i,l,c],d)=>{e.rect(i-1,l-1,a.w+2,Math.min(a.h+2,16-(l-t)),c),e.sprite(a,i,l),e.px(i+(a.w>>1),l-1,s.red1),d<r?e.sprite(z.star,i+a.w-1,l+a.h-2):(r===0||d>=r+1)&&e.rect(i-1,l-1,a.w+2,Math.min(a.h+2,16-(l-t)),s.mist,.55)})},floorLamp(e,o,t,r){r&&e.glow(o+3,t+4,22,s.glow0,.35);let n=r?s.glow1:s.cream;e.rect(o,t,7,5,n),e.hline(o,o+6,t+4,r?s.glow0:s.mist),e.frame(o,t,7,5,s.ink),e.vline(o+3,t+5,t+30,s.ink2),e.rect(o+1,t+30,5,2,s.ink2)},couch(e,o,t,r){let n=Array.isArray(r)?r:[Z(r,s.ink,.35),r,Z(r,s.white,.3)],[a,i,l]=n;j(e,o+3,t,15,8,i,l,a),j(e,o+18,t,15,8,i,l,a),j(e,o+3,t+7,30,6,i,l,a),e.vline(o+18,t+8,t+11,a),j(e,o,t+4,5,11,i,l,a),j(e,o+31,t+4,5,11,i,l,a),e.rect(o+1,t+13,34,3,a),e.frame(o,t+13,36,3,s.ink),e.rect(o+2,t+16,2,2,s.wood0),e.rect(o+32,t+16,2,2,s.wood0),j(e,o+5,t+3,6,5,s.teal2,s.teal3,s.teal1)},tv(e,o,t,r="modern",n=!0){j(e,o,t+16,20,12,s.wood2,s.wood3,s.wood1),e.hline(o+1,o+18,t+21,s.wood1),e.px(o+5,t+19,s.gold2),e.px(o+14,t+19,s.gold2),r==="crt"?(j(e,o+2,t+2,16,14,s.stone,s.mist,s.shade),e.rect(o+4,t+4,10,9,n?s.blue3:s.ink2),e.frame(o+3,t+3,12,11,s.ink),e.px(o+16,t+6,s.red1),e.px(o+16,t+9,s.ink2),e.line(o+8,t+1,o+5,t-4,s.ink2),e.line(o+10,t+1,o+13,t-4,s.ink2)):(j(e,o-1,t+2,22,13,s.ink,null,null),e.rect(o+1,t+4,18,9,n?s.blue2:s.ink2),n&&(e.rect(o+1,t+10,18,3,s.green2),e.rect(o+13,t+5,3,3,s.gold2),e.hline(o+3,o+8,t+6,s.blue4)),e.rect(o+8,t+15,4,1,s.ink2)),n&&e.glow(o+10,t+9,14,s.blue3,.2)},coinJar(e,o,t,r=.5){let n=t,a=t+2,i=6;e.rect(o+1,n,5,2,s.red1),e.frame(o+1,n,5,2,s.ink),e.rect(o,a,7,i,s.blue4,.6);let l=Math.round(r*(i-1));for(let c=0;c<l;c++)for(let d=1;d<6;d++)e.px(o+d,a+i-1-c,(d+c)%3?s.gold2:s.gold1);e.frame(o,a,7,i,s.ink),e.px(o+1,a+1,s.white)},plant(e,o,t){let r=h(`
+....g..g....
+..ggGggGgg..
+.gGgggggGgg.
+ggGgGggGgGgg
+.gggGGggggG.
+..gGgggGgg..
+...gg.ggg...
+....oooo....
+...oxxxxo...
+...oxxxXo...
+....oxXo....
+....oooo....
+`,{g:"green2",G:"green1",x:"red2",X:"red1"});e.sprite(r,o-2,t+6)},cat(e,o,t,r=!0){e.sprite(r?z.catSleep:z.cat,o,t)},upperCabinets(e,o,t,r){j(e,o,t,r,13,s.wood3,s.wood4,s.wood2);let n=Math.max(1,Math.round(r/11)),a=r/n;for(let i=1;i<n;i++)e.vline(Math.round(o+i*a),t+1,t+11,s.ink2);for(let i=0;i<n;i++)e.px(Math.round(o+i*a+a/2+(i%2?-2:2)),t+9,s.gold2)},counter(e,o,t,r){e.rect(o,t,r,3,s.mist),e.hline(o,o+r-1,t,s.white),e.frame(o,t,r,3,s.ink),j(e,o+1,t+3,r-2,13,s.wood2,null,s.wood1);let n=Math.round(r/12);for(let a=1;a<n;a++)e.vline(o+1+Math.round(a*(r-2)/n),t+4,t+14,s.wood1);for(let a=0;a<n;a++)e.px(o+1+Math.round((a+.5)*(r-2)/n),t+6,s.gold2);e.rect(o+2,t+16,r-4,2,s.ink2)},stove(e,o,t){j(e,o,t-4,16,4,s.stone,s.mist,null),e.px(o+3,t-2,s.red1),e.px(o+6,t-2,s.ink2),e.px(o+9,t-2,s.ink2),e.px(o+12,t-2,s.red1),j(e,o,t,16,18,s.white,null,s.mist),e.rect(o+3,t+5,10,6,s.ink2),e.rect(o+4,t+6,8,4,s.gold1,.6),e.frame(o+2,t+4,12,8,s.ink),e.hline(o+3,o+12,t+2,s.stone),j(e,o+2,t-9,7,5,s.teal1,s.teal2,null),e.px(o+1,t-8,s.ink),e.px(o+9,t-8,s.ink)},counterStuff(e,o){let t=o.counter||[],r=201,n=136;for(let a of t)if(a==="fruit")e.sprite(z.fruit,r,n-4),r+=9;else if(a==="coffee")e.sprite(z.coffeeMaker,r,n-6),r+=9;else if(a==="cookies")e.sprite(z.cookieJar,r,n-6),r+=7;else if(a==="cake")e.sprite(z.cake,r,n-7),r+=10;else if(a==="bills")e.sprite(z.bills,r,n-6),r+=9;else if(a.startsWith("soda")){let i=+(a.split(":")[1]||3);for(let l=0;l<i;l++)e.sprite(z.sodaCan,r+l*4,n-4-(l%2,0));r+=i*4+3}else a==="water"&&(e.rect(r,n-7,3,7,s.blue3),e.frame(r,n-7,3,7,s.ink),e.px(r+1,n-8,s.teal1),r+=6)},fridge(e,o,t,r=[]){j(e,o,t,16,38,s.cream,s.white,s.mist),e.hline(o+1,o+14,t+12,s.ink2),e.rect(o+12,t+4,1,6,s.stone),e.rect(o+12,t+15,1,9,s.stone);let n=t+15;for(let a of r)if(a==="calendar"){e.rect(o+2,n,8,9,s.white),e.rect(o+2,n,8,2,s.red1);for(let i=0;i<3;i++)for(let l=0;l<3;l++)e.px(o+3+l*2,n+3+i*2,s.stone);e.frame(o+2,n,8,9,s.ink2),n+=11}else if(a==="postcard"||a==="postcards"){let i=a==="postcards"?3:1;for(let l=0;l<i;l++){let c=o+2+l*2,d=n+l*3;e.rect(c,d,7,5,s.blue4),e.hline(c,c+6,d,s.teal2),e.px(c+2,d+2,s.teal1),e.px(c+4,d+3,s.stone),e.frame(c,d,7,5,s.ink2)}n+=6+i*3}else a==="drawing"?(e.rect(o+2,n,8,7,s.white),e.line(o+3,n+5,o+5,n+2,s.red1),e.line(o+5,n+2,o+8,n+5,s.blue2),e.px(o+7,n+1,s.gold2),e.frame(o+2,n,8,7,s.ink2),n+=9):a==="photo"&&(e.rect(o+3,t+4,6,5,s.pink3),e.frame(o+3,t+4,6,5,s.white));e.px(o+4,t+3,s.red1),e.px(o+8,t+7,s.teal2)},clock(e,o,t){e.disc(o+3,t+3,3,s.ink),e.disc(o+3,t+3,2,s.cream),e.px(o+3,t+2,s.ink),e.px(o+4,t+3,s.ink)},mailbox(e,o,t){e.sprite(z.mailbox,o,t+3)},bush(e,o,t){e.disc(o+4,t+4,4,s.green0),e.disc(o+9,t+5,3,s.green0),e.disc(o+4,t+3,3,s.green1),e.disc(o+9,t+4,2,s.green1),e.px(o+3,t+2,s.green2)},box(e,o,t,r,n){j(e,o,t,r,n,s.wood3,s.wood4,s.wood2),e.vline(o+(r>>1),t+1,t+3,s.gold3),e.hline(o+2,o+r-3,t+(n>>1)+1,s.wood2)},crib(e,o,t){e.rect(o,t+2,20,2,s.cream),e.rect(o,t+11,20,2,s.cream);for(let r=0;r<20;r+=3)e.vline(o+r,t+2,t+13,s.cream);e.vline(o,t,t+14,s.mist),e.vline(o+19,t,t+14,s.mist),e.rect(o+2,t+9,16,2,s.pink3)},hockeyStick(e,o,t){e.line(o,t,o+8,t+16,s.wood3),e.line(o+1,t,o+9,t+16,s.wood2),e.rect(o+9,t+15,5,2,s.ink2)},sprites:z};var Pe=320,ko=180,J=160,Ee={bedroom:{x:44,y:54,w:112,h:46,footY:100},bath:{x:159,y:54,w:63,h:46,footY:100},study:{x:225,y:54,w:51,h:46,footY:100},living:{x:44,y:106,w:124,h:48,footY:154},kitchen:{x:171,y:106,w:105,h:48,footY:154},attic:{x:96,y:22,w:128,h:28,footY:50}},mo={dusk:[s.night1,s.night2,s.dusk0,s.dusk1,s.dusk2,s.dusk3,s.dusk4],day:[s.day0,s.day0,s.day1,s.day1,s.day2,s.day2,s.cream],night:[s.night0,s.night0,s.night1,s.night1,s.night2,s.night2,s.dusk0]};function Ct(e,o,t,r,n,a,i={}){let{outline:l=s.ink,light:c,shadow:d}=i;e.rect(o,t,r,n,a),c&&e.hline(o+1,o+r-2,t+1,c),d&&(e.vline(o+r-2,t+1,t+n-2,d),e.hline(o+1,o+r-2,t+n-2,d)),l&&e.frame(o,t,r,n,l)}function ze(e,o,t,r,n){e.rect(o.x,o.y,o.w,o.h,t);for(let a=o.y;a<o.y+o.h;a++)for(let i=o.x;i<o.x+o.w;i++){let l=i-o.x,c=a-o.y,d=!1;r==="stripes"?d=l%8===0:r==="dots"?d=l%8===3&&c%8===3||l%8===7&&c%8===7:r==="diamonds"?d=(l+c)%10===0&&c%10<5||(l-c+100)%10===0&&c%10>=5:r==="stars"&&(d=l%12===5&&c%12===4||l%12===11&&c%12===10),d&&e.px(i,a,n)}e.hline(o.x,o.x+o.w-1,o.y,Z(t,s.ink,.35)),e.dither(o.x,o.y+1,o.w,2,Z(t,s.ink,.25),.5)}function At(e,o,t,r,n,a){let i=o.y+o.h-t;e.rect(o.x,i,o.w,t,r),e.hline(o.x,o.x+o.w-1,i,a),e.hline(o.x,o.x+o.w-1,i+1,n);for(let l=o.x+4;l<o.x+o.w;l+=10)e.vline(l,i+3,i+t-2,n)}function Yo(e,o,t,r,n,a,i,l=4){for(let c=0;c<n;c++)for(let d=0;d<r;d++){let p=(d/l|0)+(c/l|0)&1;e.px(o+d,t+c,p?a:i)}}function Vo(e,o,t,r){e.hline(o,o+r-1,t,s.wood3),e.hline(o,o+r-1,t+1,s.wood2);for(let n=o+3;n<o+r;n+=9)e.px(n,t+1,s.wood1)}function Pt(e,o,t=[24,24]){if(e.gradient(0,0,Pe,J,mo[o]||mo.dusk,3),o!=="day"){let r=[[12,8],[44,16],[70,6],[98,12],[232,9],[262,18],[300,7],[286,30],[20,40],[305,46],[120,4],[205,5],[58,30],[250,38]];for(let[i,l]of r)e.px(i,l,s.cream),(i+l)%3===0&&(e.px(i-1,l,s.mist,.5),e.px(i+1,l,s.mist,.5));let[n,a]=t;e.disc(n,a,7,s.gold3),e.disc(n+3,a-2,6,mo[o][Math.min(6,Math.floor(a/23))]),e.glow(n,a,16,s.gold3,.12)}else e.disc(292,26,9,s.gold3),e.disc(292,26,7,s.cream),po(e,20,30),po(e,250,50),po(e,90,14);for(let r=0;r<Pe;r++){let n=14+Math.round(6*Math.sin(r/23)+4*Math.sin(r/9+1));e.vline(r,J-n,J-1,o==="day"?s.green2:s.dusk0),e.vline(r,J-Math.round(n*.55),J-1,o==="day"?s.green1:s.plum1)}}function po(e,o,t){e.rect(o+4,t,14,3,s.white),e.rect(o,t+3,26,4,s.white),e.hline(o+1,o+25,t+7,s.day1)}function Dt(e,o){let t=o==="day"?s.green2:s.green1,r=o==="day"?s.green1:s.green0;e.rect(0,J,Pe,4,t);for(let n=0;n<Pe;n+=3)e.px(n,J-1,t);e.hline(0,Pe-1,J+3,r),e.rect(0,J+4,Pe,ko-J-4,s.wood1),e.dither(0,J+4,Pe,ko-J-4,s.wood0,.35);for(let n of[8,18,28])e.rect(n,J+1,5,2,s.stone),e.hline(n,n+4,J+1,s.mist)}function Tt(e,o,t){e.rect(o+13,t+30,6,20,s.wood1),e.vline(o+13,t+30,t+49,s.wood0),e.vline(o+18,t+30,t+49,s.ink2);let r=(n,a,i,l)=>e.disc(n,a,i,l);r(o+16,t+18,15,s.green0),r(o+8,t+24,10,s.green0),r(o+25,t+25,10,s.green0),r(o+15,t+16,13,s.green1),r(o+9,t+22,8,s.green1),r(o+23,t+22,8,s.green1),r(o+12,t+11,6,s.green2),r(o+20,t+14,4,s.green2)}function Ht(e){for(let i=10;i<=50;i++){let l=Math.round((i-10)*3.2),c=160-l,d=160+l;for(let p=c;p<=d;p++){let k=Math.min(p-c,d-p),b;k<1?b=s.ink:k<7?b=i+(p>>2)&3?s.red1:s.red0:k<9?b=s.wood0:b=null,b&&e.px(p,i,b)}}for(let i=14;i<50;i++){let l=Math.round((i-10)*3.2)-9;l<=0||e.hline(160-l,160+l,i,i&3?Z(s.wood0,s.night1,.35):Z(s.wood1,s.night1,.35))}e.hline(120,200,24,s.wood1),e.hline(120,200,25,s.ink2),e.hline(32,288,50,s.ink),e.hline(33,287,51,s.cream),Ct(e,226,12,10,16,s.red1,{light:s.red2,shadow:s.red0}),e.rect(224,10,14,3,s.stone),e.frame(224,10,14,3,s.ink);for(let[i,l]of[[38,1],[277,-1]]){e.rect(i,52,6,J-52,s.wood0);let c=l>0?i:i+3;for(let d=52;d<J;d++)e.hline(c,c+2,d,d%4===0?s.red0:s.red1);e.vline(l>0?i:i+5,52,J-1,s.ink),e.vline(l>0?i+5:i,52,J-1,s.ink2)}e.rect(38,50,244,4,s.wood0),e.hline(38,281,53,s.ink),e.rect(44,100,232,6,s.wood0),Vo(e,44,100,232),e.hline(44,275,102,s.wood1),e.hline(44,275,105,s.ink),Vo(e,44,154,232),e.rect(38,156,244,4,s.stone);for(let i=38;i<282;i+=7)e.vline(i,156,159,s.shade);e.hline(38,281,156,s.mist),e.hline(38,281,159,s.ink2)}function go(e,o,t,r,n){e.rect(o,t,3,r,s.wood1),e.vline(o,t,t+r-1,s.ink2),e.vline(o+2,t,t+r-1,s.wood0),n!=null&&e.rect(o,n,3,t+r-n,null)}function Lt(e,o){let t=Ee.bedroom;ze(e,t,s.wallLilac,"dots",s.wallLilacS),F.window(e,52,62,22,20,o.time,s.teal1),F.frame(e,84,64,12,9,"mountain"),e.rect(78,98,20,2,s.red1),e.hline(78,97,98,s.red2);for(let r=78;r<98;r+=2)e.px(r,99,s.gold2);F.dresser(e,56,84),F.bed(e,108,82,s.teal1,o.bedPerson),F.nightstand(e,99,88,o.nightGuard),F.lamp(e,100,78,o.time!=="day")}function Et(e,o){let t=Ee.bath;ze(e,t,s.cream,"none"),Yo(e,t.x,t.y+24,t.w,t.h-24,s.wallBlue,s.blue4,3),e.hline(t.x,t.x+t.w-1,t.y+24,s.wallBlueS),e.disc(214,64,4,s.ink),e.disc(214,64,3,o.time==="day"?s.day1:s.night2),F.mirror(e,166,60),F.sink(e,165,80,o.toothbrush),F.towel(e,204,70,s.pink2),F.tub(e,190,86),e.rect(176,98,12,2,s.teal2)}function Rt(e,o){let t=Ee.study;ze(e,t,s.wallRose,"stars",s.wallRoseS),e.rect(229,66,24,2,s.wood2),e.hline(229,252,68,s.wood0),F.books(e,230,59,9),F.trophy(e,242,60),F.plantSmall(e,248,58),F.desk(e,236,84),F.laptopOpen(e,244,78,o.time!=="day"),F.chair(e,228,84,s.teal1),F.window(e,262,62,11,18,o.time,s.gold1)}function Ot(e,o){let t=Ee.living;ze(e,t,s.wallSage,"stripes",s.wallSageS),At(e,t,12,s.wood3,s.wood2,s.wood4),F.bookshelf(e,48,116),F.dreamBoard(e,76,113,o.dreams),F.floorLamp(e,104,122,o.time!=="day"),F.couch(e,110,136,s.gold1),e.rect(96,152,50,2,s.plum2),e.hline(96,145,152,s.plum3),F.tv(e,146,126,o.era,o.time!=="day"),F.coinJar(e,52,108,o.savings),F.plant(e,96,136),o.cat&&F.cat(e,118,133)}function It(e,o){let t=Ee.kitchen;ze(e,t,s.wallCream,"diamonds",s.wallCreamS),F.clock(e,182,114),e.rect(176,124,9,10,s.white),e.rect(176,124,9,3,s.red1);for(let r=0;r<3;r++)for(let n=0;n<3;n++)e.px(177+n*3,128+r*2,s.stone);e.frame(176,124,9,10,s.ink2),F.window(e,214,112,22,16,o.time,s.red2),F.upperCabinets(e,199,110,13),F.upperCabinets(e,239,110,17),Yo(e,199,128,58,8,s.cream,s.blue4,2),F.counter(e,199,136,42),F.stove(e,240,136),e.rect(217,136,16,1,s.stone),e.rect(223,131,2,5,s.stone),e.rect(223,131,5,1,s.stone),e.frame(222,130,3,6,s.ink),F.counterStuff(e,o),F.fridge(e,258,116,o.fridgeNotes)}function bo(e,o={}){let t={time:"dusk",era:"modern",cat:!0,dreams:2,savings:.6,toothbrush:"electric",nightGuard:!0,fridgeNotes:["calendar"],counter:["fruit"],...o};if(Pt(e,t.time,t.moon),Tt(e,0,104),t.time!=="day"&&e.dither(2,106,30,34,s.dusk1,.12),Dt(e,t.time),F.bush(e,284,152),F.mailbox(e,300,146),t.time!=="day"&&e.rect(0,0,Pe,ko,s.night1,.22,"multiply"),Ht(e),Lt(e,t),Et(e,t),Rt(e,t),Ot(e,t),It(e,t),Xt(e,t),go(e,156,54,46),go(e,222,54,46),go(e,168,106,48,116),t.time!=="day"){for(let r of Object.values(Ee))r!==Ee.attic&&e.rect(r.x,r.y,r.w,r.h,s.plum3,.1,"multiply");Ft(e,t)}return t}function Ft(e,o){e.glow(103,83,26,s.glow0,.22),e.glow(107,126,30,s.glow0,.22),e.glow(156,135,18,s.blue3,.12),e.glow(249,82,16,s.blue3,.14),e.glow(225,120,30,s.glow1,.12),e.glow(190,70,24,s.glow1,.1)}function Xt(e,o){F.box(e,112,40,12,10),F.box(e,124,43,9,7),F.box(e,190,41,11,9),F.crib(e,142,36),F.hockeyStick(e,206,32),e.disc(160,32,4,s.ink),e.disc(160,32,3,o.time==="day"?s.day1:s.dusk1),e.hline(157,163,32,s.ink2),e.vline(160,29,35,s.ink2)}var Bt={meal:{label:"Meal",drop:1.1,tDrop:8,hold:12,effect:{k:1.6,minutes:30}},dessertMeal:{label:"Meal + dessert",drop:1.6,tDrop:8,hold:14,effect:{k:1.6,minutes:30}},cereal:{label:"Sweet cereal",drop:1.8,tDrop:6,hold:12},fruit:{label:"Fruit",drop:1.4,tDrop:6,hold:6},driedFruit:{label:"Dried fruit",drop:2,tDrop:6,hold:32},candy:{label:"Hard candy",drop:2.2,tDrop:4,hold:18},chewy:{label:"Chewy candy",drop:2.3,tDrop:4,hold:28},chocolate:{label:"Chocolate",drop:1.6,tDrop:5,hold:10},pastry:{label:"Pastry",drop:2,tDrop:6,hold:16},tasting:{label:"Tasting bite",drop:2,tDrop:4,hold:12},cookies:{label:"Cookies",drop:1.9,tDrop:7,hold:20},chips:{label:"Chips / crackers",drop:1.7,tDrop:16,hold:30},bread:{label:"Bread",drop:1.2,tDrop:12,hold:16},yogurtSweet:{label:"Sweet yogurt",drop:1.5,tDrop:5,hold:6},soda:{label:"Soda",drop:2.3,tDrop:3,hold:3,sip:10,drinkPH:3.1},dietSoda:{label:"Diet soda",drop:.8,tDrop:1,hold:1,sip:10,drinkPH:3.2,noSugar:!0},juice:{label:"Juice",drop:2.1,tDrop:3,hold:3,sip:8,drinkPH:3.5},juiceBottle:{label:"Juice bottle in bed",drop:2.1,tDrop:3,hold:30,sip:25,drinkPH:3.5},milkBottle:{label:"Milk bottle in bed",drop:.9,tDrop:4,hold:30,sip:25},sportsDrink:{label:"Sports drink",drop:2,tDrop:3,hold:3,sip:20,drinkPH:3.1},energy:{label:"Energy drink",drop:2.3,tDrop:3,hold:3,sip:20,drinkPH:3.3},sweetCoffee:{label:"Sweet coffee",drop:1.7,tDrop:4,hold:4,sip:25},coffee:{label:"Black coffee",drop:.1,tDrop:3,hold:0,sip:20,noSugar:!0},milk:{label:"Milk",drop:.3,tDrop:4,hold:0,sip:5},wine:{label:"Wine",drop:.6,tDrop:3,hold:2,sip:30,drinkPH:3.4},nuts:{label:"Nuts",drop:.1,tDrop:5,hold:0,noSugar:!0},veggies:{label:"Veggies",drop:.2,tDrop:5,hold:0,noSugar:!0},cheese:{label:"Cheese",drop:0,tDrop:1,hold:0,noSugar:!0,effect:{k:2.5,minutes:20,clear:.5}},gum:{label:"Sugar-free gum",drop:0,tDrop:1,hold:0,noSugar:!0,effect:{k:2,minutes:20,clear:.6}},reflux:{label:"Reflux at night",drop:1.3,tDrop:1,hold:4,drinkPH:2,noSugar:!0,body:!0},water:{label:"Water rinse",drop:0,tDrop:1,hold:0,noSugar:!0,effect:{k:1.4,minutes:10,clear:.4}}};function Re({ms:e=1,PI:o=.4,saliva:t=1,nightDry:r=1}={}){let n=Math.max(6.1,Math.min(7.05,6.95-.2*Math.max(0,e-1)-.3*Math.max(0,o-.45)-.25*Math.max(0,1-t))),a=(.9+.25*o)*(.93+.07*Math.min(3,e)),i=1.1-.25*o;return{rest:n,dropScale:a,clear:i,saliva:t,nightDry:r}}function Ge(e,o=Re(),t=[23*60,7*60],r={}){var Y,oe;let n=(Y=r.nightAwake)!=null?Y:.7,a=D=>t[0]<t[1]?D>=t[0]&&D<t[1]:D>=t[0]||D<t[1],i=new Float64Array(1440),l=new Uint8Array(1440);for(let D=0;D<1440;D++)l[D]=a(D)?1:0,i[D]=o.saliva*(l[D]?.08*((oe=o.nightDry)!=null?oe:1):D<6*60||D>=22*60?n:1);let c=Math.pow(10,-o.rest),d=e.map(D=>{var Se,he,Ae;let x=Bt[D.food],q=(he=(Se=D.sip)!=null?Se:x.sip)!=null?he:0,U=x.drop*(1+.15*(((Ae=D.size)!=null?Ae:1)-1))*(1-.15*Math.min(1,Math.max(0,(q-20)/70))),te=Math.max(4,o.rest-U*o.dropScale),se=x.hold/Math.sqrt(Math.max(.25,i[D.t]));return{t:D.t,f:x,sip:q,flat:x.tDrop+q+se,eMax:Math.max(0,Math.pow(10,-te)-c)}}),p=new Float64Array(1440);for(let D of d){let x=D.f.effect;if(x){for(let q=0;q<x.minutes;q++)p[(D.t+q)%1440]+=Math.log(x.k);if(x.clear)for(let q of d){let U=(D.t-q.t+1440)%1440,te=Math.max(q.f.tDrop+q.sip,U);q!==D&&te<q.flat&&(q.flat=te+(q.flat-te)*(1-x.clear))}}}let k=new Float64Array(1440),b=new Map;for(let D=0;D<1440;D++){let x=b.get(i[D]);x===void 0&&b.set(i[D],x=.08*Math.pow(Math.max(i[D],.02),.8)*o.clear),k[D]=Math.exp(-x*(p[D]?Math.exp(p[D]):1))}let v=[];for(let D=0;D<2;D++)for(let x of d)x.eMax>0&&v.push({T:D*1440+x.t,e:x,last:0});v.sort((D,x)=>D.T-x.T);let M=new Float32Array(1440),C=0,E=0,u=[],O=0,X=0,B=0,H=0,g=0,ne=0,me=14,A=0,P=0,w=0,W=0,S=0,V=0;for(let D=0;D<2880;D++){let x=D%1440;for(C*=k[x];E<v.length&&v[E].T===D;)u.push(v[E++]);let q=C;if(u.length){let te=[];for(let se of u){let Se=D-se.T,he=se.e;if(Se>=he.flat){C+=se.last*k[x],q+=se.last*k[x];continue}se.last=Se<he.f.tDrop?he.eMax*(Se+1)/he.f.tDrop:he.eMax,q+=se.last,te.push(se)}u=te}if(D<1440)continue;let U=Math.max(4,-Math.log10(c+q));M[x]=U,U<me&&(me=U),U<5.7&&g++,U<6.2&&(B++,H+=6.2-U),U>=6&&(A++,P+=Math.min(1,U-6+.25)*(.3+.7*Math.min(1,i[x]))),U<5.5?(O++,X+=5.5-U,l[x]&&ne++,w||(W=x),++w>S&&(S=w,V=W)):w=0}let K=0;for(let D of d){if(D.f.drinkPH==null)continue;let x=2+.6*D.sip+3/Math.sqrt(Math.max(o.saliva,.1));K+=x*Math.max(0,4.5-D.f.drinkPH)}return{curve:M,rest:o.rest,acidMinutes:O,acidDose:X,rootMinutes:B,rootDose:H,safeMinutes:g,sleepAcid:ne,lowest:me,longest:S,longestStart:V,erosion:K,repairMinutes:A,repairDose:P}}var y=(e,o=0)=>e*60+o,jt=[3,8.5,13.5,7,4.25,10,14.5,2],Nt=[3,8.5,6.5,11.75,4,10,2,9.5],$t=["cookies","candy","chips","pastry","chocolate","driedFruit","cookies","chewy"],Gt=["juice","cookies","candy","chips","fruit","chewy","juice","chocolate"];function Ce(e,o){let{age:t,job:r,working:n,sportActive:a}=o,i=t<13,l=t>=13&&t<18,c=t<4,d=n&&r==="nurse",p=n&&r==="baker",k=[],b=(B,H,g)=>k.push({t:(Math.round(B)%1440+1440)%1440,food:H,...g});if(t<1)return{intakes:[y(6,30),y(10),y(13,30),y(17),y(19)].map(B=>({t:B,food:"milk"})),sleep:[y(19,30),y(6,30)]};let v,M;d?(v=[y(8,30),y(15,30)],M=[y(16),y(20),y(1)]):p?(v=[y(21),y(4,30)],M=[y(4,45),y(11,30),y(17,30)]):i?(v=c?[y(19,45),y(6,45)]:[y(20,30),y(7)],M=[y(7,15),y(12),y(18)]):l?(v=[y(23,30),y(7)],M=[y(7,15),y(12),y(18,30)]):(v=[y(23),y(7)],M=[y(7,30),y(12,30),y(18,30)]);let C=v[1],E=e.gum&&!c,u=i?e.kidSugar:e.sugar,O=M.map(()=>0);for(let B=0;B<u;B++){if(e.withMeals){O[B%M.length]++;continue}let H=C+60*(i?Nt:jt)[B%8];b(H,(i?Gt:$t)[B%8]),e.waterAfterSnacks&&b(H+10,"water"),E&&b(H+10,"gum")}M.forEach((B,H)=>{b(B,O[H]?"dessertMeal":"meal",O[H]>1?{size:O[H]}:void 0),E&&b(B+20,"gum")});let X=e.sipping?{sip:90}:void 0;if(!i){let B=d?[y(23),y(2,30),y(18)]:[y(13),y(16),y(20),y(11)];for(let H=0;H<e.sodas;H++){let g=e.withMeals?M[H%M.length]+5:B[H%B.length];b(g,"soda",X),e.waterAfterSnacks&&!e.sipping&&b(g+15,"water")}for(let H=0;H<e.dietSodas;H++)b(d?[y(21),y(3)][H%2]:[y(15),y(19,30)][H%2],"dietSoda",X);for(let H=0;H<e.energyDrinks;H++)b(d?[y(23,30),y(3)][H%2]:[y(8,30),y(14,30)][H%2],"energy")}return e.bedtimeSnack&&!c&&b(v[0]-20,"cookies"),n&&(p?[y(5,30),y(6,30),y(8),y(9,30),y(10,45)].forEach(B=>b(B,"tasting")):d?(b(y(0,30),"energy"),b(y(4,30),"cookies")):r==="office"?b(y(9),"sweetCoffee"):r==="teacher"?b(y(15,15),"pastry"):r==="warehouse"?(b(y(10),"sportsDrink"),b(y(14),"sportsDrink")):r==="driver"&&b(y(10,30),"soda",{sip:60})),a&&b(y(17),i?"juice":"sportsDrink",{sip:30}),c&&e.bedtimeBottle&&b(v[0]-10,"juiceBottle"),e.reflux&&t>=18&&[30,200,380].forEach(B=>b(v[0]+B,"reflux")),k.sort((B,H)=>B.t-H.t),{intakes:k,sleep:v}}var qt=Re({ms:1,PI:.4,saliva:1}),wo=(()=>{let{intakes:e,sleep:o}=Ce({sugar:3,sodas:0,dietSodas:0,energyDrinks:0,kidSugar:3},{age:30,job:"none",working:!1});return Ge(e,qt,o)})(),Vt=wo.acidDose,Yt=wo.rootDose,so=2*(2+.6*10+3)*(4.5-3.1),_t=wo.repairDose;function _o(e){return Math.max(.4,Math.min(1.4,e/_t))}function yo(e,o=!1){let t=Math.max(.35,Math.min(5,Math.pow(Math.max(e,.5)/Vt,.75)));return o&&t>1?1+(t-1)*.6:t}function Ko(e,o=!1){let t=Math.max(.35,Math.min(5,Math.pow(Math.max(e,.5)/Yt,.75)));return o&&t>1?1+(t-1)*.6:t}var Uo=[y(7,30),y(12,30),y(18,30)],ue=(e="meal")=>Uo.map(o=>({t:o,food:e})),ye=[{t:y(10),food:"cookies"},{t:y(15,30),food:"candy"},{t:y(20,30),food:"chips"}],Kt=[y(23),y(7)],fe=e=>[...e].sort((o,t)=>o.t-t.t),Ut=[{id:"snacks",label:"Three sweet snacks between meals",intakes:fe([...ue(),...ye])},{id:"withMeals",label:"The same sweets, as dessert",intakes:fe(ue("dessertMeal"))},{id:"gum",label:"Snacks + sugar-free gum after",intakes:fe([...ue(),...ye,...ye.map(e=>({t:e.t+10,food:"gum"})),...Uo.map(e=>({t:e+20,food:"gum"}))])},{id:"bedtime",label:"Snacks + a cookie after brushing",intakes:fe([...ue(),...ye,{t:y(22,40),food:"cookies"}])},{id:"sodaSip",label:"Snacks + 2 sodas sipped all afternoon",intakes:fe([...ue(),...ye,{t:y(13),food:"soda",sip:90},{t:y(16),food:"soda",sip:90}])},{id:"better",label:"Same food: sweets as dessert, sodas with meals",intakes:fe([...ue("dessertMeal"),{t:y(12,35),food:"soda"},{t:y(18,35),food:"soda"}])},{id:"sodaMeals",label:"Snacks + 2 sodas finished at meals",intakes:fe([...ue(),...ye,{t:y(12,35),food:"soda"},{t:y(18,35),food:"soda"}])},{id:"diet",label:"Snacks + 2 diet sodas",intakes:fe([...ue(),...ye,{t:y(13),food:"dietSoda"},{t:y(16),food:"dietSoda"}])},{id:"dry",label:"Three snacks, dry mouth (meds)",intakes:fe([...ue(),...ye]),saliva:.35},{id:"dryCandy",label:"Dry mouth, sucking candies for relief",intakes:fe([...ue(),{t:y(10),food:"candy"},{t:y(11,30),food:"candy"},{t:y(14),food:"candy"},{t:y(16),food:"candy"},{t:y(20,30),food:"candy"}]),saliva:.35},{id:"baker",label:"Baker: tastings from 5 am",...Ce({sugar:3,sodas:0,dietSodas:0,energyDrinks:0},{age:35,job:"baker",working:!0})},{id:"nurse",label:"Night nurse: snacks on the night shift",...Ce({sugar:3,sodas:1,dietSodas:0,energyDrinks:0},{age:35,job:"nurse",working:!0})},{id:"reflux",label:"Snacks + acid reflux at night",intakes:fe([...ue(),...ye,...[y(23,30),y(2,20),y(5,20)].map(e=>({t:e,food:"reflux"}))])},{id:"apnea",label:"Snacks + a cookie after brushing, mouth breathing in sleep",intakes:fe([...ue(),...ye,{t:y(22,40),food:"cookies"}]),nightDry:.4},{id:"toddler",label:"Toddler: juice, cookies, candy",...Ce({kidSugar:3},{age:2})},{id:"bottle",label:"Toddler + juice bottle in bed",...Ce({kidSugar:3,bedtimeBottle:!0},{age:2})}].map(e=>({sleep:Kt,saliva:1,...e}));var m={lifespan:80,returnReal:.05,debtRate:.1,networkDiscount:.25,cariesInit:{primary:{incisor:.0086,canine:.0067,molar:.04},permanent:{incisor:.0038,canine:.0045,premolar:.0135,molar:.034}},cariesAge:e=>e<12?.95:e<20?.8:e<40?.6:e<60?.55:.6,rootInit:.02,prog:{enamelToDentin:.06,dentinToDeep:.11,deepToPulp:.2,pulpToAbscess:.5,arrest:.04},teenProgFactor:2.5,primaryProgFactor:3,progRiskExponent:.6,rr:{fluorideToothpaste:.76,varnishPermanent:.57,varnishPrimary:.63,waterFluoride:.93,brushOnce:1.08,brushRarely:1.05,sealant:.25,sealantLossPerYear:.07,braces:1.6,dryMouthResidual:1,vaping:1.3,cSection:1.1,salivaSharing:1.1,bottlePooling:3,xylitol:1,erosionPerRef:.075},saliva:{dry:.35,meds:.5},apnea:{nightDry:.4,nightDryTreated:.8,brux:{untreated:.15,treated:0},gums:.05},infiltrationProg:.35,sdfArrest:.81,highFluorideRoot:.6,highFluorideArrest:1.5,postbioticMs:.9,kidPasteF:{recommended:.45,pea:.65,lots:1,none:0},fluorosis:{veryMild:[.22,.28],mild:[.04,.1],moderate:[.003,.012]},fluorosisFixPerYear:.05,erosionSensitivity:.6,symptoms:{2:{rate:.2,days:1,severe:!1},3:{rate:1,days:2,severe:!1},4:{rate:4,days:4,severe:!0},5:{rate:6,days:7,severe:!0}},primaryPainFactor:.3,detect:{1:.45,2:.75,3:.95,4:1,5:1},detectEmergency:{1:0,2:.2,3:.5,4:1,5:1},fail:{fillS:.02,fillL:.035,crown:.012,rct:.028,implant:.004,bridge:.011,partial:.12,denture:.12},periImplantitis:.02,perioClass:[["rapid",.08,.36],["moderate",.81,.22],["resistant",.11,.03]],plaque:{twice:.4,once:.55,rarely:.8},interdental:{daily:.12,sometimes:.05,never:0},electricBrush:.05,calculusPerMonth:.035,smokingPerio:1.85,diabetesPerio:1.86,stressPerio:1.3,perioToothLoss:e=>e<=2?0:Math.min(.6,.0022*Math.exp((e-4)/.9)),maintainedFactor:.5,bruxBase:[[.05,.7],[.3,.2],[.6,.1]],nightGuardProtection:.8,nightGuardAdherence:.7,crackBase:7e-4,trauma:{toddler:.06,kid:.012,adult:.004},sports:{none:0,hockey:.1,boxing:.15,basketball:.05,football:.02,soccer:.025,skate:.03,running:0},guardRR:{none:1,boil:.55,custom:.45},avulsionKeptWithFirstAid:.6,negExperience:{preventive:.03,filling:.1,rct:.2,extraction:.3,emergency:.3,ga:.4,implant:.2},cbtFactor:.4,fee:{allOn4:22e3,exam:60,newExam:105,emergencyExam:120,cleaning:110,kidCleaning:85,bitewings:65,pano:130,fluoride:35,sealant:42,fillS:210,fillL:300,bonding:250,rctAnterior:950,rctPremolar:1050,rctMolar:1175,core:300,crown:1300,retreat:1200,extraction:200,surgicalExtraction:345,graft:500,implant:4500,bridge:3800,partial:2e3,denture:1750,srp:970,infiltration:250,sdf:40,fluorosisFix:600,perioMaint:160,nightGuard:400,mouthguardCustom:300,mouthguardBoil:25,braces:6e3,wisdom:2750,ga:1e4,er:1900,cbt:900,sedation:350,flipper:500,periImplant:900},insurance:{none:{prev:0,basic:0,major:0,max:0,ded:0},employer:{prev:1,basic:.8,major:.5,max:1500,ded:50},medicaidChild:{prev:1,basic:1,major:1,max:1/0,ded:0},medicaidAdult:{prev:0,basic:0,major:0,emergency:1,max:1/0,ded:0},medicare:{prev:0,basic:0,major:0,max:0,ded:0},advantage:{prev:1,basic:.5,major:.5,max:1300,ded:0}}},vo={office:{label:"Office",sugar:1,energy:0,brux:.1,shift:!1,savings:6e3,insurance:"employer"},baker:{label:"Baker",sugar:4,energy:0,brux:.05,shift:!0,savings:3500,insurance:"employer"},warehouse:{label:"Warehouse",sugar:1,energy:1,brux:.25,shift:!1,savings:4e3,insurance:"employer",trauma:.004},nurse:{label:"Night nurse",sugar:1,energy:1,brux:.1,shift:!0,savings:7e3,insurance:"employer"},driver:{label:"Rideshare",sugar:1,energy:0,brux:.05,shift:!1,savings:2500,insurance:"none"},teacher:{label:"Teacher",sugar:1,energy:0,brux:.1,shift:!1,savings:5e3,insurance:"employer"},hygienist:{label:"Hygienist",sugar:0,energy:0,brux:.05,shift:!1,savings:5500,insurance:"employer",knowsRisk:!0}};function xo(e,o=0){let t=3735928559^o,r=1103547991^o;for(let n=0;n<e.length;n++){let a=e.charCodeAt(n);t=Math.imul(t^a,2654435761),r=Math.imul(r^a,1597334677)}return t=Math.imul(t^t>>>16,2246822507)^Math.imul(r^r>>>13,3266489909),r=Math.imul(r^r>>>16,2246822507)^Math.imul(t^t>>>13,3266489909),(t^r)>>>0}function Wt(e,o,t,r){return function(){e>>>=0,o>>>=0,t>>>=0,r>>>=0;let n=e+o|0;return e=o^o>>>9,o=t+(t<<3)|0,t=t<<21|t>>>11,r=r+1|0,n=n+r|0,t=t+n|0,(n>>>0)/4294967296}}var ro=class{constructor(o){this.seed=o>>>0,this.map=new Map}get(o){let t=this.map.get(o);if(!t){let r=xo(o,this.seed);t=Wt(r,xo(o+"#1",this.seed),xo(o+"#2",this.seed),this.seed^2654435769);for(let n=0;n<12;n++)t();this.map.set(o,t)}return t}u(o){return this.get(o)()}exp(o){return-Math.log(1-this.get(o)())}pick(o,t){let r=this.u(o)*t.reduce((a,i)=>a+i,0),n=0;for(let a=0;a<t.length;a++)if(n+=t[a],r<n)return a;return t.length-1}},pe=class{constructor(o,t){this.streams=o,this.name=t,this.acc=0,this.threshold=o.exp(t)}tick(o,t){return o<=0?!1:(this.acc+=o*t,this.acc>=this.threshold?(this.acc=0,this.threshold=this.streams.exp(this.name),!0):!1)}reset(){this.acc=0}};var zt={name:"Default",birth:"vaginal",parentsOral:"average",parentsAnxious:!1,fluoridatedWater:!0,kidInsurance:"employer",firstVisit:3,kidVisits:"every6",kidDentist:"pediatric",bedtimeBottle:!1,kidBrushing:"twice",kidPaste:"recommended",kidSugar:3,salivaSharing:!0,sealants:!0,braces:!1,sugar:3,sodas:0,sipping:!1,dietSodas:0,energyDrinks:0,withMeals:!1,gum:!1,waterAfterSnacks:!1,bedtimeSnack:!1,dryMouthMeds:!1,reflux:!1,sleepApnea:!1,grinds:!1,modernCare:!1,highFluoride:!1,postbiotic:!1,brushing:"twice",fluorideToothpaste:!0,interdental:"sometimes",electricBrush:!1,visits:"yearly",job:"office",insurance:"job",retireInsurance:"medicare",sport:"none",sportFrom:8,sportUntil:22,guard:"none",smoking:"never",nightGuard:"auto",knowsRisk:!1,coping:"none",treatment:"follow",bookNext:!1,firstAid:!1,iceChewing:!1,pregnancies:[],phases:[]},no=new Map;function Wo(e,o,t){var v;let{age:r,job:n,working:a,sportActive:i}=o,l=r<1?"baby":r<4?"toddler":r<13?"kid":r<18?"teen":"adult",c=r<13,d=Math.round(t.ms*20)/20,p=Math.round(t.PI*100)/100,k=[l,a?n:"",i?c?"k":"a":"",c?e.kidSugar:e.sugar,c?"":`${e.sodas},${e.dietSodas},${e.energyDrinks},${e.sipping?1:0}`,e.withMeals?1:0,e.gum?1:0,e.waterAfterSnacks?1:0,e.bedtimeSnack?1:0,l==="toddler"&&e.bedtimeBottle?1:0,l==="adult"&&e.reflux?1:0,d,p,t.saliva,(v=t.nightDry)!=null?v:1].join("|"),b=no.get(k);if(!b){let M=Ce(e,{age:r,job:n,working:a,sportActive:i}),C=Ge(M.intakes,Re({ms:d,PI:p,saliva:t.saliva,nightDry:t.nightDry}),M.sleep);b={acidMinutes:C.acidMinutes,acidDose:C.acidDose,rootMinutes:C.rootMinutes,rootDose:C.rootDose,sleepAcid:C.sleepAcid,erosion:C.erosion,repairMinutes:C.repairMinutes,repairDose:C.repairDose},no.size>4e4&&no.clear(),no.set(k,b)}return b}var So={every6:6,yearly:12,every2y:24,pain:1/0,never:1/0},Jt={healthy:.7,average:1,poor:1.6};function Qt(e,o){if(!e.phases.length)return e;let t={...e};for(let r of e.phases)o>=r.age&&Object.assign(t,r.set);return t}function Zt(){let e=[];[...Array(8).fill(["incisor",.8,7]),...Array(4).fill(["canine",1.5,10.5]),...Array(4).fill(["molar",1.2,10.5]),...Array(4).fill(["molar",2.2,11.5])].forEach(([r,n,a],i)=>e.push(zo(`p${i}`,"primary",r,n+i%4*.1,a+i%4*.3)));for(let r=0;r<4;r++)e[r].upperFront=!0;return[...Array(8).fill(["incisor",7,null]),...Array(4).fill(["canine",11,null]),...Array(8).fill(["premolar",11,null]),...Array(4).fill(["molar",6,"m1"]),...Array(4).fill(["molar",12,"m2"])].forEach(([r,n,a],i)=>e.push(zo(`t${i}`,"permanent",r,n+i%4*.15,1/0,a))),e}function zo(e,o,t,r,n,a=null){return{id:e,kind:o,type:t,erupt:r,shed:n,grp:a,present:!1,gone:!1,stage:0,resto:"none",needs:null,sealed:!1,varnishUntil:-1,anterior:t==="incisor"||t==="canine",posterior:t==="molar"||t==="premolar",clocks:null}}function de(e,o,t){return o.clocks||(o.clocks={}),o.clocks[t]||(o.clocks[t]=new pe(e,`${o.id}:${t}`))}function I(e,o,t,r){var c,d;let n=m.insurance[e.insNow]||m.insurance.none;n.max>0&&t!=="none"&&(o*=1-m.networkDiscount);let a=(c=n[t])!=null?c:0;t==="emergency"&&n.emergency&&(a=n.emergency),t==="extraction"&&(a=(d=n.emergency)!=null?d:n.basic);let i=0;if(a>0){let p=o;if(e.dedLeft>0&&t!=="prev"){let k=Math.min(e.dedLeft,p);e.dedLeft-=k,p-=k}i=Math.min(p*a,e.maxLeft),e.maxLeft-=i}let l=o-i;return e.billed+=o,e.insPaid+=i,r==="parents"?e.parentsPaid+=l:(e.oop+=l,e.wallet-=l,e.age<65&&e.oopBefore65.push([e.age,l])),l}function Oe(e,o=1,t={}){var ne,me,A;let r={...zt,...e,phases:e.phases||[]},n=new ro(o),a=1/12,i=m.lifespan*12,l=t.log!==!1,c=Math.exp((n.u("trait:enamel")-.5)*.6),d=m.perioClass[n.pick("trait:perio",m.perioClass.map(P=>P[1]))],p=m.bruxBase[n.pick("trait:brux",m.bruxBase.map(P=>P[1]))][0],k=n.u("trait:temperament"),b=Math.exp((n.u("trait:gums")-.5)*1),v=n.u("trait:drymouth")<.35,M=Math.max(.5,1.6+(n.u("trait:colonize")-.5)*1.2-(r.birth==="csection"?.98:0)-(r.parentsOral==="poor"?.4:0)-(r.salivaSharing?.2:0)),C=Zt(),E=C.filter(P=>P.kind==="permanent"),u={seed:o,plan:r.name,age:0,traits:{perio:d[0],bruxism:p,enamel:+c.toFixed(2),colonizeAge:+M.toFixed(2)},wallet:0,walletNoDental:0,billed:0,insPaid:0,oop:0,parentsPaid:0,oopBefore65:[],insNow:"none",dedLeft:0,maxLeft:0,anxiety:Math.min(.9,.05+(r.parentsAnxious?.2:0)+.35*k*k),anxietyPeak:0,ms:.25,perio:{PI:.4,calc:0,G:.2,CAL:0,srp:!1,maint:!1,boost:0},diabetic:!1,counts:{visits:0,skipped:0,emergencies:0,er:0,cleanings:0,sealants:0,fillings:0,crowns:0,rct:0,extractions:0,implants:0,bridges:0,partials:0,dentures:0,srp:0,nightGuard:0,trauma:0,cracks:0,negVisits:0,painEpisodes:0,wisdom:0,ga:0},painDays:0,missedWork:0,sleepless:0,selfConsciousMonths:0,gumDiseaseMonths:0,events:[],yearly:[],firstVisitDone:!1,nextVisit:1/0,lastVisitAge:-99,hasNightGuard:!1,hasCustomGuard:!1,cbtDone:!1,lostBy:{caries:0,perio:0,crack:0,trauma:0}};u.guidance={bedtimeBottle:r.bedtimeBottle,kidBrushing:r.kidBrushing,kidSugar:r.kidSugar};let O=(P,w={})=>{l&&u.events.push({age:+u.age.toFixed(2),type:P,...w})},X={diabetes:new pe(n,"diabetes"),trauma:new pe(n,"trauma"),perioAbscess:new pe(n,"perioAbscess"),tmd:new pe(n,"tmd"),wisdom:new pe(n,"wisdom"),prosthesis:new pe(n,"prosthesis"),sensitivity:new pe(n,"sensitivity")},B=n.u("trait:wisdom")<.6,H=!1,g=-1;for(let P=0;P<i;P++){let w=P/12;u.age=w;let W=Qt(r,w),S=w<13?{...W,...u.guidance}:W,V=w<13,K=w>=18,Y=w>=22&&w<65,oe=vo[S.job]||vo.office,D=Math.floor(w);if(D!==g){g=D;let f;w<18?f=S.kidInsurance:w<22?f=S.kidInsurance==="employer"?"employer":"none":w<65?f=S.insurance==="job"?oe.insurance:S.insurance:f=S.retireInsurance,u.insNow=f;let N=m.insurance[f]||m.insurance.none;u.dedLeft=N.ded,u.maxLeft=N.max}let x=Math.pow(1+m.returnReal,a);u.wallet*=u.wallet>=0?x:Math.pow(1+m.debtRate,a),u.walletNoDental*=x,Y&&(u.wallet+=oe.savings/12,u.walletNoDental+=oe.savings/12);let q=S.sipping?3:1,U,te;V?(U=S.kidSugar+(S.bedtimeBottle&&w<4?2:0),te=S.kidBrushing):(U=S.sugar+S.sodas*q+S.energyDrinks+(Y?oe.sugar+oe.energy:0),te=S.brushing);let se=S.sport!=="none"&&w>=S.sportFrom&&w<S.sportUntil;se&&S.sport==="running"&&(U+=1);let Se=S.fluorideToothpaste&&!(w<6&&S.kidPaste==="none"),he=te==="twice"&&Se,Ae=!V&&S.smoking==="smoker",lo=!V&&S.smoking==="vaper",Ve=v&&w>=60?m.saliva.dry:S.dryMouthMeds&&K?m.saliva.meds:1,Ye=K&&S.sleepApnea||!1,ht=Ye==="untreated"?m.apnea.nightDry:Ye==="treated"?m.apnea.nightDryTreated:1,Eo=S.braces&&w>=12&&w<14.5,G=u.perio,Ro=m.plaque[te]-m.interdental[V?"never":S.interdental]-(S.electricBrush?m.electricBrush:0);if(V&&te==="twice"&&(Ro-=.03),G.PI=Math.max(.1,Ro),w>=M){u.ms<.3&&(u.ms=u.ms0=Jt[S.parentsOral]*(S.salivaSharing?1.1:1));let f=Wo(S,{age:w,job:S.job,working:Y,sportActive:se},{ms:1,PI:.4,saliva:1}),N=(.6+.36*yo(f.acidDose)+.3*(u.ms0-1))*(S.postbiotic?m.postbioticMs:1);S.knowsRisk&&N>1.2&&(N*=.85),u.ms+=(N-u.ms)*(a/4)}let Te=Wo(S,{age:w,job:S.job,working:Y,sportActive:se},{ms:u.ms,PI:G.PI,saliva:Ve,nightDry:ht});u.acidNow=Te;let ae=yo(Te.acidDose,he)*c;Se&&(ae*=m.rr.fluorideToothpaste),S.fluoridatedWater&&(ae*=m.rr.waterFluoride),te==="once"?ae*=m.rr.brushOnce:te==="rarely"&&(ae*=m.rr.brushRarely),Ve<1&&(ae*=1+(m.rr.dryMouthResidual-1)*(1-Ve)/(1-m.saliva.dry)),lo&&(ae*=m.rr.vaping),Eo&&(ae*=m.rr.braces),ae*=1+m.rr.erosionPerRef*Math.min(2,Te.erosion/so),r.birth==="csection"&&w<6&&(ae*=m.rr.cSection),S.salivaSharing&&w<3&&(ae*=m.rr.salivaSharing);let Oo=S.knowsRisk&&ae>1.6,co=p+(S.grinds&&!V?.3:0)+(Ye?m.apnea.brux[Ye]:0)+(Y?oe.brux:0)+(S.energyDrinks>0?.05:0)+(Ae?.05:0)+(w>45?.05:0);co=Math.min(1,co);let ut=u.hasNightGuard?m.nightGuardProtection*m.nightGuardAdherence:0,_e=co*(1-ut);G.calc=Math.min(1,G.calc+m.calculusPerMonth*G.PI);let ft=S.pregnancies.some(f=>w>=f&&w<f+.75),Io=.05+(Ye==="untreated"?m.apnea.gums:0)+.75*G.PI+.2*G.calc+(ft?.2:0)+(u.diabetic?.1:0)+(Ae?.05:0)+(Eo?.1:0);if(G.boost>0&&(Io*=G.maint?.5:.7,G.boost--),G.G=Math.max(0,Math.min(1,Io)),w>=15){let f=w<40?1:w<60?1.3:1.5,N=d[2]*b*Math.pow(Math.max(0,G.G-.2)/.75,1.7)*(Ae?m.smokingPerio:lo?1.3:1)*(u.diabetic?m.diabetesPerio:1)*(oe.shift&&Y?1.1:1)*f;G.CAL+=(N+(w>=20?.032:0)+(Ae?.03:lo?.012:0))*a}if(G.visibleG=Ae?Math.max(0,G.G-.15):G.G,G.G>.5&&u.gumDiseaseMonths++,!u.diabetic&&w>=25){let f=(w<45?.003:w<60?.009:.012)*(U>=6?1.5:1)*(G.CAL>=5?1.2:1);X.diabetes.tick(f,a)&&(u.diabetic=!0,O("diabetes"))}let ho=K?Math.max(0,Math.min(1,(G.CAL-2)/3)):0,Fo=0;ho>0&&(Fo=m.rootInit*ho*Ko(Te.rootDose,he)*(S.fluorideToothpaste?m.rr.fluorideToothpaste:1)*(Ve<1?m.rr.dryMouthResidual:1)*(S.highFluoride?m.highFluorideRoot:1));let Be=!1,ke=null,Ke=!1;for(let f of C){if(f.gone)continue;if(!f.present)if(w>=f.erupt)f.present=!0;else continue;if(f.kind==="primary"&&w>=f.shed){f.present=!1,f.gone=!0;continue}let N=f.resto==="missing";if(N||f.resto==="implant"||f.resto==="bridge"||f.resto==="partial"||f.resto==="denture"||f.resto==="arch"){(f.resto==="implant"||f.resto==="bridge")&&(de(n,f,"fail").tick(m.fail[f.resto],a)&&(f.needs=f.resto==="implant"?"reimplant":"replace",O("replacementFails",{tooth:f.id,what:f.resto})),f.resto==="implant"&&de(n,f,"periImplant").tick(m.periImplantitis,a)&&(f.needs=f.needs||"periImplant")),f.anterior&&N&&f.kind==="permanent"&&(Ke=!0);continue}let L=f.kind==="primary",gt=L?m.cariesInit.primary[f.type]:m.cariesInit.permanent[f.type]*m.cariesAge(w),Me=ae;f.upperFront&&S.bedtimeBottle&&w<4&&(Me*=m.rr.bottlePooling),f.sealed&&(Me*=m.rr.sealant);let Bo=P<=f.varnishUntil;Bo&&(Me*=L?m.rr.varnishPrimary:m.rr.varnishPermanent),u.ms<.3&&(Me*=.2),(f.resto==="fillS"||f.resto==="fillL")&&(Me*=1.3);let uo=(L?m.primaryProgFactor:w>=12&&w<18?m.teenProgFactor:1)*Math.pow(Me,m.progRiskExponent);if(f.stage===0&&f.resto!=="crown"&&f.resto!=="rct")de(n,f,"init").tick(gt*Me+(L?0:Fo),a)&&(f.stage=1);else if(f.stage===1){let be=m.prog.arrest*_o(Te.repairDose)*(S.highFluoride&&K?m.highFluorideArrest:1)*(Bo?2.5:1)*(he?1.3:.7)/Math.max(.5,Math.min(2.5,Me));de(n,f,"arrest").tick(be,a)?f.stage=0:de(n,f,"prog").tick(m.prog.enamelToDentin*uo*(f.infiltrated?m.infiltrationProg:1),a)&&(f.stage=2)}else f.stage===2?de(n,f,"prog").tick(m.prog.dentinToDeep*uo*(f.sdfArrest?.1:1),a)&&(f.stage=3):f.stage===3?de(n,f,"prog").tick(m.prog.deepToPulp*uo*(f.sdfArrest?.1:1),a)&&(f.stage=4):f.stage===4&&de(n,f,"prog").tick(m.prog.pulpToAbscess*(L?1.5:1),a)&&(f.stage=5);if(f.resto!=="none"&&!f.needs){let be=m.fail[f.resto]||0;if(be*=Math.pow(Math.max(1,Me),.5)*(f.resto==="crown"||f.resto==="fillL"?1+_e:1),de(n,f,"fail").tick(be,a)){let He=n.u(`${f.id}:failKind`);f.resto==="fillS"?(f.resto="none",f.stage=He<.6?2:3):f.resto==="fillL"?He<.5?f.needs="crown":He<.8?(f.resto="none",f.stage=3):(f.resto="none",f.stage=4):f.resto==="crown"?f.needs=He<.6?"recrown":"rct":f.resto==="rct"&&(f.needs=He<.5?"retreat":"extract"),f.needs&&n.u(`${f.id}:failPain`)<.4&&(Be=!0,ke="broken tooth")}}if(f.posterior&&!L&&f.resto!=="crown"){let be=(ne={none:1,fillS:1.5,fillL:4,rct:5}[f.resto])!=null?ne:1,He=m.crackBase*(1+5*_e)*be*(S.iceChewing?2:1)*(w>=40?1.6:1);if(de(n,f,"crack").tick(He,a)){let jo=n.u(`${f.id}:crackKind`);u.counts.cracks++,f.needs=jo<.55?"crown":jo<.85?"rct":"extract",f.crackCause=!0,Be=!0,ke="cracked tooth",O("crack",{tooth:f.id,severity:f.needs})}}if(!L&&G.CAL>2){f.site==null&&(f.site=Math.exp((n.u(`${f.id}:site`)-.5)*2.4));let be=m.perioToothLoss(G.CAL)*f.site*(G.maint?m.maintainedFactor:1)*(f.type==="molar"?1.5:f.type==="incisor"?.8:1);de(n,f,"perio").tick(be,a)&&(f.needs="extract",f.perioLoose=!0,n.u(`${f.id}:perioPain`)<.5&&(Be=!0,ke="loose tooth"))}let eo=m.symptoms[f.stage];if(eo){let be=eo.rate*(L?m.primaryPainFactor:1)*(f.sdfArrest?.2:1);de(n,f,"pain").tick(be,a)&&(u.painDays+=eo.days,u.counts.painEpisodes++,eo.severe&&(Be=!0,ke=f.stage===5?"abscess":"toothache",u.sleepless+=3))}f.anterior&&!L&&(f.stage>=3||f.needs)&&(Ke=!0)}G.CAL>=6&&(Ke=!0);{let f=new Set(E.filter(L=>L.present).map(L=>L.resto)),N=f.has("denture")?[m.fail.denture,m.fee.denture*2,"dentures"]:f.has("arch")?[.03,8e3,"arch"]:f.has("partial")?[m.fail.partial,m.fee.partial,"partial"]:null;N&&X.prosthesis.tick(N[0],a)&&(I(u,N[1],"major",K?"self":"parents"),O("prosthesisRedo",{what:N[2]}))}if(P===6*12){let f=(r.fluoridatedWater?1:.3)+((me=m.kidPasteF[r.kidPaste])!=null?me:m.kidPasteF.recommended),N=m.fluorosis,L=n.u("trait:fluorosis");u.fluorosis=L<N.moderate[0]+N.moderate[1]*Math.pow(f,1.5)?"moderate":L<N.mild[0]+N.mild[1]*f?"mild":L<N.veryMild[0]+N.veryMild[1]*f?"veryMild":"none",u.fluorosis!=="none"&&O("fluorosis",{grade:u.fluorosis})}u.fluorosis==="moderate"&&!u.fluorosisFixed&&(w>=16&&w<26&&P%12===0&&n.u(`fluorosisFix:${Math.floor(w)}`)<m.fluorosisFixPerYear?(u.fluorosisFixed=!0,I(u,m.fee.fluorosisFix,"none",w<18?"parents":"self"),O("cosmeticFix",{what:"fluorosis"})):w>=13&&(Ke=!0)),!V&&Ke&&u.selfConsciousMonths++,K&&Te.erosion>so&&X.sensitivity.tick(m.erosionSensitivity*Math.min(2,Te.erosion/so-1),a)&&(u.painDays+=1),G.CAL>=6&&X.perioAbscess.tick(.3,a)&&(Be=!0,ke=ke||"gum abscess",u.painDays+=5),X.tmd.tick(12*Math.max(0,_e-.15),a)&&(u.painDays+=2);{let f=w>=1&&w<4?m.trauma.toddler:w>=6&&w<18?m.trauma.kid:w>=18?m.trauma.adult:0;se&&(f+=(m.sports[S.sport]||0)*((A=m.guardRR[S.guard])!=null?A:1)),Y&&oe.trauma&&(f+=oe.trauma),X.trauma.tick(f,a)&&ts(u,C,n,S,O)}if(!H&&B&&w>=17&&w<26&&X.wisdom.tick(.2,a)&&(H=!0,u.counts.wisdom++,I(u,m.fee.wisdom,"basic",w<18?"parents":"self"),u.painDays+=4,Y&&(u.missedWork+=2),Qo(u,n,S,"extraction",w),O("wisdomTeeth")),S.braces&&Math.abs(w-12)<a/2){let f=u.insNow==="employer"?Math.min(1500,m.fee.braces*.5):0;u.billed+=m.fee.braces,u.insPaid+=f,u.parentsPaid+=m.fee.braces-f,O("braces")}let mt=V||w<18?So[S.kidVisits]:So[S.visits],pt=G.maint?4:1/0,je=Math.min(mt,pt);!u.firstVisitDone&&typeof S.firstVisit=="number"&&w>=S.firstVisit&&(u.nextVisit=Math.min(u.nextVisit,P)),u.firstVisitDone&&u.nextVisit===1/0&&je<1/0&&(u.nextVisit=P+je);let Xo=!1;if(P>=u.nextVisit)if(!u.firstVisitDone&&S.firstVisit==="pain")u.nextVisit=1/0;else{let f=os(u,S,w,oe,Y);n.u("visit:skip")<f?(u.counts.skipped++,O("skippedVisit"),u.nextVisit=je<1/0?P+Math.max(3,Math.round(je/2)):1/0):(Jo(u,C,n,S,w,P,"routine",{rr:ae,kidHighRisk:Oo,bruxEff:_e,sportActive:se,ev:O}),Xo=!0,u.nextVisit=je<1/0?P+je:1/0)}if(Be&&!Xo){let f=So[w<18?S.kidVisits:S.visits]<=24,N=u.anxiety>.7?ke==="abscess"?.65:.3:f?.85:.6;K||(N=Math.max(N,.7));let L=K&&u.insNow==="none"&&u.wallet<500;L&&(N*=.7),n.u("pain:go")<N?L&&n.u("pain:er")<.3?(u.counts.er++,I(u,m.fee.er,"emergency",K?"self":"parents"),Y&&(u.missedWork+=1),O("er",{why:ke})):Jo(u,C,n,S,w,P,"emergency",{rr:ae,kidHighRisk:Oo,bruxEff:_e,sportActive:se,ev:O,painWhy:ke}):(O("enduredPain",{why:ke}),u.sleepless+=2,Y&&(u.missedWork+=.5))}if(u.anxiety=Math.max(0,u.anxiety-4e-4),u.anxietyPeak=Math.max(u.anxietyPeak,u.anxiety),P%12===11){let f=E.filter(L=>L.present&&!["missing","implant","bridge","partial","denture","arch"].includes(L.resto)).length,N=E.filter(L=>L.present).length;u.yearly.push({age:D,natural:f,missing:N-f,dmft:E.filter(L=>L.present&&(L.resto!=="none"||L.stage>=2)).length,primDmf:C.filter(L=>L.kind==="primary"&&L.present&&(L.resto!=="none"||L.stage>=2)).length+C.filter(L=>L.kind==="primary"&&!L.present&&!L.gone&&L.resto==="missing").length,untreated:E.some(L=>L.present&&L.resto==="none"&&L.stage>=3),untreated2:E.some(L=>L.present&&L.resto==="none"&&L.stage>=2),cal:+G.CAL.toFixed(2),gums:+G.G.toFixed(2),anxiety:+u.anxiety.toFixed(2),oop:Math.round(u.oop),wallet:Math.round(u.wallet),painDays:Math.round(u.painDays),selfConscious:+(u.selfConsciousMonths/12).toFixed(1),walletNoDental:Math.round(u.walletNoDental),acidMin:u.acidNow.acidMinutes,repairMin:u.acidNow.repairMinutes,garden:es(u,G,Ve),rootMin:ho>0?u.acidNow.rootMinutes:0,sleepAcid:u.acidNow.sleepAcid})}}return rs(u,E)}function es(e,o,t){let r=i=>Math.max(0,Math.min(1,i)),n=e.ms<.3?0:r(.7*(e.ms-.5)/2.2+.3*(e.acidNow.acidMinutes/600)),a=r(.6*(o.G-.25)/.6+.25*o.calc+.15*Math.min(1,o.CAL/5));return{sugar:+n.toFixed(2),gum:+a.toFixed(2),flowers:+r(1-.8*Math.max(n,a)-.2*Math.min(n,a)).toFixed(2),dry:+(1-t).toFixed(2)}}function os(e,o,t,r,n){if(t<18)return Math.min(.9,.05+.3*e.anxiety+(o.parentsAnxious?.1:0)+(o.kidInsurance==="none"?.15:0));let a=.06+.8*e.anxiety*e.anxiety;return e.insNow==="none"&&(a+=.12),n&&r.shift&&(a+=.06),t-e.lastVisitAge>3&&(a+=.1),o.bookNext&&(a-=.04),e.anxiety>.7&&(a=Math.max(a,.9)),Math.max(.02,Math.min(.97,a))}function Qo(e,o,t,r,n){var i;let a=(i=m.negExperience[r])!=null?i:.05;return n<12&&(a*=1.5),n<13&&t.kidDentist==="pediatric"&&(a*=.5),a*=1+e.anxiety,t.coping==="tell"&&(a*=.8),t.coping==="sedation"&&r!=="preventive"&&(a*=.6),e.cbtDone&&(a*=.7),o.u("visit:experience")<a?(e.anxiety=Math.min(1,e.anxiety+(n<13?.25:.15)*(1-e.anxiety*.5)),e.counts.negVisits++,!1):(e.anxiety=Math.max(0,e.anxiety-(n<13?.03:.015)),!0)}function ts(e,o,t,r,n){e.counts.trauma++;let a=e.age<7,i=o.filter(p=>p.present&&p.type==="incisor"&&(a?p.kind==="primary":p.kind==="permanent")&&!["missing","implant","bridge","partial","denture","arch"].includes(p.resto));if(!i.length)return;let l=i[Math.floor(t.u("trauma:which")*i.length)],c=e.age<18?"parents":"self",d=t.u("trauma:kind");if(a){d<.2&&(l.resto="missing",I(e,m.fee.extraction,"basic",c)),n("fall",{tooth:l.id});return}e.painDays+=3,d<.55?(l.resto="fillS",I(e,m.fee.bonding,"basic",c),n("trauma",{what:"chipped tooth"})):d<.85?(l.resto="rct",I(e,m.fee.rctAnterior,"basic",c),I(e,m.fee.crown,"major",c),e.counts.rct++,e.counts.crowns++,n("trauma",{what:"broken tooth"})):r.firstAid&&t.u("trauma:replant")<m.avulsionKeptWithFirstAid?(l.resto="rct",I(e,1800,"basic",c),e.counts.rct++,n("trauma",{what:"knocked out, saved in milk"})):(l.resto="missing",e.lostBy.trauma++,e.age<18?I(e,m.fee.flipper,"major",c):(I(e,m.fee.implant,"major",c),l.resto="implant",e.counts.implants++),n("trauma",{what:"knocked out"}),e.age<18&&(l.implantAt=18))}function ss(e){return e.type==="molar"?m.fee.rctMolar:e.type==="premolar"?m.fee.rctPremolar:m.fee.rctAnterior}function Jo(e,o,t,r,n,a,i,l){var H;let c=n<18?"parents":"self",d=n>=18,p=e.counts;p.visits++,i==="emergency"&&p.emergencies++;let k=!e.firstVisitDone;if(e.firstVisitDone=!0,e.lastVisitAge=n,k&&l.ev("firstVisit",{why:i}),k&&n<2&&i==="routine"&&e.guidance){let g=e.guidance;g.bedtimeBottle&&t.u("guidance:bottle")<.4&&(g.bedtimeBottle=!1,l.ev("advice",{what:"water at bedtime"})),g.kidBrushing!=="twice"&&t.u("guidance:brush")<.35&&(g.kidBrushing="twice",l.ev("advice",{what:"brush twice with fluoride"})),g.kidSugar>3&&t.u("guidance:sugar")<.3&&(g.kidSugar-=1,l.ev("advice",{what:"fewer sweet snacks"}))}let b="preventive",v=g=>{let ne=["preventive","filling","implant","rct","extraction","emergency","ga"];ne.indexOf(g)>ne.indexOf(b)&&(b=g)},M=n>=22&&n<65;M&&(e.missedWork+=.25),d&&r.coping==="cbt"&&!e.cbtDone&&e.anxiety>.4&&(e.cbtDone=!0,e.anxiety*=m.cbtFactor,I(e,m.fee.cbt,"none","self"),l.ev("cbt")),I(e,i==="emergency"?m.fee.emergencyExam:k?m.fee.newExam:m.fee.exam,i==="emergency"?"basic":"prev",c);let C=e.perio;if(i==="routine"){if((!e.lastXray||n-e.lastXray>=1)&&(I(e,m.fee.bitewings,"prev",c),e.lastXray=n),n>=3&&(C.maint?I(e,m.fee.perioMaint,"basic",c):I(e,n<14?m.fee.kidCleaning:m.fee.cleaning,"prev",c),C.calc=0,C.boost=Math.max(C.boost,C.maint?4:2),p.cleanings++),n<16||l.kidHighRisk){I(e,m.fee.fluoride,"prev",c);for(let g of o)g.present&&(g.varnishUntil=a+6)}d&&C.CAL>=3.5&&!C.srp&&(C.srp=!0,C.maint=!0,C.calc=0,C.boost=6,C.CAL=Math.max(0,C.CAL-.5),I(e,m.fee.srp,"basic",c),p.srp++,v("filling"),l.ev("deepCleaning",{cal:+C.CAL.toFixed(1),diabetic:e.diabetic}))}if(i==="routine"&&r.sealants&&n>=6&&n<16)for(let g of o)g.grp&&g.present&&!g.sealed&&g.stage===0&&g.resto==="none"&&(g.sealed=!0,p.sealants++,I(e,m.fee.sealant,"prev",c));for(let g of o)g.sealed&&de(t,g,"sealLoss").tick(m.rr.sealantLossPerYear,.5)&&(g.sealed=!1);i==="routine"&&d&&!e.hasNightGuard&&l.bruxEff>=.28&&r.nightGuard!==!1&&t.u("visit:wear")<.35&&(e.hasNightGuard=!0,p.nightGuard++,I(e,m.fee.nightGuard,"none",c),l.ev("nightGuard")),i==="routine"&&l.sportActive&&r.guard==="custom"&&!e.hasCustomGuard&&(e.hasCustomGuard=!0,I(e,m.fee.mouthguardCustom,"none",c));let E=i==="emergency"?m.detectEmergency:m.detect,u=0,O=0,X=[];for(let g of o)!g.present||g.gone||!(g.needs||g.stage>0&&t.u(`${g.id}:detect`)<((H=E[g.stage])!=null?H:0))||(g.kind==="primary"&&g.stage>=2&&O++,X.push(g));if(n<6&&O>=4){I(e,m.fee.ga,"basic","parents"),p.ga++,v("ga");for(let g of X)g.kind==="primary"&&(g.stage>=4?g.resto="missing":g.resto="fillS",g.stage=0,p.fillings++);l.ev("generalAnesthesia",{teeth:O})}for(let g of X){let w=function(){if(g.kind==="primary"){W();return}let V=t.u(`${g.id}:restorable`)<(g.stage>=5?.7:.9);if(P||!V){W();return}I(e,ss(g),"basic",c),I(e,m.fee.core,"major",c),I(e,m.fee.crown,"major",c),p.rct++,p.crowns++,v("rct"),g.resto="rct",g.stage=0,g.needs=null,M&&(e.missedWork+=.5)},W=function(){let V=g.perioLoose?"perio":g.crackCause?"crack":"caries";if(I(e,g.type==="molar"?m.fee.surgicalExtraction:m.fee.extraction,"extraction",c),p.extractions++,v("extraction"),g.stage=0,g.needs=null,g.resto="missing",u++,M&&(e.missedWork+=1),g.kind==="primary")return;e.lostBy[V]++,l.ev("extraction",{tooth:g.id,cause:V});let K=["arch","denture","partial"].find(x=>o.some(q=>q.kind==="permanent"&&q.resto===x)),Y=o.filter(x=>x.kind==="permanent"&&["missing","partial"].includes(x.resto)).length,oe=o.filter(x=>x.kind==="permanent"&&["implant","bridge","arch"].includes(x.resto)).length,D=o.filter(x=>x.kind==="permanent"&&x.present&&!["missing","implant","bridge","partial","denture","arch"].includes(x.resto)&&(x.stage>=2||x.needs)).length;if(K!=="arch"&&K!=="denture"&&Y>=10&&(P||r.treatment!=="follow")&&(D>=4||e.perio.CAL>=5.5)){for(let x of o)x.kind==="permanent"&&x.present&&!["implant","bridge","missing","partial","denture","arch"].includes(x.resto)&&(I(e,m.fee.extraction,"extraction",c),p.extractions++,e.lostBy[x.perioLoose||e.perio.CAL>=5?"perio":"caries"]++,x.stage=0,x.needs=null,x.resto="denture");for(let x of o)x.kind==="permanent"&&(x.resto==="missing"||x.resto==="partial")&&(x.resto="denture");I(e,m.fee.denture*2,"major",c),p.dentures++,l.ev("fullClearance")}else if(K)g.resto=K,I(e,300,"major",c);else if(Y+oe>=14)if(!P&&r.treatment==="follow"&&e.wallet>6e4){I(e,m.fee.allOn4*2,"major",c),p.allOn4=(p.allOn4||0)+1;for(let x of o)x.kind==="permanent"&&x.present&&x.resto!=="implant"&&(["missing","partial"].includes(x.resto)||(p.extractions++,x.stage=0,x.needs=null),x.resto="arch");l.ev("allOn4")}else{I(e,m.fee.denture*2,"major",c),p.dentures++;for(let x of o)x.kind==="permanent"&&(x.resto==="missing"||x.resto==="partial")&&(x.resto="denture");l.ev("dentures")}else!P&&d&&r.treatment==="follow"&&oe<4&&(e.wallet>5e3||e.insNow!=="none")&&t.u(`${g.id}:implantChoice`)<.55?(I(e,m.fee.graft,"major",c),I(e,m.fee.implant,"major",c),g.resto="implant",p.implants++,v("implant"),l.ev("implant",{tooth:g.id})):Y>=5&&!o.some(x=>x.resto==="partial"||x.resto==="denture")&&(I(e,m.fee.partial,"major",c),S())},S=function(){p.partials++;for(let V of o)V.kind==="permanent"&&V.resto==="missing"&&(V.resto="partial");l.ev("partialDenture")};if(g.resto==="missing"&&!g.needs)continue;let ne=g.stage>=4||g.needs==="extract"||g.needs==="rct"||i==="emergency"&&g.stage>=3,me=r.treatment==="defer"&&!ne?.7:0,A=d&&e.insNow==="none"&&e.wallet<0&&!ne?.5:0;if(t.u(`${g.id}:defer`)<Math.max(me,A)){l.ev("deferred",{tooth:g.id,stage:g.stage});continue}let P=r.treatment==="cheapest"||d&&e.insNow==="none"&&e.wallet<-2e3;if(g.needs==="replace"||g.needs==="reimplant"){g.resto==="implant"&&!P?(I(e,m.fee.implant,"major",c),p.implants++,v("implant")):g.resto==="bridge"&&!P?(I(e,m.fee.bridge,"major",c),p.bridges++):g.resto="missing",g.needs=null;continue}if(g.needs==="periImplant"){I(e,m.fee.periImplant,"basic",c),g.needs=null;continue}if(g.needs==="crown"||g.needs==="recrown"){if(P&&g.needs==="crown"){W();continue}I(e,m.fee.crown,"major",c),p.crowns++,v("filling"),g.resto=g.resto==="rct"?"rct":"crown",g.stage=0,g.needs=null;continue}if(g.needs==="retreat"){if(P){W();continue}I(e,m.fee.retreat,"basic",c),p.rct++,v("rct"),g.needs=null,g.stage=0;continue}if(g.needs==="rct"){w();continue}if(g.needs==="extract"){W();continue}if(g.stage===1){g.varnishUntil=a+12,r.modernCare&&g.kind==="permanent"&&g.posterior&&!g.infiltrated&&(I(e,m.fee.infiltration,"basic",c),g.infiltrated=!0,l.ev("infiltration",{tooth:g.id}));continue}if(r.modernCare&&g.kind==="primary"&&(g.stage===2||g.stage===3)&&!g.sdfArrest&&(I(e,m.fee.sdf,"prev",c),t.u(`${g.id}:sdf`)<m.sdfArrest)){g.sdfArrest=!0,l.ev("sdf",{tooth:g.id});continue}if(g.stage===2){I(e,m.fee.fillS,"basic",c),p.fillings++,v("filling"),g.resto=g.resto==="fillS"||g.resto==="fillL"?"fillL":"fillS",g.stage=0;continue}if(g.stage===3){I(e,m.fee.fillL,"basic",c),p.fillings++,v("filling"),g.resto="fillL",g.stage=0;continue}if(g.stage>=4){w();continue}}i==="emergency"&&v("emergency"),n<3&&b==="preventive"&&k&&(b="preventive"),Qo(e,t,r,b,n)||l.ev("scaryVisit",{what:b})}function rs(e,o){let t=c=>e.yearly.find(d=>d.age===c)||e.yearly[e.yearly.length-1],r=e.oopBefore65.reduce((c,[d,p])=>c+p*Math.pow(1+m.returnReal,65-d),0),n=t(50),a=t(65),i=t(79),l=e.yearly[e.yearly.length-1];return{seed:e.seed,plan:e.plan,traits:e.traits,counts:e.counts,lostBy:e.lostBy,missingAt:{35:t(35).missing,50:n.missing,65:a.missing,80:i.missing},naturalAt80:l.natural,dmftAt:{12:t(12).dmft,19:t(19).dmft,35:t(35).dmft,50:n.dmft,65:a.dmft},calAt:{35:t(35).cal,50:n.cal,65:a.cal},money:{billed:Math.round(e.billed),insurancePaid:Math.round(e.insPaid),outOfPocket:Math.round(e.oop),parentsPaid:Math.round(e.parentsPaid),fv65:Math.round(r),walletAt65:a.wallet,walletAt65NoDental:a.walletNoDental},painDays:Math.round(e.painDays),missedWork:Math.round(e.missedWork),sleepless:Math.round(e.sleepless),selfConsciousYears:+(e.selfConsciousMonths/12).toFixed(1),gumDiseaseYears:+(e.gumDiseaseMonths/12).toFixed(1),anxietyPeak:+e.anxietyPeak.toFixed(2),anxietyEnd:+l.anxiety.toFixed(2),diabetic:e.diabetic,fluorosis:e.fluorosis||"none",events:e.events,yearly:e.yearly}}var ee={name:"Typical",firstVisit:3,kidVisits:"yearly",kidSugar:4,sealants:!1,sugar:3,sodas:1,brushing:"twice",interdental:"sometimes",visits:"yearly",job:"office"},Q={prevention:{...ee,name:"Prevention Pro",firstVisit:1,kidVisits:"every6",kidSugar:2,sealants:!0,sugar:2,sodas:0,interdental:"daily",electricBrush:!0,visits:"every6",bookNext:!0},typical:ee,baker:{...ee,name:"The Baker",job:"baker"},soda:{...ee,name:"The Soda Sipper",sodas:3,sipping:!0,brushing:"once",interdental:"never",visits:"pain",job:"driver",treatment:"defer"},grinder:{...ee,name:"The Grinder",job:"warehouse",nightGuard:!1},grinderGuard:{...ee,name:"Grinder + night guard",job:"warehouse",nightGuard:"auto"},hockey:{...ee,name:"Hockey, no guard",sport:"hockey",sportFrom:8,sportUntil:30,guard:"none"},hockeyGuard:{...ee,name:"Hockey + guard",sport:"hockey",sportFrom:8,sportUntil:30,guard:"custom"},avoider:{...ee,name:"The Avoider",firstVisit:"pain",kidVisits:"pain",kidDentist:"general",parentsAnxious:!0,visits:"pain",treatment:"defer"},lateBloomer:{...ee,name:"Late Bloomer (returns at 40)",firstVisit:"pain",kidVisits:"pain",kidDentist:"general",parentsAnxious:!0,visits:"pain",treatment:"defer",phases:[{age:40,set:{visits:"every6",coping:"cbt",bookNext:!0,treatment:"follow"}}]},microbiomeLow:{...ee,name:"Vaginal birth, healthy parents",birth:"vaginal",parentsOral:"healthy",salivaSharing:!1},microbiomeHigh:{...ee,name:"C-section, parents w/ decay",birth:"csection",parentsOral:"poor",salivaSharing:!0},smoker:{...ee,name:"Smoker (quits at 50)",smoking:"smoker",phases:[{age:50,set:{smoking:"never"}}]},nightSnacker:{...ee,name:"Night snacker",bedtimeSnack:!0},mealtime:{...ee,name:"Sweets with meals + gum",withMeals:!0,gum:!0},dryMouth:{...ee,name:"Dry-mouth meds from 55",phases:[{age:55,set:{dryMouthMeds:!0}}]}},Mo={...ee,name:"Maya",job:"baker",firstVisit:1,kidVisits:"every6",sealants:!0},Zo={...Mo,name:'Maya: "Book it"'},et={...Mo,name:'Maya: "Later..."',phases:[{age:34,set:{visits:"pain"}}]},ns={...Mo,name:"Maya: the Acid Clock over a life",bedtimeBottle:!0,kidSugar:4,phases:[{age:13,set:{sodas:2,sipping:!0}},{age:34,set:{sodas:1,sipping:!1,withMeals:!0,gum:!0}},{age:62,set:{dryMouthMeds:!0}}]};var ls={meal:"plate",dessertMeal:"cupcake",cereal:"plate",fruit:"apple",driedFruit:"apple",candy:"candy",chewy:"candy",chocolate:"cookie",pastry:"cupcake",tasting:"cupcake",cookies:"cookie",chips:"chips",bread:"plate",yogurtSweet:"icecream",soda:"soda",dietSoda:"dietSoda",juice:"juiceBox",juiceBottle:"bottle",milkBottle:"bottle",sportsDrink:"sportsDrink",energy:"energy",sweetCoffee:"mug",coffee:"mug",milk:"sippy",wine:"mug",nuts:"apple",veggies:"apple",cheese:"cheese",gum:"gum",water:"water"},Ao=e=>`${Math.floor(e/60)}h ${String(e%60).padStart(2,"0")}m`;function ot(e,o,t,r,n,a,i={}){var ne,me;let{intakes:l,sleep:c,result:d}=a,p=(ne=i.start)!=null?ne:6*60,k=1440/r,b=7,v=4,M=A=>t+Math.round((b-Math.min(b,Math.max(v,A)))/(b-v)*(n-1)),C=A=>c[0]<c[1]?A>=c[0]&&A<c[1]:A>=c[0]||A<c[1],E=A=>Math.round(p+A*k)%1440;for(let A=0;A<r;A++){let P=C(E(A));e.vline(o+A,t,t+n-1,P?s.blue4:s.cream)}let u=M(6.2),O=M(5.5);for(let A=0;A<r;A+=3)e.px(o+A,u,s.gold1);let X=[];for(let A=0;A<r;A++){let P=14;for(let w=0;w<Math.ceil(k);w++)P=Math.min(P,d.curve[(Math.floor(p+A*k)+w)%1440]);X.push(P)}for(let A=0;A<r;A++)if(X[A]<5.5){let P=M(X[A]);e.rect(o+A,O+1,1,P-O,s.red3);for(let w=O+1;w<=P;w++)(A+w)%2===0&&e.px(o+A,w,s.red2)}e.hline(o,o+r-1,O,s.red1);for(let A=0;A<r;A++){let P=M(X[A]),w=A+1<r?M(X[A+1]):P;e.vline(o+A,Math.min(P,w),Math.max(P,w),s.ink)}e.frame(o-1,t-1,r+2,n+2,s.ink);for(let A=0;A<r;A++){let P=X[A]<5.5?s.red1:X[A]>=6?s.teal2:s.mist;e.vline(o+A,t+n+2,t+n+3,P)}let B=[];for(let A=0;A<r;A++)C(E(A))&&B.push(A);if(B.length>20&&i.zzz!==!1){let A=B[Math.floor(B.length/2)];e.sprite(to.zzz,o+A-3,t+n-9)}let H=t-2,g=[];for(let A of l){let P=T[ls[A.food]]||T.apple,w=(A.t-p+1440)%1440/k,W=o+Math.round(w)-Math.floor(P.w/2),S=0;for(;g.some(Y=>Math.abs(Y.x-W)<Math.max(Y.w,P.w)+1&&Y.lift===S);)S+=7;g.push({x:W,w:P.w,lift:S});let V=H-P.h-S;e.sprite(P,W,V);let K=(me=A.sip)!=null?me:0;K>=30&&e.hline(o+Math.round(w),Math.min(o+r-1,o+Math.round(w+K/k)),H,s.red1)}if(i.axis)for(let[A,P]of[[6*60,"6am"],[12*60,"noon"],[18*60,"6pm"],[0,"midnight"],[6*60+1439,"6am"]]){let w=Math.round((A-p+1440)%1440/k)+(P==="6am"&&A>1440?r-1:0),W=Math.min(o+r-1,o+w);e.vline(W,t+n+4,t+n+5,s.ink2);let S=oo(P);e.text(P,Math.max(o-1,Math.min(o+r-S+1,W-Math.floor(S/2))),t+n+7,s.shade)}return{yRoot:u,yEnamel:O}}var zs={young:{skin:Le.tan,hair:ie.black,top:$.coral,bottom:$.denim,shoes:$.brown},older:{skin:Le.tan,hair:ie.pepper,top:$.white,bottom:$.brown,acc:$.sage,shoes:$.brown}};var Po={strong:{label:"Strong evidence",short:"Strong"},moderate:{label:"Moderate evidence",short:"Moderate"},low:{label:"Low certainty",short:"Low"},emerging:{label:"Emerging",short:"Emerging"}};var Je=[{id:"fluoridePaste",shelf:"brush",name:"Fluoride toothpaste, twice a day",badge:"strong",generic:!0,icon:"paste",what:"Any fluoride toothpaste (1,000\u20131,450 ppm). Spit, don't rinse, especially at night.",known:"Prevents about a quarter of new cavities compared with non-fluoride paste.",source:{label:"Marinho 2003, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002278/full"},game:"Decay \xD70.76, and halves the extra risk from a heavy Acid Clock.",set:{fluorideToothpaste:!0,brushing:"twice"}},{id:"kidPaste",shelf:"brush",name:"For little kids: a rice-grain smear, then a pea",badge:"strong",generic:!0,icon:"toothbrush",what:"Fluoride toothpaste from the first tooth: a smear the size of a grain of rice under 3, a pea-sized dab from 3 to 6. Supervise, and help them spit.",known:"Keeps the cavity protection of fluoride while limiting how much is swallowed. Very mild fluorosis is common and mostly unnoticeable; the link to paste amount is weak.",source:{label:"ADA guideline 2014, JADA",url:"https://jada.ada.org/article/S0002-8177(14)60226-9/fulltext"},game:"No paste before 6: cavities by 5 go from 28% to 45%. A full ribbon: fluorosis 65% \u2192 81% (mostly very mild).",set:{kidPaste:"recommended"}},{id:"electricBrush",shelf:"brush",name:"Electric toothbrush",badge:"low",generic:!0,icon:"eBrush",what:"A powered brush, ideally with a two-minute timer.",known:"11\u201321% less plaque and less gingivitis than a manual brush; clinical importance unclear.",source:{label:"Yaacob 2014, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002281.pub3/full"},game:"Less plaque: calmer gums and a slightly shallower Acid Clock.",set:{electricBrush:!0}},{id:"interdental",shelf:"brush",name:"Cleaning between teeth",badge:"low",generic:!0,icon:"picks",what:"Interdental brushes or floss, daily. Brushes may work better than floss.",known:"May reduce gingivitis and plaque; low to very low certainty; no trials measured decay.",source:{label:"Worthington 2019, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD012018.pub2/full"},game:"Less plaque between teeth: fewer gum weeds.",set:{interdental:"daily"}},{id:"xylitolPaste",shelf:"brush",name:"Xylitol toothpaste",badge:"low",generic:!0,icon:"paste",what:"Fluoride toothpaste with 10% xylitol.",known:"May reduce decay by about 13% more than fluoride alone; low-quality evidence.",source:{label:"Riley 2015, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD010743.pub2/abstract"},game:"No extra effect in the model (evidence too uncertain).",set:null},{id:"postbiotic",shelf:"brush",name:"Postbiotic toothpaste (e.g. from S. dentisani)",badge:"emerging",generic:!1,icon:"paste",what:"Pastes with compounds from health-associated bacteria that push back on acid-loving species.",known:"Small trials: fewer S. mutans and higher pH while used, with brief colonization. No trials yet with cavities as the outcome.",source:{label:"Systematic review 2025, J Oral Microbiol",url:"https://pubmed.ncbi.nlm.nih.gov/41477312/"},game:"Fewer sugar weeds while used (the measured mechanism). Any effect on cavities comes only through that.",set:{postbiotic:!0}},{id:"highFluoride",shelf:"brush",name:"Prescription 5,000 ppm fluoride toothpaste",badge:"strong",generic:!0,dentistOnly:!0,icon:"paste",what:"For high-risk mouths, especially exposed roots, dry mouth or braces. Ask your dentist.",known:"Prevents new root cavities and hardens existing ones in older adults, more than regular paste.",source:{label:"Network meta-analysis 2026",url:"https://pubmed.ncbi.nlm.nih.gov/41720286/"},game:"Root decay \xD70.6 and more early lesions harden.",set:{highFluoride:!0}},{id:"withMeals",shelf:"food",name:"Sweets as dessert, not snacks",badge:"strong",generic:!0,icon:"cupcake",what:"Same sweets, eaten with a meal instead of between meals.",known:"Sugar between meals, especially sticky sweets, caused far more decay than sugar at meals.",source:{label:"Vipeholm study (1954)",url:"https://www.dentalcare.com/en-us/ce-courses/ce713/vipeholm-study"},game:"Three snacks' acid time: 2h 06m. As dessert: 57m.",set:{withMeals:!0}},{id:"gum",shelf:"food",name:"Sugar-free gum after eating",badge:"moderate",generic:!0,icon:"gum",what:"Chew for about 20 minutes after meals and snacks.",known:"About 28% fewer new cavities; trials of moderate quality with variable effect.",source:{label:"Newton 2020, JDR Clin Transl Res",url:"https://pubmed.ncbi.nlm.nih.gov/31743654/"},game:"Saliva returns faster: acid time 2h 06m \u2192 1h 11m.",set:{gum:!0}},{id:"waterBottle",shelf:"food",name:"A water bottle instead of sipping",badge:"moderate",generic:!0,icon:"water",what:"Keep sodas and sweet coffee to meals; sip water in between.",known:"Sugar frequency drives decay; sipping keeps plaque pH down for hours.",source:{label:"Stephan curve, dentalcare CE713",url:"https://www.dentalcare.com/en-us/ce-courses/ce713/stephan-curve"},game:"Two sodas sipped: 5h 33m of acid. With meals: 3h 18m.",set:{sipping:!1}},{id:"sealants",shelf:"chair",name:"Sealants on new molars",badge:"strong",generic:!0,dentistOnly:!0,icon:"sticker",what:"A thin coating in the grooves of back teeth, ideally soon after they come in (around 6 and 12).",known:"Large reduction in chewing-surface decay while the sealant stays on.",source:{label:"Ahovuo-Saloranta 2017, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD001830.pub5/full"},game:"Chewing-surface decay \xD70.25 while retained.",set:{sealants:!0}},{id:"varnish",shelf:"chair",name:"Fluoride varnish",badge:"strong",generic:!0,dentistOnly:!0,icon:"paste",what:"Painted on at checkups, especially for kids and high-risk adults.",known:"About 43% fewer cavities in permanent teeth, 37% in baby teeth.",source:{label:"Marinho 2013, Cochrane",url:"https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD002279.pub2/full"},game:"Applied at visits when an early lesion is found.",set:{visits:"every6"}},{id:"sdf",shelf:"chair",name:"Silver diamine fluoride (SDF)",badge:"strong",generic:!0,dentistOnly:!0,icon:"pill",what:"A liquid painted on a cavity to stop it. No drill, no needle. It stains the decay black.",known:"About 81% of treated cavities in baby teeth stop progressing.",source:{label:"Meta-analysis, JADA / PubMed 28972954",url:"https://pubmed.ncbi.nlm.nih.gov/28972954/"},game:"Kids' cavities painted instead of drilled; most stop.",set:{modernCare:!0}},{id:"infiltration",shelf:"chair",name:"Resin infiltration (e.g. ICON)",badge:"strong",generic:!1,dentistOnly:!0,icon:"sticker",what:"Seals an early, not-yet-broken lesion between teeth with resin. No drilling.",known:"Firm evidence that it stops early proximal lesions; less effect once decay reaches dentin.",source:{label:"Systematic review 2023",url:"https://pubmed.ncbi.nlm.nih.gov/36675656/"},game:"Early lesions progress about a third as often.",set:{modernCare:!0}},{id:"nightGuard",shelf:"chair",name:"Custom night guard",badge:"low",generic:!1,dentistOnly:!0,icon:"guard",what:"Made by your dentist if you grind. It protects teeth; it doesn't stop the habit.",known:"Protection is plausible; effect on grinding itself not shown.",source:{label:"Research notes",url:"https://github.com/YourLifewithAI/AvoidTheDentist/blob/claude/keen-davinci-xhh5au/docs/research/clinical-evidence.md"},game:"Cracks and jaw pain from grinding drop while worn.",set:{nightGuard:!0}},{id:"mouthguard",shelf:"chair",name:"Sports mouthguard",badge:"moderate",generic:!0,icon:"guard",what:"Custom from the dentist or boil-and-bite, for contact sports.",known:"Fewer dental injuries (unverified pooled estimate \xD7~0.55).",source:{label:"Knapik 2007 (to verify)",url:"https://pubmed.ncbi.nlm.nih.gov/?term=Knapik+2007+mouthguards+sport+injury+prevention+effectiveness"},game:"Sports injuries \xD70.45\u20130.55.",set:{guard:"custom"}},{id:"sleepCare",shelf:"body",name:"Get snoring and sleep apnea checked",badge:"low",generic:!0,icon:"calendar",what:"Ask your doctor. CPAP or a dentist-made advancement appliance can help.",known:"Apnea connects with grinding and a dry mouth at night; treatment reduced grinding in about 60% in a small study.",source:{label:"Pilot study 2023",url:"https://pubmed.ncbi.nlm.nih.gov/36867294/"},game:"Treated apnea: less grinding, a less dry mouth at night.",set:{sleepApnea:"treated"}},{id:"refluxCare",shelf:"body",name:"Mention heartburn or reflux",badge:"strong",generic:!0,icon:"calendar",what:"Tell your doctor and your dentist. Don't brush right after reflux; rinse with water.",known:"Reflux connects strongly with acid wear (erosion).",source:{label:"Meta-analysis 2022",url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9316498/"},game:"Night acid with no food on the shelf; acid wear and cold sensitivity.",set:null},{id:"dryMouthCare",shelf:"body",name:"Dry mouth: sip water, sugar-free lozenges",badge:"low",generic:!0,icon:"water",what:"If a medication dries your mouth, ask about alternatives. Never use sugary candies for relief.",known:"Low saliva slows acid recovery and repair; relief products have low-certainty evidence for comfort.",source:{label:"Dawes 2008, JADA",url:"https://pubmed.ncbi.nlm.nih.gov/18460676/"},game:"Candies for relief: 8h of acid a day. Sugar-free: none.",set:null},{id:"microbiomeTest",shelf:"tests",name:"Oral microbiome test (shotgun sequencing)",badge:"emerging",generic:!1,icon:"calendar",what:'A "soil test" for the garden: which bacteria are there, and how much. Re-test after a change and see for yourself.',known:"Sequencing can tell periodontitis from health well (AUC ~0.9) and decay less well (~0.8). No trials yet show testing alone improves outcomes.",source:{label:"Metagenomics review 2025",url:"https://pubmed.ncbi.nlm.nih.gov/41800013/"},game:"Reveals your garden and hidden risk; the benefit comes from what you change.",set:{knowsRisk:!0}},{id:"riskCheck",shelf:"tests",name:"A caries risk assessment at your checkup",badge:"moderate",generic:!0,dentistOnly:!0,icon:"calendar",what:"Your dentist sets your checkup interval and prevention plan by your risk.",known:"Low-risk adults do about as well with longer recall intervals; high-risk mouths need more.",source:{label:"Clarkson 2020, INTERVAL (to verify)",url:"https://pubmed.ncbi.nlm.nih.gov/?term=Clarkson+2020+INTERVAL+dental+recalls+trial"},game:"Personalized advice: targeted prevention for high-risk mouths.",set:{knowsRisk:!0}}];var Ie={flower:h(`
+.p.p.
+ppypp
+.pgp.
+..g..
+.gg..
+..g..
+`,{p:"pink2",y:"gold2",g:"green2"}),flower2:h(`
+.w.w.
+wwyww
+.wgw.
+..g..
+..gg.
+..g..
+`,{w:"white",y:"gold1",g:"green2"}),flower3:h(`
+..b..
+.bbb.
+..g..
+.gg..
+..g..
+`,{b:"blue3",g:"green2"}),sugarWeed:h(`
+..y...y..
+.yoy.yoy.
+..k...k..
+k.k.k.k.k
+.kkk.kkk.
+k.kkkkk.k
+.k.kkk.k.
+...kkk...
+..k.k.k..
+`,{y:"gold2",o:"gold0",k:"green0"}),gumWeed:h(`
+...q.....q..
+..qpq.p.qpq.
+.qp.pqpqp.pq
+qp...p.p...p
+p..........p
+`,{q:"plum0",p:"plum2"}),sprout:h(`
+g.g
+.g.
+`,{g:"green3"}),soilKit:h(`
+.oooo.
+okkkko
+oxyzxo
+okkkko
+.oooo.
+`,{k:"white",x:"green2",y:"gold2",z:"plum2"}),can:h(`
+....oo.
+.ooooo.
+oxxxxo.
+oxxxxooo
+oxxxxo..
+.oooo...
+`,{x:"teal2"})},De=(e,o)=>{let t=e*374761393+o*668265263|0;return t=(t^t>>>13)*1274126177,((t^t>>>16)>>>0)/4294967296};function tt(e,o,t,r,n,a,i={}){let l=t+Math.round(n*.42);e.rect(o,t,r,l-t,s.day1||s.blue4),e.rect(o,t,r,3,s.blue4);for(let u=o+1;u<o+r;u+=7)e.rect(u,l-14,5,14,s.wood4),e.vline(u+4,l-14,l-1,s.wood3),e.px(u+2,l-15,s.wood4);e.hline(o,o+r-1,l-10,s.wood2),e.hline(o,o+r-1,l-4,s.wood2),e.rect(o,l,r,t+n-l,s.green2),e.dither(o,l,r,3,s.green3,.5);let c=l+6,d=t+n-c-3,p=a.dry>.3?s.wood3:s.wood1;if(e.rect(o+3,c,r-6,d,p),e.dither(o+3,c,r-6,d,a.dry>.3?s.wood4:s.wood0,.25),a.dry>.3)for(let u=0;u<Math.round(r/9);u++){let O=o+6+Math.floor(De(u,9)*(r-12)),X=c+2+Math.floor(De(u,10)*(d-4));e.px(O,X,s.wood0),e.px(O+1,X+1,s.wood0),e.px(O+2,X+1,s.wood0),e.px(O-1,X-1,s.wood0)}let k=Math.max(6,Math.floor((r-12)/9)),b=Math.round(a.sugar*k*.8),v=Math.max(0,Math.round(a.flowers*k)),M=[...Array(k).keys()].sort((u,O)=>De(u,1)-De(O,1)),C=[Ie.flower,Ie.flower2,Ie.flower3];M.forEach((u,O)=>{let X=o+7+Math.floor(u*((r-16)/k)),B=c-3+Math.floor(De(u,2)*Math.max(1,d-6)),H=null;O<b?H=Ie.sugarWeed:O<b+v?H=a.dry>.3&&De(u,3)<.4?Ie.sprout:C[u%3]:De(u,4)<.5&&(H=Ie.sprout),H&&e.sprite(H,X,B-H.h+4)});let E=Math.round(a.gum*(r-10)/11);for(let u=0;u<E;u++)e.sprite(Ie.gumWeed,o+4+Math.floor(De(u,7)*(r-18)),t+n-8);e.frame(o,t,r,n,s.ink)}var ir={skin:Le.brown,hair:ie.black,top:$.sky,bottom:$.sky,shoes:$.white};var lr={strong:s.green2,moderate:s.teal2,low:s.gold2,emerging:s.plum3};var cr=h(`
+..y..
+.yyy.
+yyyyy
+.y.y.
+`,{y:"gold2"});var ao={},st="Some links may earn us a small commission. It never changes what we suggest: suggestions come from your life story and the evidence.";var R=e=>document.getElementById(e),ge=e=>String(e).replace(/[&<>"]/g,o=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[o]),Qe=e=>"$"+Math.round(e).toLocaleString("en-US"),rt=matchMedia("(prefers-reduced-motion: reduce)").matches;function Ze(e,o){e.width=o.w,e.height=o.h,e.getContext("2d").putImageData(new ImageData(o.data,o.w,o.h),0,0),it(e)}function it(e){let o=window.devicePixelRatio||1,t=e.parentElement.clientWidth*o,r=Math.max(1,Math.floor(t/e.width));e.style.width=e.width*r/o+"px",e.style.height=e.height*r/o+"px"}new ResizeObserver(()=>document.querySelectorAll("canvas").forEach(e=>e.width&&it(e))).observe(document.body);function qe(e){for(let t of document.querySelectorAll(".screen"))t.hidden=t.id!==e;window.scrollTo(0,0);let o=R(e).querySelector("h1, h2");o&&(o.setAttribute("tabindex","-1"),o.focus({preventScroll:!0}))}var lt=[{id:"kid",q:"Growing up, how often did you see a dentist?",options:[["Regular checkups",{kidVisits:"every6",firstVisit:1}],["Now and then",{kidVisits:"yearly",firstVisit:3}],["Only for problems",{kidVisits:"pain",firstVisit:"pain"}]]},{id:"snacks",q:"Sweet snacks on a normal day?",help:"Candy, cookies, pastries, chips, dried fruit.",options:[["0 or 1",{sugar:1}],["2 or 3",{sugar:3}],["4 or more",{sugar:5}]]},{id:"timing",q:"When do the sweets usually happen?",options:[["Mostly with meals",{withMeals:!0}],["Between meals",{withMeals:!1}]]},{id:"drinks",q:"Sugary drinks a day?",help:"Soda, sweet coffee or tea, juice, energy or sports drinks.",options:[["None",{sodas:0}],["One",{sodas:1}],["Two or more",{sodas:3}]]},{id:"sip",q:"Do you sip drinks slowly, over an hour or more?",when:e=>e.drinks!==0,options:[["Yes, usually",{sipping:!0}],["No, I finish them",{sipping:!1}]]},{id:"bedtime",q:"A snack or sweet drink after brushing at night?",options:[["Often",{bedtimeSnack:!0}],["Rarely",{bedtimeSnack:!1}]]},{id:"brush",q:"How often do you brush?",options:[["Twice a day",{brushing:"twice",fluorideToothpaste:!0}],["Once a day",{brushing:"once",fluorideToothpaste:!0}],["Some days",{brushing:"rarely",fluorideToothpaste:!0}]]},{id:"floss",q:"Clean between your teeth?",help:"Floss, interdental brushes or picks.",options:[["Daily",{interdental:"daily"}],["Sometimes",{interdental:"sometimes"}],["Rarely",{interdental:"never"}]]},{id:"visits",q:"Dental checkups these days?",options:[["Every 6 months",{visits:"every6"}],["Once a year",{visits:"yearly"}],["When something hurts",{visits:"pain"}],["Hardly ever",{visits:"never"}]]},{id:"job",q:"What is your work like?",options:[["Desk or office",{job:"office"}],["Food or baking",{job:"baker"}],["Physical, lifting",{job:"warehouse"}],["Night shifts",{job:"nurse"}],["Driving",{job:"driver"}],["Teaching",{job:"teacher"}]]},{id:"sport",q:"Contact sports?",options:[["No",{sport:"none"}],["Yes, with a mouthguard",{sport:"hockey",sportUntil:35,guard:"boil"}],["Yes, without one",{sport:"hockey",sportUntil:35,guard:"none"}]]},{id:"smoke",q:"Smoke or vape?",options:[["No",{smoking:"never"}],["Smoke",{smoking:"smoker"}],["Vape",{smoking:"vaper"}]]},{id:"body",q:"Any of these? Tap all that apply.",multi:!0,options:[["Dry mouth, or a medication that dries it",{dryMouthMeds:!0}],["Heartburn or reflux",{reflux:!0}],["Snoring or sleep apnea",{sleepApnea:"untreated"}],["I clench or grind",{grinds:!0}]]}],ve={},xe=0;function Ho(){return lt.filter(e=>!e.when||e.when(ve))}function io(){let e=Ho(),o=e[xe];R("q-progress").textContent=`${xe+1} of ${e.length}`,R("q-bar").style.width=`${Math.round((xe+1)/e.length*100)}%`,R("q-text").textContent=o.q,R("q-help").textContent=o.help||"";let t=ve[o.id];R("q-options").innerHTML=o.options.map(([r],n)=>{let a=o.multi?(t||[]).includes(n):t===n;return`<button type="button" class="opt" data-i="${n}" aria-pressed="${a}">${ge(r)}</button>`}).join("")+(o.multi?`<button type="button" class="opt primary" data-next="1">${(t||[]).length?"Next":"None of these"}</button>`:""),R("q-back").hidden=xe===0}R("q-options").addEventListener("click",e=>{let o=e.target.closest("button");if(!o)return;let t=Ho(),r=t[xe];if(o.dataset.next)return nt();let n=+o.dataset.i;if(r.multi){let a=new Set(ve[r.id]||[]);a.has(n)?a.delete(n):a.add(n),ve[r.id]=[...a],io()}else ve[r.id]=n,r.id==="drinks"&&(ve.drinks=n===0?0:n),nt()});R("q-back").addEventListener("click",()=>{xe=Math.max(0,xe-1),io()});function nt(){let e=Ho();if(xe<e.length-1){xe++,io();return}let o={...Q.typical,name:"Your life",sealants:!0,phases:[]};for(let t of lt){if(t.when&&!t.when(ve))continue;let r=ve[t.id];if(r!=null)for(let n of t.multi?r:[r])Object.assign(o,t.options[n][1])}ve.drinks===0&&(o.sipping=!1),Lo(o,"your life")}var ct=[["typical","A typical life","Three snacks, a soda, yearly checkups, an office job.",Q.typical],["prevention","Prevention Pro","Sealants, few snacks, daily flossing, checkups every 6 months.",Q.prevention],["mealtime","Sweets with meals","Same sweets, eaten as dessert, plus sugar-free gum after eating.",Q.mealtime],["baker","The Baker","Tasting the bakes from 5 am, every workday.",Q.baker],["soda","The Soda Sipper","Three sodas sipped all day, brushing once, visits only for pain.",Q.soda],["nightSnacker","The night snacker","A snack after brushing, most nights.",Q.nightSnacker],["avoider","The Avoider","A scary visit as a kid, then only for pain.",Q.avoider],["lateBloomer","The Late Bloomer","Avoids the dentist, then comes back at 40.",Q.lateBloomer],["grinder","The Grinder","Lifting at work, clenching, no night guard.",Q.grinder],["hockey","Hockey, no mouthguard","Plays from 8 to 30 without a guard.",Q.hockey],["smoker","The Smoker","Smokes from 18, quits at 50.",Q.smoker],["dryMouth","Dry mouth at 55","A medication that dries the mouth, from 55.",Q.dryMouth],["reflux","Reflux at night","Heartburn from 40, untreated.",{...Q.typical,name:"Reflux at night",phases:[{age:40,set:{reflux:!0}}]}],["apnea","Sleep apnea","Snoring and apnea from 45, untreated.",{...Q.typical,name:"Sleep apnea",phases:[{age:45,set:{sleepApnea:"untreated"}}]}],["bottle","The bedtime bottle","A juice bottle in bed as a toddler.",{...Q.typical,name:"The bedtime bottle",bedtimeBottle:!0,firstVisit:"pain"}],["mayaBook",'Maya at 34: "Book it"',"The dentist calls. She books the visit.",Zo],["mayaLater",'Maya at 34: "Later..."',"The dentist calls. She puts it off.",et]];R("story-list").innerHTML=ct.map(([e,o,t])=>`<button type="button" class="story" data-id="${e}"><strong>${ge(o)}</strong><span>${ge(t)}</span></button>`).join("");R("story-list").addEventListener("click",e=>{let o=e.target.closest("button[data-id]");if(!o)return;let t=ct.find(r=>r[0]===o.dataset.id);Lo({...t[3],phases:t[3].phases||[]},t[1])});var _=null,Fe=null,cs=()=>1+Math.floor(Math.random()*99999);function Xe(e,o){let t={...e};for(let r of e.phases||[])o>=r.age&&Object.assign(t,r.set);return t}var ds={firstVisit:"First dental visit",advice:e=>`The dentist's tip: ${e.what}`,trauma:"An accident knocks a tooth",fall:"A tumble chips a baby tooth",wisdomTeeth:"Wisdom teeth out",braces:"Braces!",scaryVisit:"A scary visit",enduredPain:e=>`Puts up with ${e.why||"a toothache"}`,er:"ER visit for tooth pain (it can't fix the tooth)",extraction:e=>`A tooth is pulled${e.cause==="perio"?" (gum disease)":""}`,implant:"An implant replaces a tooth",crack:"A tooth cracks",diabetes:"Diagnosed with diabetes",deepCleaning:"Deep cleaning for gum disease",nightGuard:"Gets a night guard",dentures:"Dentures",partialDenture:"A partial denture",fullClearance:"All remaining teeth removed",generalAnesthesia:"Dental work under anesthesia",cbt:"Works on dental fear with a therapist",sdf:"A cavity painted with SDF: no drill",infiltration:"An early cavity sealed with resin",fluorosis:e=>e.grade==="moderate"?"Fluorosis patches on the front teeth":null,cosmeticFix:"Fluorosis spots fixed",replacementFails:"A replacement fails",prosthesisRedo:"Denture remade"},hs=e=>{let o=ds[e.type];return typeof o=="function"?o(e):o||null};function Do(e){let o={skin:Le.tan,shoes:$.brown};return e<1?{head:"baby",body:"baby",arms:null,look:{...o,hair:ie.black,top:$.butter,bottom:$.butter}}:e<4?{head:"toddler",body:"toddler",arms:null,look:{...o,hair:ie.black,top:$.rose,bottom:$.denim}}:e<13?{head:"pigtails",body:"kidDress",arms:"kid",look:{...o,hair:ie.black,top:$.mint,bottom:$.mint}}:e<19?{head:"long",back:"long",body:"teenHoodie",arms:"teen",look:{...o,hair:ie.black,top:$.lilac,bottom:$.denim}}:e<50?{head:"bun",body:"tee",arms:"down",look:{...o,hair:ie.black,top:$.teal,bottom:$.denim}}:e<68?{head:"bob",body:"cardigan",arms:"down",glasses:!0,look:{...o,hair:ie.pepper,top:$.white,bottom:$.brown,acc:$.sage}}:{head:"curlyShort",body:"cardigan",arms:"cane",glasses:!0,look:{...o,hair:ie.white,top:$.white,bottom:$.grey,acc:$.plum}}}function us(e,o,t){let r=o.yearly[Math.min(79,Math.floor(e))],n=o.yearly[Math.max(0,Math.floor(e)-1)],a=Xe(t,e),i=[];e>=13&&a.sodas>=2?i.push("soda:3"):e>=13&&a.sodas===1?i.push("soda:1"):i.push("fruit"),e>=13&&(a.sugar>=4||a.bedtimeSnack)?i.push("cookies"):i.push("water"),r.oop-n.oop>1500&&i.push("bills");let l=r.walletNoDental>0?Math.max(0,r.wallet)/r.walletNoDental:1,c=e<25?1:Math.round(Math.min(4,e/15)*Math.min(1,l)),d=new we(320,180);bo(d,{time:e%10<5?"day":"dusk",moon:[300,58],cat:e>25,counter:i,fridgeNotes:a.visits==="pain"||a.visits==="never"?["postcards"]:["calendar"],dreams:c,savings:Math.min(1,l)});let p=r.painDays-n.painDays>=3,k=r.selfConscious>n.selfConscious&&e>=13,b=Do(e),v=p?"wince":k?"sad":e<4?"happy":"smile",M=b.arms===null?null:p?"cheek":k?"cover":b.arms,C=$e(d,176,154,{...b,face:v==="happy"&&e>=1?"smile":v,arms:M});return p&&d.sprite(to.pain,193,C.headY+6),d}function Lo(e,o){_={plan:e,label:o,seed:cs()},_.life=Oe(e,_.seed,{log:!0}),qe("play"),R("play-title").textContent=o==="your life"?"Your life":o,R("feed").innerHTML="";let t=0,r=-1,n=_.life.events,a=()=>{let i=Math.min(79,Math.floor(t));if(i!==r){for(let l=r+1;l<=i;l++){let c=_.life.yearly[l],d=_.life.yearly[Math.max(0,l-1)],p=n.filter(k=>Math.floor(k.age)===l).map(hs).filter(Boolean);l>0&&c.missing>d.missing&&!p.some(k=>/pulled|removed|knocks/.test(k))&&p.push(c.missing-d.missing===1?"A tooth is lost":`${c.missing-d.missing} teeth lost`);for(let k of[...new Set(p)].slice(0,2)){let b=document.createElement("li");for(b.innerHTML=`<span class="age">${l}</span> ${ge(k)}`,R("feed").prepend(b);R("feed").children.length>6;)R("feed").lastChild.remove()}}r=i,R("play-age").textContent=`Age ${i}`,R("play-bar").style.width=`${Math.round(i/79*100)}%`,Ze(R("scene"),us(t,_.life,e))}t+=rt?2:.35,t>=80&&(clearInterval(Fe),Fe=null,setTimeout(()=>dt(),rt?0:700))};clearInterval(Fe),Fe=setInterval(a,90),a()}R("skip").addEventListener("click",()=>{clearInterval(Fe),Fe=null,dt()});function dt(){let{life:e,plan:o}=_;qe("story"),R("story-title").textContent=_.label==="your life"?"Your life story":`${_.label}: the life story`;let t=e.money.outOfPocket+e.money.parentsPaid,r=[["Spent on teeth",Qe(t),"out of pocket, over a lifetime"],["Teeth lost by 80",String(e.missingAt[80]),e.missingAt[80]===0?"kept every one":"of 28 adult teeth"],["Days in pain",String(e.painDays),"toothaches, sensitivity, sore jaw"],["Years hiding a smile",String(e.selfConsciousYears),"covering a gap or a stain"]];R("tiles").innerHTML=r.map(([d,p,k])=>`<div class="tile"><span class="label">${d}</span><span class="value">${p}</span><span class="sub">${k}</span></div>`).join(""),R("whatelse").textContent=e.money.fv65>2e3?`The dental bills before 65, invested at 5% a year instead, would be worth about ${Qe(e.money.fv65)} at 65. That's a lot of trips, guitars or rent.`:"Barely any dental bills before 65: the money went to the rest of life.";let n=Xe(o,35),a=Ce(n,{age:35,job:n.job,working:!0,sportActive:n.sport!=="none"&&35<(n.sportUntil||22)}),i={twice:.4,once:.55,rarely:.8}[n.brushing]-({daily:.12,sometimes:.05,never:0}[n.interdental]||0),l=Ge(a.intakes,Re({PI:i,saliva:n.dryMouthMeds?.5:1,nightDry:n.sleepApnea==="untreated"?.4:1}),a.sleep),c=new we(240,60).clear(s.paper);ot(c,12,18,216,30,{intakes:a.intakes,sleep:a.sleep,result:l},{axis:!1}),Ze(R("acid"),c),R("acid-note").textContent=`On a workday at 35, your teeth spend ${Ao(l.acidMinutes)} below pH 5.5, where enamel dissolves${l.sleepAcid?`, ${Ao(l.sleepAcid)} of it asleep, when saliva nearly stops`:""}. The longest stretch is ${l.longest} minutes. Frequent sipping and snacking keep the line down; dessert with meals, gum and water bring it back up.`;for(let[d,p]of[["garden35",35],["garden70",70]]){let k=e.yearly[p].garden,b=new we(160,80);tt(b,0,0,160,80,k),Ze(R(d),b),R(d+"-cap").textContent=`At ${p}: sugar weeds ${Math.round(k.sugar*100)}%, gum weeds ${Math.round(k.gum*100)}%${k.dry>.3?", dry soil":""}`}fs(),ps(),R("hundred-out").innerHTML="",R("hundred").disabled=!1}var To=[["Sweets with meals instead of snacks",e=>!e.withMeals&&e.sugar>=2,{withMeals:!0}],["Sugar-free gum after eating",e=>!e.gum,{gum:!0}],["Finish drinks instead of sipping",e=>e.sipping,{sipping:!1}],["No snack after brushing",e=>e.bedtimeSnack,{bedtimeSnack:!1}],["Brush twice a day",e=>e.brushing!=="twice",{brushing:"twice"}],["Clean between teeth daily",e=>e.interdental!=="daily",{interdental:"daily"}],["Checkups every year",e=>e.visits==="pain"||e.visits==="never",{visits:"yearly"}],["A mouthguard for sports",e=>e.sport!=="none"&&e.guard==="none",{guard:"custom"}],["A night guard",e=>e.grinds||e.job==="warehouse",{nightGuard:!0}],["Quit smoking at 30",e=>e.smoking==="smoker",{phases:[{age:30,set:{smoking:"never"}}]}],["Checkups every 6 months",e=>e.visits==="yearly",{visits:"every6"}]];function fs(){let e=Xe(_.plan,40),o=To.filter(([,t])=>t(e)).slice(0,4);R("changes").innerHTML=o.length?o.map(([t],r)=>`<button type="button" class="opt" data-c="${To.findIndex(n=>n[0]===t)}">${ge(t)}</button>`).join(""):"<p>This life is already doing the big things. Try a story to see what changes.</p>",R("change-out").textContent=""}R("changes").addEventListener("click",e=>{let o=e.target.closest("button[data-c]");if(!o)return;let[t,,r]=To[+o.dataset.c],n=[..._.plan.phases||[],...r.phases||[]],a={..._.plan,...r,phases:n};for(let k of document.querySelectorAll("#changes button"))k.setAttribute("aria-pressed",String(k===o)),k.disabled=!0;R("change-out").textContent="Living 40 pairs of lives...";let i=40,l={cost:0,teeth:0,pain:0,better:0,worse:0},c=1,d=k=>k.money.outOfPocket+k.money.parentsPaid,p=()=>{for(let C=0;C<5&&c<=i;C++,c++){let E=Oe(_.plan,5e3+c,{log:!1}),u=Oe(a,5e3+c,{log:!1});l.cost+=d(u)-d(E),l.teeth+=E.missingAt[80]-u.missingAt[80],l.pain+=E.painDays-u.painDays,u.missingAt[80]<E.missingAt[80]?l.better++:u.missingAt[80]>E.missingAt[80]&&l.worse++}if(c<=i){setTimeout(p,0);return}for(let C of document.querySelectorAll("#changes button"))C.disabled=!1;let k=l.cost/i,b=l.teeth/i,v=Math.round(l.pain/i),M=[k<-100?`${Qe(-k)} less spent`:k>100?`${Qe(k)} more spent`:"about the same money"];Math.abs(b)>=.1&&M.push(b>0?`${b.toFixed(1)} more teeth kept`:`${(-b).toFixed(1)} more teeth lost`),Math.abs(v)>=2&&M.push(v>0?`${v} fewer days in pain`:`${-v} more days in pain`),R("change-out").textContent=`${t}: on average across 40 same-luck pairs, ${M.join(", ")}. It kept more teeth in ${l.better} of 40 lives and fewer in ${l.worse}.`};p()});R("hundred").addEventListener("click",()=>{let e=R("hundred");e.disabled=!0,e.textContent="Living 100 lives...";let o=[],t=1,r=()=>{for(let v=0;v<10&&t<=100;v++,t++)o.push(Oe(_.plan,1e3+t,{log:!1}));if(t<=100){setTimeout(r,0);return}e.textContent="Live it 100 times";let n=o.filter(v=>v.missingAt[80]===0).length,a=o.filter(v=>v.counts.rct>0).length,i=o.filter(v=>v.lostBy.perio>0).length,l=o.map(v=>v.money.outOfPocket+v.money.parentsPaid).sort((v,M)=>v-M)[50],c=new we(181,61),d=getComputedStyle(document.documentElement),p=d.getPropertyValue("--better").trim(),k=d.getPropertyValue("--worse").trim(),b=["..###..",".#####.",".#####.","..###..",".#####.","#######","#.###.#","..#.#..","..#.#.."];o.forEach((v,M)=>{let C=v.missingAt[80]===0?p:k,E=M%20*9+1,u=Math.floor(M/20)*12+2;b.forEach((O,X)=>[...O].forEach((B,H)=>{B==="#"&&c.px(E+H,u+X,C)}))}),R("hundred-out").innerHTML=`<canvas id="hundred-canvas" width="181" height="61" aria-label="100 people: ${n} kept every tooth."></canvas>
+      <p><strong>${n} of 100</strong> kept every tooth to 80 (blue). ${a} needed a root canal. ${i} lost a tooth to gum disease. Typical lifetime cost: ${Qe(l)}.</p>`,Ze(R("hundred-canvas"),c)};r()});function ms(){let e=Xe(_.plan,40),o=[],t=r=>{o.includes(r)||o.push(r)};return!e.withMeals&&e.sugar>=2&&t("withMeals"),(e.sipping||e.sodas>=2)&&t("waterBottle"),e.gum||t("gum"),(e.brushing!=="twice"||!e.fluorideToothpaste)&&t("fluoridePaste"),(e.visits==="pain"||e.visits==="never")&&t("riskCheck"),(e.dryMouthMeds||Xe(_.plan,70).dryMouthMeds)&&(t("dryMouthCare"),t("highFluoride")),(e.reflux||Xe(_.plan,70).reflux)&&t("refluxCare"),(e.sleepApnea||Xe(_.plan,70).sleepApnea)&&t("sleepCare"),(e.grinds||e.job==="warehouse")&&t("nightGuard"),e.sport!=="none"&&e.guard==="none"&&t("mouthguard"),e.interdental!=="daily"&&t("interdental"),t("kidPaste"),o.slice(0,6).map(r=>Je.find(n=>n.id===r)).filter(Boolean)}function at(e){let o=ao[e.id],t=e.dentistOnly?'<p class="ask">Ask your dental team about this.</p>':o&&o.url?`<a class="buy" href="${ge(o.url)}" target="_blank" rel="noopener sponsored">${ge(o.label||"See an example")}</a>`:"";return`<article class="tool"><span class="badge" style="--c: var(--b-${e.badge})">${Po[e.badge].label}</span>
+    <h3>${ge(e.name)}</h3><p>${ge(e.what)}</p>
+    <p class="known"><strong>What's known:</strong> ${ge(e.known)} <a href="${ge(e.source.url)}" target="_blank" rel="noopener">Source</a></p>${t}</article>`}function ps(){let e=ms();R("tools").innerHTML=e.map(at).join(""),R("emerging").innerHTML=Je.filter(t=>t.badge==="emerging").map(at).join("");let o=[...e,...Je.filter(t=>t.badge==="emerging")].some(t=>{var r,n;return((r=ao[t.id])==null?void 0:r.url)&&((n=ao[t.id])==null?void 0:n.affiliate)});R("disclosure").textContent=o?st:"",R("disclosure").hidden=!o}R("go-build").addEventListener("click",()=>{ve={},xe=0,io(),qe("build")});R("go-stories").addEventListener("click",()=>qe("stories"));for(let e of document.querySelectorAll("[data-home]"))e.addEventListener("click",()=>{clearInterval(Fe),qe("welcome")});R("again").addEventListener("click",()=>Lo(_.plan,_.label));{let e=new we(320,180);bo(e,{time:"dusk",moon:[300,58],cat:!0,counter:["fruit","water"],fridgeNotes:["calendar"],dreams:3,savings:.7}),$e(e,176,154,{...Do(30),face:"grin",arms:"hold",after:[{spr:T.mug,dx:5,dy:0}]}),$e(e,176,100,{...Do(7),face:"content",arms:"kidBrush"}),Ze(R("welcome-scene"),e)}qe("welcome");"serviceWorker"in navigator&&location.protocol==="https:"&&navigator.serviceWorker.register("sw.js").catch(()=>{});})();
+</script>
+</body>
+</html>
