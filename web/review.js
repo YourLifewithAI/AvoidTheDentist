@@ -189,7 +189,7 @@ if (FEAT.seed) document.getElementById('hero-note').textContent = `Every image o
 
 for (const canvas of document.querySelectorAll('canvas[data-sheet]')) {
   const name = canvas.dataset.sheet;
-  const pix = name === 'mockupDay' ? sheets.mockupDay() : name === 'twolives' ? sheets.twolives(DATA.featured) : sheets[name]();
+  const pix = name === 'mockupDay' ? sheets.mockupDay() : name === 'twolives' ? sheets.twolives(DATA.featured) : name === 'toothpaste' ? sheets.toothpaste(DATA.paste) : sheets[name]();
   blit(canvas, pix);
   mount(canvas);
 }

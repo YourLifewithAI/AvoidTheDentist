@@ -16,6 +16,7 @@ const data = {
   featured: { seed: report.two.featured.seed, snapBookIt: snap(report.two.featured.snapBookIt), snapLater: snap(report.two.featured.snapLater) },
   summary: report.two.summary,
   levers,
+  paste: report.paste,
 };
 
 let html = readFileSync(root + 'web/review.html', 'utf8');

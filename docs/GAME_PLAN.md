@@ -4,7 +4,7 @@
 
 ![Key art: a cozy cutaway house at dusk. June brushes her teeth upstairs, Maya has an evening mug in the kitchen, the cat sleeps on the couch.](art/keyart.png)
 
-> **Status:** planning checkpoint (M0). This folder contains the plan, fourteen art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. **New in v0.2:** the Acid Clock (§4.5, §6.2), a 24-hour plaque-pH model that now drives decay in the simulation, and your answers to the open questions (§14). Every simulation number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)); fees and evidence come from the [research notes](research/).
+> **Status:** planning checkpoint (M0). This folder contains the plan, fifteen art samples built with a reusable pixel-art toolkit, and a working prototype of the hidden simulation, calibrated against CDC data. **New in v0.2:** the Acid Clock (§4.5, §6.2), a 24-hour plaque-pH model that now drives decay in the simulation, and your answers to the open questions (§14). Every simulation number in this document comes from `node sim/report.mjs` (see [SIM_REPORT.md](SIM_REPORT.md)); fees and evidence come from the [research notes](research/).
 
 ---
 
@@ -239,6 +239,19 @@ Generics come first. Newer options sit beside them, clearly labeled:
 
 Emerging tools act only through their measured mechanism. The postbiotic lowers acid-loving bacteria while it's used, and any effect on cavities follows from that alone. When the honest answer is "no visible change", the garden shows no change. "Try it" replays the same life, with the same luck, using the tool. This is also the backbone for the recommendation idea in §14: recommendations would come from the drivers of a player's outcome, filtered through these badges.
 
+**Toothpaste for little kids (a parent's choice).** A smear the size of a rice grain under 3 and a pea from 3 to 6 is the ADA's advice. The model shows why:
+
+![How much toothpaste for little kids](art/toothpaste.png)
+
+| Toddler toothpaste (typical life) | Fluorosis, very mild or worse | Moderate | Cavities in baby teeth by 5 |
+|---|---:|---:|---:|
+| Smear under 3, pea 3–6 | 64% | 1.5% | 27% |
+| Pea-sized from the first tooth | 71% | 1.5% | 27% |
+| A full ribbon | 80% | 2.5% | 27% |
+| No fluoride paste before 6 | 51% | 0.5% | 44% |
+
+Fluorosis is settled by age 6, from fluoride swallowed while the front teeth form (water plus toothpaste). The model matches the 61% of US teens with very mild or worse fluorosis. Nearly all of it is faint white flecks nobody notices. Moderate patches show from the teens on, and some people pay for a cosmetic fix. The honest lesson is a balance: skipping fluoride trades rare cosmetic flecks for many more cavities. The paste-amount effect is kept modest because the evidence linking amount to fluorosis is weak.
+
 ### 4.7 Event cards
 
 Each card has context art, two or three choices, hidden effects, and a *Why?* link that appears **after** the consequence lands. Examples by stage:
@@ -246,6 +259,7 @@ Each card has context art, two or three choices, hidden effects, and a *Why?* li
 | Age | Card | Choices | Hidden effect |
 |---|---|---|---|
 | 0.6 | "A first tooth! Your pediatrician mentions a dental visit." | Book one now / Wait until 3 / Only if there's a problem | Anticipatory guidance may fix a risky habit; varnish starts; the familiarity lowers fear |
+| 1 | "How much toothpaste on that tiny brush?" | A rice grain / A pea / A full ribbon / None yet | Cavity protection vs. fluorosis flecks (see §4.6) |
 | 1.5 | "Bedtime is easier with a bottle of juice..." | Juice / Milk / Water | An all-night Acid Clock (~3 h below pH 5.5 while asleep) plus pooling on the upper front teeth, until 4 |
 | 6 | "The dentist suggests sealants on the new molars ($42 each)." | Yes / Skip | Occlusal decay risk ×0.25 while retained |
 | 9 | "Ow! A tooth hurts. It's been a while since a checkup." | Dentist today / Wait and see | Pediatric vs. general dentist and invasiveness drive a scary or fine visit |
@@ -383,7 +397,7 @@ flowchart LR
 
 | Metric | Model | Target | Source |
 |---|---:|---:|---|
-| Caries experience, baby teeth, ages 2–5 | 23.8% | 23% | CDC OHSR 2019 ✓ |
+| Caries experience, baby teeth, ages 2–5 | 24.6% | 23% | CDC OHSR 2019 ✓ |
 | Caries experience, permanent, ages 12–19 | 55.9% | ~57% | NHANES (unverified) |
 | Caries experience, permanent, ages 20–64 | 93.7% | ~90% | NIDCR (unverified) |
 | Mean natural teeth, dentate adults, 20–34 / 50–64 / 65–74 | 27.5 / 25.4 / 24.3 | 27.0 / 23.3 / 21.7 | CDC OHSR 2024 ✓ |
@@ -585,7 +599,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 | People | 8 ages × 2 builds; 5 skin tones; 10 hairstyles; 15 outfits | 5 age builds, 15 body/outfit sprites, 12 heads, 5 skin tones ✓ |
 | Expressions and poses | 15 faces, 12 poses, 20 emote marks | 15 faces, 12 poses, 11 emotes ✓ |
 | Props | ~60 | 47 props + ~35 furniture pieces ✓ |
-| Event cards | ~60 across stages | 16 designed (§4.7) |
+| Event cards | ~60 across stages | 17 designed (§4.7) |
 | Jobs / sports | 7 / 6 | in the model ✓, art for 6 ✓ |
 | Helpers | 10 | in the design ✓ |
 | Preset lives | 12 | 12 in the model ✓ |
@@ -597,7 +611,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 
 | Milestone | Scope | Estimate* |
 |---|---|---|
-| **M0: Plan & proof** ✓ | This plan; 14 art samples; toolkit; the Acid Clock, garden and tool shed; calibrated model prototype; report; review page with a working What-If Lab | done |
+| **M0: Plan & proof** ✓ | This plan; 15 art samples; toolkit; the Acid Clock, garden and tool shed; calibrated model prototype; report; review page with a working What-If Lab | done |
 | **M1: Vertical slice** | Playable birth-to-80 life in the house at 1×/2×/4×; 20 cards; 6 helpers; year-end ledger; Life Story; local save | 3–4 weeks |
 | **M2: The comparison engine** | What-If Lab; Twin Lives side by side; 100 Lives icon array; "Why?" view with evidence badges | 2–3 weeks |
 | **M3: Content & feel** | 60 cards; all jobs and sports; animations; audio; apartment variant; era decor | 4 weeks |
@@ -652,7 +666,7 @@ The framing is *gain* for prevention ("that's Kyoto") and gentle *loss* for dete
 6. **Costs:** US-only for v1?
 7. **Art:** keep building with the code-drawn toolkit, or bring in a pixel artist for M3 animation polish?
 8. **Name:** keep *Avoid the Dentist*? Alternates: *Small Now, Big Later*; *Open Wide, Live Long*; *Tooth & Consequences*.
-9. **Built (September 2026):** the repair side of the Acid Clock, reflux and sleep apnea, the backyard garden and the tool shed. **Next:** the toothpaste-amount choice with fluorosis, then garden and shed screens inside the playable house (M1).
+9. **Built (September 2026):** the repair side of the Acid Clock, reflux and sleep apnea, the backyard garden and the tool shed. the toothpaste-amount choice with fluorosis. **Next:** the playable vertical slice (M1): the house at 1×/2×/4× with the Acid Clock strip, garden and tool shed as in-game screens.
 
 ---
 

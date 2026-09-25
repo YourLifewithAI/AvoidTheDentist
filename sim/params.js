@@ -77,6 +77,14 @@ export const P = {
   highFluorideRoot: 0.6, // 5,000 ppm toothpaste (prescription): fewer new root lesions [V; magnitude D]
   highFluorideArrest: 1.5, // ...and more existing lesions harden [V; magnitude D]
   postbioticMs: 0.9, // S. dentisani / postbiotics: lower S. mutans, higher pH while used; no caries-endpoint trials yet [mechanism V; effect D]
+  // toddler toothpaste and fluorosis (ages ~1-6, while front-tooth enamel forms)
+  // ADA 2014: a rice-grain smear under 3, pea-sized 3-6 [V]. Very mild or worse fluorosis
+  // in 61% of US 16-17 year-olds (NHANES 2011-12) [V], nearly all cosmetic; moderate or
+  // worse is uncommon [U]. The amount of paste has weak evidence for fluorosis (Cochrane) [V],
+  // so the model's effect is modest [D].
+  kidPasteF: { recommended: 0.45, pea: 0.65, lots: 1.0, none: 0 }, // fluoride swallowed, relative [D]
+  fluorosis: { veryMild: [0.22, 0.28], mild: [0.04, 0.10], moderate: [0.003, 0.012] }, // p = a + b*F (moderate: b*F^1.5) [D]
+  fluorosisFixPerYear: 0.05, // moderate fluorosis: yearly chance of a cosmetic fix at 16-25 (microabrasion, infiltration, whitening) [D]
   erosionSensitivity: 0.6, // [D] cold-sensitivity episodes/yr per extra "two sodas" of daily acid bath // [V/D] hyposalivation: unstimulated flow <0.1 vs ~0.3-0.4 mL/min
 
   // --- symptoms (episodes per year while in a state) [D]
@@ -135,7 +143,7 @@ export const P = {
     fluoride: 35, sealant: 42, fillS: 210, fillL: 300, bonding: 250,
     rctAnterior: 950, rctPremolar: 1050, rctMolar: 1175, core: 300, crown: 1300, retreat: 1200,
     extraction: 200, surgicalExtraction: 345, graft: 500, implant: 4500, bridge: 3800, partial: 2000, denture: 1750,
-    srp: 970, infiltration: 250, sdf: 40, perioMaint: 160, nightGuard: 400, mouthguardCustom: 300, mouthguardBoil: 25,
+    srp: 970, infiltration: 250, sdf: 40, fluorosisFix: 600, perioMaint: 160, nightGuard: 400, mouthguardCustom: 300, mouthguardBoil: 25,
     braces: 6000, wisdom: 2750, ga: 10000, er: 1900, cbt: 900, sedation: 350, flipper: 500, periImplant: 900,
   },
   insurance: {

@@ -36,6 +36,8 @@ const rows = [
   ['Mean CAL progression 30-60 (mm/yr)', ((band(60, 60, y => y.cal) - band(30, 30, y => y.cal)) / 30).toFixed(3), '~0.1', 'Needleman 2018 [V]'],
   ['High dental anxiety (>= 0.5), adults', pct(band(18, 79, y => (y.anxiety >= 0.5 ? 1 : 0))), '~12-15%', 'Silveira 2021 / ADHS 2009 [U]'],
 ];
+rows.push(['Fluorosis, very mild or worse (per life)', pct(lives.filter(l => l.fluorosis !== 'none').length / N), '61% (16-17)', 'NHANES 2011-12, Wiener 2018 [V]']);
+rows.push(['Fluorosis, moderate (per life)', pct(lives.filter(l => l.fluorosis === 'moderate').length / N), 'a few %', 'Dean index surveys [U]']);
 const w0 = Math.max(...rows.map(r => r[0].length));
 console.log(`\nSimulated population: ${N} random US-like lives\n`);
 console.log('Metric'.padEnd(w0), 'Model'.padStart(8), '  Target'.padEnd(14), 'Source');

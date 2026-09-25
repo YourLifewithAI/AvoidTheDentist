@@ -324,6 +324,8 @@
             <option value="gum">Chews sugar-free gum after eating</option>
             <option value="bedtimeSnack">Has a snack after brushing at night</option>
             <option value="dryMeds45">Starts a medication that dries the mouth at 45</option>
+            <option value="kidPasteLots">As a toddler, a full ribbon of toothpaste</option>
+            <option value="kidPasteNone">As a toddler, no fluoride toothpaste until 6</option>
             <option value="modernCare">Dentist offers resin infiltration and SDF</option>
             <option value="highFluoride">Uses prescription 5,000 ppm toothpaste</option>
             <option value="postbiotic">Uses a postbiotic toothpaste (emerging)</option>
@@ -438,6 +440,8 @@
         <div class="text"><h3>The Acid Clock</h3><p>How the game shows a day: what she ate and drank sits on a shelf above the curve, night is shaded, and acid time is filled in. Same food eaten with meals: 1h 33m instead of 5h 33m. The same day on a drying medication at 70: over 8 hours. Below, her acid time for every year of one simulated life, with the choices that moved it.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="garden" width="320" height="212" aria-label="Four backyard gardens from four simulated lives."></canvas></figure>
         <div class="text"><h3>The backyard garden</h3><p>Four lives, four gardens. Prevention Pro's is mostly flowers. The Soda Sipper's is overrun with sugar weeds. The Avoider's gum weeds creep in when nobody pulls them. On a drying medication, the soil cracks.</p></div></div>
+      <div class="piece"><figure class="frame"><canvas data-sheet="toothpaste" width="320" height="120" aria-label="Four toothbrushes with different amounts of toothpaste, with fluorosis and cavity rates for each."></canvas></figure>
+        <div class="text"><h3>How much toothpaste for little kids</h3><p>A parent's choice with a real tradeoff, straight from the sim. The ADA's rice grain under 3 and pea from 3 to 6 keep the cavity protection. A full ribbon adds fluorosis, mostly faint white flecks. Skipping fluoride paste cuts fluorosis but sends early cavities from 28% to 45%.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="toolshed" width="320" height="172" aria-label="The tool shed with shelves of options, each marked with an evidence badge."></canvas></figure>
         <div class="text"><h3>The tool shed</h3><p>Shelves for brush and paste, food and drink, the dentist's chair, sleep and body, and tests. Each tool wears its evidence badge; a white tag means ask your dentist.</p></div></div>
       <div class="piece"><figure class="frame"><canvas data-sheet="mockup" width="320" height="180" aria-label="Main game screen mockup with status panel, wallet, event card and life timeline."></canvas></figure>
@@ -510,7 +514,7 @@ flowchart LR
       <table>
         <thead><tr><th>Measure</th><th class="num">Model</th><th class="num">US data</th><th>Source</th></tr></thead>
         <tbody>
-          <tr><td>Tooth decay in baby teeth, ages 2–5</td><td class="num">23.7%</td><td class="num">23%</td><td>CDC 2019</td></tr>
+          <tr><td>Tooth decay in baby teeth, ages 2–5</td><td class="num">24.6%</td><td class="num">23%</td><td>CDC 2019</td></tr>
           <tr><td>Tooth decay in adult teeth, ages 12–19</td><td class="num">55.5%</td><td class="num">~57%</td><td>NHANES (to verify)</td></tr>
           <tr><td>Natural teeth left, ages 50–64 (people with teeth)</td><td class="num">25.4</td><td class="num">23.3</td><td>CDC 2024</td></tr>
           <tr><td>Natural teeth left, ages 65–74</td><td class="num">24.3</td><td class="num">21.7</td><td>CDC 2024</td></tr>
@@ -518,6 +522,7 @@ flowchart LR
           <tr><td>No natural teeth, ages 75–79</td><td class="num">18.3%</td><td class="num">19.7% (75+)</td><td>CDC 2024</td></tr>
           <tr><td>Gum disease (periodontitis), adults 30+</td><td class="num">38.4%</td><td class="num">~42%</td><td>Eke 2018 (to verify)</td></tr>
           <tr><td>Severe gum disease, adults 30+</td><td class="num">10.2%</td><td class="num">~7.8%</td><td>Eke 2018 (to verify)</td></tr>
+          <tr><td>Dental fluorosis, very mild or worse (teens)</td><td class="num">59.3%</td><td class="num">61%</td><td>NHANES 2011–12 (Wiener 2018)</td></tr>
           <tr><td>High dental anxiety, adults</td><td class="num">8.3%</td><td class="num">~12–15%</td><td>Silveira 2021 (to verify)</td></tr>
           <tr><td>Lifetime dental spending, all payers (median)</td><td class="num">$39,313</td><td class="num">~$42,000</td><td>~$520 per person per year (to verify)</td></tr>
         </tbody>

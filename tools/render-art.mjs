@@ -21,6 +21,7 @@ const list = [
   ['acid-clock', 4, () => sheets.acidclock()],
   ['garden', 4, () => sheets.garden()],
   ['tool-shed', 4, () => sheets.toolshed()],
+  ['toothpaste', 4, () => sheets.toothpaste(existsSync(report) ? JSON.parse(readFileSync(report, 'utf8')).paste : undefined)],
   ['clinic', 4, () => sheets.clinic()],
   ['props', 4, () => sheets.props()],
   ['palette', 5, () => sheets.palette()],

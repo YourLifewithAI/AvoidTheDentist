@@ -27,6 +27,7 @@ export function randomPlan(seed) {
     kidVisits: pick(S, 'kidVisits', [['every6', 0.50], ['yearly', 0.30], ['pain', 0.20]]),
     kidDentist: chance('pedo', 0.5) ? 'pediatric' : 'general',
     bedtimeBottle: chance('bottle', 0.2),
+    kidPaste: pick(S, 'kidPaste', [['recommended', 0.40], ['pea', 0.35], ['lots', 0.15], ['none', 0.10]]),
     kidBrushing: pick(S, 'kidBrush', [['twice', 0.55], ['once', 0.35], ['rarely', 0.10]]),
     kidSugar: pick(S, 'kidSugar', [[2, 0.25], [3, 0.30], [4, 0.25], [6, 0.20]]),
     salivaSharing: chance('saliva', 0.5),

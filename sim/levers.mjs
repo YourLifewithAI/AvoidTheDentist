@@ -23,6 +23,8 @@ const levers = [
   ['Water rinse after snacks', { waterAfterSnacks: true }],
   ['A snack after brushing at night', { bedtimeSnack: true }],
   ['Dry-mouth medication from 45', { phases: [{ age: 45, set: { dryMouthMeds: true } }] }],
+  ['Kids: a full ribbon of paste (vs smear/pea)', { kidPaste: 'lots' }],
+  ['Kids: no fluoride paste until 6', { kidPaste: 'none' }],
   ['Modern care: resin infiltration + SDF', { modernCare: true }],
   ['Prescription 5,000 ppm toothpaste', { highFluoride: true }],
   ['Postbiotic toothpaste (emerging)', { postbiotic: true }],
